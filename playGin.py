@@ -3,20 +3,12 @@ import time
 import random
 import math
 
-# public static PrintStream log = System.out;
-winMap = {}
-MAX_TURNS = 1000
-NUM_HANDS_TO_PLAY = 500
-PLAYER_ONE_NAME = "schuyler"
-PLAYER_TWO_NAME = "francesca"
-
-## Dumbass 0.78% win
-## Random 1.48% win
-	
 class playGin:	
-	def playHand(strategyOne, strategyTwo, maxTurns=MAX_TURNS, logWins=True):
-		ginhand = gin.GinHand(gin.Player(PLAYER_ONE_NAME), strategyOne, 
-				gin.Player(PLAYER_TWO_NAME), strategyTwo)
+	def playHand(strategyOne, strategyTwo, 
+					player1_name="player1", player2_name="player2", 
+					maxTurns=1000, logWins=True):
+		ginhand = gin.GinHand(gin.Player(player1_name), strategyOne, 
+				gin.Player(player2_name), strategyTwo)
 		return playGin.playThisHand(ginhand, maxTurns, logWins)
 	
 	def playThisHand(ginhand, maxTurns, logWins):
@@ -25,6 +17,7 @@ class playGin:
 		return ginhand
 	
 # ##############################################	
+## Dumbass 0.78% win
 class DumbassGinStrategy(gin.GinStrategy):
 	def __init__(self):
 		gin.GinStrategy.__init__(self)
@@ -36,6 +29,7 @@ class DumbassGinStrategy(gin.GinStrategy):
 		return hand.currentlyPlaying.playerHand.card[3]
 	
 # ##############################################	
+## Random 1.48% win
 class RandomGinStrategy(gin.GinStrategy): 
 	def __init__(self):
 		gin.GinStrategy.__init__(self)
@@ -122,23 +116,29 @@ class BrandiacGinStrategy(BrainiacGinStrategy):
 
 ## ##############################
 if __name__ == '__main__':	
-	num_hands_to_play = NUM_HANDS_TO_PLAY
-	min_duration = 10000000
+	num_hands_to_play = 500
+
 	max_duration = -1
+	min_duration = 10000000
 	wins = 0
 	startTime = time.time()
 
-	print("hello")
+	print("hello, learningGin based on snakeGa")
 
-	winMap[PLAYER_ONE_NAME] = 0				
-	winMap[PLAYER_TWO_NAME] = 0		
+	p1="schuyler"
+	p2="francesca"
+
+	winMap = {}
+	winMap[p1] = 0				
+	winMap[p2] = 0		
 	winMap['nobody'] = 0		
 
 	for i in range(num_hands_to_play):
 
 		handStartTime = time.time()
 		ginhand = playGin.playHand(RandomGinStrategy(), 
-						RandomGinStrategy())
+								RandomGinStrategy(), 
+								player1_name=p1, player2_name=p2)
 		duration = time.time() - handStartTime
 
 		if not ginhand.winner == None:
