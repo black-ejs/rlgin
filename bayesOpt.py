@@ -1,5 +1,6 @@
 import learningGin
 import time
+import datetime
 import ginDQNParameters
 from GPyOpt.methods import BayesianOptimization
 
@@ -97,10 +98,11 @@ class BayesianOptimizer():
 #      Main      #
 ##################
 if __name__ == '__main__':
+    print(f"bayesOpt.py: Bayesian optimization stsrting at {datetime.datetime()}") 
     # Define optimizer
     params = ginDQNParameters.define_parameters()
     params['log_path'] = 'logs/bayesian_log.' + params['timestamp'] +'.txt'
     bayesOpt = BayesianOptimizer(params)
     startTime = time.time()
     bayesOpt.optimize_RL()
-    print(f"bayesOpt.py: Bayesian optimizaion run took {time.time()-startTime} seconds") 
+    print(f"bayesOpt.py: Bayesian optimization run took {time.time()-startTime} seconds") 
