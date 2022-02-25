@@ -1,0 +1,24 @@
+name: rlgin
+channels:
+  - conda-forge
+  - r
+  - defaults
+dependencies:
+  - python=3.6.15
+  # - collections
+  # - copy
+  # - datetime
+  # - math
+  # - random
+  # - sys
+  # - time
+  # - distutils
+  - GPyOpt==1.2.6
+  - argparse
+  - matplotlib==3.2.0
+  - numpy=1.18.1
+  - pandas=0.25.1
+  - seaborn
+  - statistics
+  - pytorch=1.7.1
+
