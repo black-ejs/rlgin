@@ -29,7 +29,7 @@ class Stats:
     def put(self, key, value):
         self.stats[key]=value
 
-    def get(self, key):
+    def get(self, key): 
         if self.stats.has_key(key):
             return self.stats[key]
         return "unknown statistic"
@@ -179,6 +179,7 @@ def run(params):
 
 ## #############################################
 if __name__ == '__main__':
+
     # Set options to activate or deactivate the game view, and its speed
     parser = argparse.ArgumentParser()
     params = ginDQNParameters.define_parameters()
@@ -189,6 +190,11 @@ if __name__ == '__main__':
     print("Args", args)
     params['display'] = args.display
     params['speed'] = args.speed
+
+    start_time = time.time()
+    print(f"****** learningGin execution at {datetime.datetime.now()} ")
+    print(f"params: {params}")
+
     #if args.bayesianopt:
     #    bayesOpt = BayesianOptimizer(params)
     #    bayesOpt.optimize_RL()
@@ -203,3 +209,5 @@ if __name__ == '__main__':
         params['load_weights'] = True
         stats = run(params)
         print_stats(stats)
+
+    print(f"****** learningGin execution took {time.time() - start_time} seconds")
