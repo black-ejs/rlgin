@@ -30,6 +30,7 @@ def define_parameters():
     # ##########################################
     # App/execution Settings
     timestamp = str(datetime.datetime.now().strftime("%Y%m%d%H%M%S"))
+    params['timestamp'] = timestamp
     params['player_one_name'] = "Primo"    # opponent
     params['player_two_name'] = "Tempo"    # DQN
     params['max_steps_per_hand'] = 1000    # turns

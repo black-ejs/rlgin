@@ -4,21 +4,10 @@ channels:
   - r
   - defaults
 dependencies:
-  - python=3.6.15
-  # - collections
-  # - copy
-  # - datetime
-  # - math
-  # - random
-  # - sys
-  # - time
-  # - distutils
-  - GPyOpt==1.2.6
-  - argparse
-  - matplotlib==3.2.0
-  - numpy=1.18.1
-  - pandas=0.25.1
-  - seaborn
-  - statistics
+  - python=3.9
   - pytorch=1.7.1
+  - matplotlib=3.5.1
+  - pandas=1.4.1
+  - GPyOpt=1.2.6
+  - seaborn=0.11.2
 
