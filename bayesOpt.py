@@ -50,6 +50,7 @@ class BayesianOptimizer():
             startTime = time.time()
             stats = learningGin.run(self.params)
             duration = time.time() - startTime
+            stats.stats['duration'] = score
 
             # the more we win, the better it came out
             # we are player two
@@ -98,7 +99,7 @@ class BayesianOptimizer():
 #      Main      #
 ##################
 if __name__ == '__main__':
-    print(f"bayesOpt.py: Bayesian optimization stsrting at {datetime.datetime()}") 
+    print(f"bayesOpt.py: Bayesian optimization stsrting at {datetime.datetime.now()}") 
     # Define optimizer
     params = ginDQNParameters.define_parameters()
     params['log_path'] = 'logs/bayesian_log.' + params['timestamp'] +'.txt'
