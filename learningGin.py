@@ -38,9 +38,9 @@ class Stats:
 def display(counter_hands, hand_duration, ginhand):
     winner = ginhand.winner
     if not winner == None:
-        print(f'Game {counter_hands}    Winner: {winner.player}    Hand: {winner.playerHand}    Time: {hand_duration*1000:3.2f}')
+        print(f'Game {counter_hands}    Winner: {winner.player}    Hand: {winner.playerHand}    Turns: {len(ginhand.turns)}    Time: {hand_duration*1000:3.2f}')
     else:
-        print(f'Game {counter_hands}    Winner: Nobody    Time: {hand_duration*1000:3.2f}')
+        print(f'Game {counter_hands}    Winner: Nobody    Turns: {len(ginhand.turns)}    Time: {hand_duration*1000:3.2f}')
 
 ## #############################################
 def plot_seaborn(array_counter, array_score, train):
@@ -129,8 +129,10 @@ def run(params):
                                 float(params['noise_epsilon']),)
 
         # create GinHand, re-using the agent each time
-        ginhand = gin.GinHand(gin.Player(params['player_one_name']),playGin.RandomGinStrategy(),
-                    gin.Player(params['player_two_name']),ginDQN.ginDQNStrategy(params,agent))
+        ginhand = gin.GinHand(gin.Player(params['player_one_name']),
+                                    playGin.BrandiacGinStrategy(params['brandiac_random_percent']),
+                                gin.Player(params['player_two_name']),
+                                    ginDQN.ginDQNStrategy(params,agent))
 
         ginhand.deal()
         
@@ -192,7 +194,7 @@ if __name__ == '__main__':
     #    bayesOpt.optimize_RL()
     if params['train']:
         print("Training...")
-        # params['load_weights'] = False   # when training, the network is not pre-trained
+        # params['load_weights'] = False   # depends on params, might be retraining
         stats = run(params)
         print_stats(stats)
     if params['test']:

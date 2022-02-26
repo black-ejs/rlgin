@@ -107,12 +107,12 @@ class BrainiacGinStrategy(OneDecisionGinStrategy):
 class BrandiacGinStrategy(BrainiacGinStrategy): 
 	def __init__(self, random_percent=50):
 		BrainiacGinStrategy.__init__(self)
-		self.epsilon=random_percent/100
+		self.random_percent=random_percent/100
 
 	def scoreCandidate(self, myHand, candidate, ginhand):
 		if random.random() < self.random_percent:
 			return random.random()
-		return super.scoreCandidate(self, myHand, candidate, ginhand)
+		return BrainiacGinStrategy.scoreCandidate(self, myHand, candidate, ginhand)
 
 ## ##############################
 if __name__ == '__main__':	

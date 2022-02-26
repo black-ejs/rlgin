@@ -35,13 +35,14 @@ def define_parameters():
     params['player_two_name'] = "Tempo"    # DQN
     params['max_steps_per_hand'] = 1000    # turns
     params['extend_hands'] = True          # recycle duscards when deck is exhausted, up to max_steps_per_hand
-    params['brandiac_random_percent'] = 75 # assuming opponent = BrandiacGinStrategy 
+    params['brandiac_random_percent'] = 90 # assuming opponent = BrandiacGinStrategy 
 
     params['train'] = True
-    params["test"] = True
+    params["load_weights"] = True   # False if starting from scratch, True if re-training 
+    params["test"] = True           # run from saved weights after training or re-training
     params["display"] = True
     params['plot_score'] = False
     params['log_path'] = 'logs/learningGin_log.' + timestamp +'.txt'
-    params['weights_path'] = 'weights/weights.' + timestamp + '.h5'
+    params['weights_path'] = 'weights/weights.h5'
 
     return params
