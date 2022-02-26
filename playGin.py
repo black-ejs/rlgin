@@ -123,7 +123,7 @@ if __name__ == '__main__':
 	wins = 0
 	startTime = time.time()
 
-	print("hello, learningGin based on snakeGa")
+	print("playGin says hello")
 
 	p1="schuyler"
 	p2="francesca"
