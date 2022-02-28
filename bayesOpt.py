@@ -50,20 +50,15 @@ class BayesianOptimizer():
             startTime = time.time()
             stats = learningGin.run(self.params)
             duration = time.time() - startTime
-            stats.stats['duration'] = duration
+            stats.put('duration',duration)
 
             # the more we win, the better it came out
             # we are player two
-            score = stats.stats['winMap'][self.params['player_two_name']] 
-            stats.stats['score'] = score
+            score = stats.get('winMap')[self.params['player_two_name']]
+            stats.put('score',score)
 
             # report the results
-            learningGin.print_stats(stats)
-            with open(self.params['log_path'], 'a') as f: 
-                print(f"\n********* {str(self.params['name_scenario'])}",file=f) 
-                learningGin.print_stats(stats, f)
-                print(f"=====> optimization run {self.params['name_scenario']} took {duration:10.2f} seconds\n",file=f)
-                f.close()
+            self.print_stats(stats)
 
             return score
 
@@ -93,7 +88,14 @@ class BayesianOptimizer():
         print('Optimized third layer: ', bayes_optimizer.x_opt[3])
         print('Optimized epsilon linear decay: ', bayes_optimizer.x_opt[4])
         return self.params
-
+    
+    def print_stats(self,stats):
+        learningGin.print_stats(stats)
+        with open(self.params['log_path'], 'a') as f: 
+            print(f"\n********* {str(self.params['name_scenario'])}",file=f) 
+            learningGin.print_stats(stats, f)
+            print(f"=====> optimization run {self.params['name_scenario']} took {stats.get('duration'):10.2f} seconds\n",file=f)
+            f.close()
 
 ##################
 #      Main      #
