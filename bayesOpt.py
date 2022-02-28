@@ -50,7 +50,7 @@ class BayesianOptimizer():
             startTime = time.time()
             stats = learningGin.run(self.params)
             duration = time.time() - startTime
-            stats.stats['duration'] = score
+            stats.stats['duration'] = duration
 
             # the more we win, the better it came out
             # we are player two
