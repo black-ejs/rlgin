@@ -102,7 +102,7 @@ class Hand:
 		four = False
 		for c in hand.card:
 			score = Hand.scoreCard(hand, c)
-			if (score < 10):  
+			if (score < 50):  
 				# no match or run
 				return False
 			if (score > 100):  
@@ -161,7 +161,7 @@ class Hand:
 
 		score = runcount + matchcount
 		if match or run:
-			score += 10
+			score += 50
 			if match4 or run4:
 				score += 100
 

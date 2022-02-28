@@ -97,7 +97,7 @@ class BrainiacGinStrategy(OneDecisionGinStrategy):
 		#if score > 0.002:
 		#	print(f"{sevenCardHand} trying {candidate}")
 		#	print(f"raw score={score}")
-		score = score*(100/112) + 1
+		score = score*(100/152) + 1
 		score = math.log10(score)/2
 		#if score > 0.01:
 		#	print(f"final score={score}")
@@ -105,7 +105,7 @@ class BrainiacGinStrategy(OneDecisionGinStrategy):
 
 ## ##############################
 class BrandiacGinStrategy(BrainiacGinStrategy): 
-	def __init__(self, random_percent=50):
+	def __init__(self, random_percent=0.1):
 		BrainiacGinStrategy.__init__(self)
 		self.random_percent=random_percent/100
 
@@ -136,8 +136,8 @@ if __name__ == '__main__':
 	for i in range(num_hands_to_play):
 
 		handStartTime = time.time()
-		ginhand = playGin.playHand(RandomGinStrategy(), 
-								RandomGinStrategy(), 
+		ginhand = playGin.playHand(BrainiacGinStrategy(), 
+								BrainiacGinStrategy(), 
 								player1_name=p1, player2_name=p2)
 		duration = time.time() - handStartTime
 
