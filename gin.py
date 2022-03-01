@@ -447,6 +447,11 @@ class GinHand:
 		
 		return rez
 	
+	def notCurrentlyPlaying(self):
+		if self.currentlyPlaying == self.playingOne:
+			return self.playingTwo
+		return  self.playingOne
+
 	def toString(self,which):
 		if which==1:
 			return self.toString(self.playingOne)
