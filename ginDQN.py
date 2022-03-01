@@ -136,9 +136,10 @@ class ginDQNStrategy(playGin.OneDecisionGinStrategy):
         return score
         
     def endOfHand(self, ginhand):
-        if not hasattr(self,'myPlayer'):
+        if not hasattr(self,'old_state'):
             # the other player was dealt a winning hand
-            self.myPlayer = ginhand.notCurrentlyPlaying().player
+            # nothing to learn here, except perhaps philosophically
+            return
         new_state = self.agent.get_state(ginhand,self.myPlayer)
         reward = self.agent.set_reward(ginhand,self.myPlayer)
         self.learnTurn(self.old_state, self.turn_scores, reward, new_state, True)
