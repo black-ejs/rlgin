@@ -11,7 +11,7 @@ def	playHand():
 	if winner == None:
 		print("NO WINNER")
 	else:
-		print(f"WINNER: {winner.player.name} {winner.playerHand}")
+		print(f"WINNER: {winner.player.name} {winner.playerHand.prettyStr()}")
 
 class InteractiveGinStrategy(gin.GinStrategy):
 	def __init__(self):
@@ -28,6 +28,8 @@ class InteractiveGinStrategy(gin.GinStrategy):
 					drawSource=gin.Draw.DECK
 				elif line[0].upper()=='P':
 					drawSource=gin.Draw.PILE
+				elif line[0].upper()=='Q':
+					self.quitTheGame()
 
 		return drawSource
 	
@@ -57,6 +59,8 @@ class InteractiveGinStrategy(gin.GinStrategy):
 			print("Discard (1-8, left to right)?")
 			line = input()
 			try:
+				if line[0].upper()=='Q':
+					self.quitTheGame()
 				candidate = int(line)
 				if candidate>0 and candidate<9:
 					cardChoice = candidate
@@ -66,6 +70,10 @@ class InteractiveGinStrategy(gin.GinStrategy):
 				print(f"cannot use {line} as a choice.");
 
 		return playerHand.card[cardChoice-1]
+
+	def quitTheGame(self):
+		print("Goodbye.")
+		quit()
 
 ## ################################################
 ## ################################################
