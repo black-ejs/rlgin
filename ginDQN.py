@@ -94,6 +94,7 @@ class ginDQNStrategy(playGin.OneDecisionGinStrategy):
         self.state_size = params['input_size']
         self.agent = agent
         self.old_state = None
+        self.myPlayer = None
         self.turns = 0
         self.batch_size = params['batch_size']
 
@@ -136,7 +137,7 @@ class ginDQNStrategy(playGin.OneDecisionGinStrategy):
         return score
         
     def endOfHand(self, ginhand):
-        if not hasattr(self,'old_state'):
+        if self.myPlayer == None:
             # the other player was dealt a winning hand
             # nothing to learn here, except perhaps philosophically
             return
