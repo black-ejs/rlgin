@@ -30,7 +30,7 @@ class Stats:
         self.stats[key]=value
 
     def get(self, key): 
-        if self.stats.has_key(key):
+        if key in self.stats:
             return self.stats[key]
         return "unknown statistic"
 
@@ -38,9 +38,9 @@ class Stats:
 def display(counter_hands, hand_duration, ginhand):
     winner = ginhand.winner
     if not winner == None:
-        print(f'Game {counter_hands}    Winner: {winner.player}    Hand: {winner.playerHand}    Turns: {len(ginhand.turns)}    Time: {hand_duration*1000:3.2f}')
+        print(f'Game {counter_hands}    Winner: {winner.player}    Hand: {winner.playerHand.prettyStr()}    Turns: {len(ginhand.turns)}    Time: {hand_duration*1000:3.2f}')
     else:
-        print(f'Game {counter_hands}    Winner: Nobody    Turns: {len(ginhand.turns)}    Time: {hand_duration*1000:3.2f}')
+        print(f'Game {counter_hands}    Winner: {NO_WIN_NAME}    Turns: {len(ginhand.turns)}    Time: {hand_duration*1000:3.2f}')
 
 ## #############################################
 def plot_seaborn(array_counter, array_score, train):
