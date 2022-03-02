@@ -47,17 +47,21 @@ class Card:
 		return self.rank==other.rank and self.suit==other.suit
 
 	def __lt__(self, other):
-		s=self.__hash__()
-		o=other.__hash__()
+		if other == None:
+			return False
+		s=self.toInt()
+		o=other.toInt()
 		return s<o
 
 	def __gt__(self, other):
-		s=self.__hash__()
-		o=other.__hash__()
+		if other == None:
+			return True
+		s=self.toInt()
+		o=other.toInt()
 		return s>o
 
 	def toInt(self) -> int:
-		return self.suit*13 + self.suit;
+		return self.suit*13 + self.rank;
 
 	def fromInt(hval):
 		i=int(hval)
@@ -93,6 +97,36 @@ class Hand:
 
 	def wins(self):
 		Hand.wins(self)
+
+	def prettyStr(self):
+		"""
+		prints as a 'sorted' hand, 
+		with runs and matches together
+		"""
+		result = ""
+		cards = copy.copy(self.card)
+		cards.sort()
+		run = []
+		for c in cards:
+			if not (len(run)==0) and c.rank == run[len(run)-1].rank+1:
+				run.append(c)
+			match = []
+			match.append(c)
+			for p in cards:
+				if p.rank == c.rank and not p.suit == c.suit:
+					match.append(p)
+			if len(match) > 2:
+				for c in match:
+					result = result + c.__str__() + " "
+					cards.remove(c)
+			elif len(run)>2:
+				for c in match:
+					result = result + c.__str__() + " "
+					cards.remove(c)
+				run = []
+		for c in cards:
+			result = result + c.__str__() + " "
+		return result[:-1]	
 
 	def wins(hand):
 		# if any card is not part of a match or
@@ -211,7 +245,7 @@ class Player:
 		self.name=playerName
 
 	def __eq__(self, other):
-		return self.name == other.name
+		return (not (other == None)) and self.name == other.name
 
 	def __hash__(self):
 		return hash(self.name)
