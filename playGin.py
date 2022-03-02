@@ -143,7 +143,7 @@ if __name__ == '__main__':
 
 		if not ginhand.winner == None:
 			wins+=1
-			print(f"{i:5} WINNER: {ginhand.winner.player.name} {ginhand.winner.playerHand} in {len(ginhand.turns)} turns, {duration:3.2f}s")
+			print(f"{i:5} WINNER: {ginhand.winner.player.name} {ginhand.winner.playerHand.prettyStr()} in {len(ginhand.turns)} turns, {duration:3.2f}s")
 			winMap[ginhand.winner.player.name]+=1
 		else:
 			print(f"{i:5} WINNER: nobody in {len(ginhand.turns)} turns, {duration:3.2f}s")
