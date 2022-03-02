@@ -1,3 +1,5 @@
+import copy
+import random
 import gin
 
 def testInts():
@@ -27,13 +29,21 @@ def testWins():
 								gin.Card(1,1),gin.Card(11,0),gin.Card(12,1)])
 
 	print(f"h2match_3matchs {h2match_3matchs.wins()}")
+	print(f"        {h2match_3matchs.prettyStr()}")
 	print(f"h2match_fail {h2match_fail.wins()}")
+	print(f"        {h2match_fail.prettyStr()}")
 	print(f"h3run4run_m {h3run4run_m.wins()}")
+	print(f"        {h3run4run_m.prettyStr()}")
 	print(f"h3run4match_m {h3run4match_m.wins()}")
+	print(f"        {h3run4match_m.prettyStr()}")
 	print(f"h3match4run_m {h3match4run_m.wins()}")
+	print(f"        {h3match4run_m.prettyStr()}")
 	print(f"hjunk_f {hjunk_f.wins()}")
+	print(f"        {hjunk_f.prettyStr()}")
 	print(f"tricky_m {tricky_m.wins()}")
+	print(f"        {tricky_m.prettyStr()}")
 	print(f"tricky_f {tricky_f.wins()}")
+	print(f"        {tricky_f.prettyStr()}")
 
 def testWins2():
 	d = gin.Deck()
@@ -61,9 +71,19 @@ def testWins3():
 			count+=1
 	print(f"***** {count} hands flunked")
 
+def testWins4():
+	initWinners()
+	for hand in winningHands:
+		myHand = copy.copy(hand)
+		random.shuffle(myHand.card)
+		print(f"** winner: {myHand.prettyStr()}")
+		print(f"xx ugly..: {myHand}")
+
 winningHands=[]
 
 def initWinners():
+	if len(winningHands)>0:
+		winningHands.clear()
 	hand = []
 	for i in range(gin.HAND_SIZE):
 		hand.append(gin.Card(1,1))
@@ -171,7 +191,7 @@ def winnersString():
 	winnersStr = ""
 
 	for winningHand in winningHands:
-		winnersStr+=winningHand
+		winnersStr+=winningHand.prettyStr()
 		winnersStr+='\n'
 		
 	return winnersStr
@@ -182,5 +202,6 @@ if __name__ == '__main__':
 	testWins()
 	testWins2()
 	testWins3()
+	testWins4()
 
 
