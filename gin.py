@@ -3,19 +3,19 @@ import copy
 
 NUM_SUITS=4
 NUM_RANKS=13
-HAND_SIZE=4
+HAND_SIZE=7
 
 class Card:
 	rankNames = ["2","3","4","5","6","7","8","9","10","J","Q","K","A"]
 	suitNames = ["C","D","H","S"]
 	
 	def __init__(self, prank, psuit):
-		if prank>=NUM_RANKS | prank<0:
+		if prank>=NUM_RANKS or prank<0:
 			raise Exception(f"illegal rank of {prank}, range is 0-{NUM_RANKS}")
-		if psuit<0 | psuit>=NUM_SUITS:
+		if psuit<0 or psuit>=NUM_SUITS:
 			raise Exception(f"illegal suit of {psuit}, range is 0-{NUM_SUITS}")
-		self.rank=prank
-		self.suit=psuit
+		self.rank=int(prank)
+		self.suit=int(psuit)
 
 	def rankName(rank):
 		return Card.rankNames[rank]
@@ -98,108 +98,96 @@ class Hand:
 	def wins(self):
 		Hand.wins(self)
 
-	def prettyStr(self):
+	def wins(hand):
+		runs, matches, cards = hand.analyze()
+		winningHand = []
+		for r in runs:
+			for c in r:
+				winningHand.append(c) 			
+		for m in matches:
+			for c in m:
+				if not c in winningHand:
+					winningHand.append(c)
+		return len(winningHand) == HAND_SIZE
+
+	def analyze(self):
 		"""
 		prints as a 'sorted' hand, 
 		with runs and matches together
 		"""
-		result = ""
 		cards = copy.copy(self.card)
+
+		## find runs
 		cards.sort()
-		run = []
-		for c in cards:
-			if not (len(run)==0) and c.rank == run[len(run)-1].rank+1:
-				run.append(c)
-			match = []
-			match.append(c)
-			for p in cards:
-				if p.rank == c.rank and not p.suit == c.suit:
-					match.append(p)
-			if len(match) > 2:
-				for c in match:
-					result = result + c.__str__() + " "
-					cards.remove(c)
-			elif len(run)>2:
-				for c in match:
-					result = result + c.__str__() + " "
-					cards.remove(c)
+		runs = []
+		i=0
+		while i<len(cards)-2:
+			if (cards[i].rank+1 == cards[i+1].rank and 
+					cards[i].suit == cards[i+1].suit and 
+					cards[i].rank+2 == cards[i+2].rank and
+					cards[i].suit == cards[i+2].suit):
 				run = []
+				runs.append(run)
+				for c in cards[i:i+3]:
+					run.append(c)
+				i+=2
+				while (i<len(cards)-1 and 
+						cards[i].rank+1 == cards[i+1].rank and 
+						cards[i].suit == cards[i+1].suit):
+					run.append(cards[i+1])
+					i+=1
+			i+=1
+
+		## find matches
+		matches = []
 		for c in cards:
+			alreadyMatched = False
+			for m in matches:
+				if c in m:
+					alreadyMatched = True
+			if not alreadyMatched:		
+				match = []
+				match.append(c)
+				for p in cards:
+					if p.rank == c.rank and not p.suit == c.suit:
+						match.append(p)
+				if len(match) >2:
+					matches.append(match)
+
+		# check for conflicts
+		for r in runs:
+			for c in r:
+				for m in matches:
+					if c in m:
+						# c shows up in a match and a run
+						if len(m) > 3:
+							m.remove(c)
+						elif len(r)>3 and (c == r[0] or c==r[len(r)-1]):
+							r.remove(c)
+						else:
+							# one will be destroyed
+							m.clear()
+		return runs, matches, cards
+
+	def prettyStr(self):
+		runs, matches, cards = self.analyze()
+		prettyHand = []
+		for r in runs:
+			for c in r:
+				if not c in prettyHand:
+					prettyHand.append(c) 			
+		for m in matches:
+			for c in m:
+				if not c in prettyHand:
+					prettyHand.append(c) 			
+		for c in cards:
+			if not c in prettyHand:
+				prettyHand.append(c)
+
+		result = ""
+		for c in prettyHand:
 			result = result + c.__str__() + " "
-		return result[:-1]	
-
-	def wins(hand):
-		# if any card is not part of a match or
-		# part of a run, the hand is not a winner
-		# if all cards are part of a match or run, and
-		# one is 4 cards lon, the hand is a winner
-		four = False
-		for c in hand.card:
-			score = Hand.scoreCard(hand, c)
-			if (score < 50):  
-				# no match or run
-				return False
-			if (score > 100):  
-				four = True
-
-		if not four:
-			return False
-
-		return True
-
-	def scoreCard(hand,c):
-		match = False
-		run = False
-		match4 = False
-		run4 = False
-
-		# check match
-		neighbors = []
-		matchcount = 0
-		for s in range(NUM_SUITS):
-			if not s==c.suit:
-				neighbors.append(Card(c.rank,s))
-		for n in neighbors:
-			if hand.contains(n):
-				matchcount+=1
-		if matchcount>1:
-			match = True
-			if matchcount==3:
-				match4 = True
-
-		# check run
-		neighbors = []
-		runcount = 0
-		if c.rank>0:
-			leftNeighbor=Card(c.rank-1,c.suit)
-			if hand.contains(leftNeighbor):
-				runcount+=1
-				if c.rank>1:
-					leftNeighbor2=Card(c.rank-2,c.suit)
-					if hand.contains(leftNeighbor2):
-						runcount+=1
-						
-		if c.rank<NUM_RANKS-1:
-			rightNeighbor=Card(c.rank+1,c.suit)
-			if hand.contains(rightNeighbor):
-				runcount+=1
-				if c.rank<NUM_RANKS-2:
-					rightNeighbor2=Card(c.rank+2,c.suit)
-					if hand.contains(rightNeighbor2):
-						runcount+=1
-
-		if runcount>1:
-			run = True
-			if runcount==3:
-				run4 = True
-
-		score = runcount + matchcount
-		if match or run:
-			score += 50
-			if match4 or run4:
-				score += 100
-
-		return score
+		return result[:-1]
 
 ## //////////////////////////////////////////////////
 class Deck:
@@ -226,7 +214,7 @@ class Deck:
 		random.shuffle(self.undealt)
 	
 	def contains(self,card):
-		return self.undealt.contains(card)
+		return card in self.undealt
 
 	def card2Int(card):
 		return Deck._cardList.index(card)
@@ -360,7 +348,7 @@ class GinHand:
 		# self.firstPileCard 
 	
 	def lastTurn(self):
-		if hasattr(self,"turns") == False | len(self.turns)==0:
+		if hasattr(self,"turns") == False or len(self.turns)==0:
 			return None
 		return self.turns[len(self.turns)-1]
 	
