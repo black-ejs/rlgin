@@ -93,15 +93,66 @@ class BrainiacGinStrategy(OneDecisionGinStrategy):
 		OneDecisionGinStrategy.__init__(self)
 
 	def scoreCandidate(self, myHand, candidate, ginhand):
-		score = gin.Hand.scoreCard(myHand, candidate) + 0.001
+		score = BrainiacGinStrategy.scoreCard(myHand, candidate) + 0.001
 		#if score > 0.002:
-		#	print(f"{sevenCardHand} trying {candidate}")
-		#	print(f"raw score={score}")
+		#       print(f"{sevenCardHand} trying {candidate}")
+		#       print(f"raw score={score}")
 		score = score*(100/152) + 1
 		score = math.log10(score)/2
 		#if score > 0.01:
-		#	print(f"final score={score}")
+		#       print(f"final score={score}")
 		return score
+
+	def scoreCard(hand,c):
+		match = False
+		run = False
+		match4 = False
+		run4 = False
+
+        # check match
+		neighbors = []
+		matchcount = 0
+		for s in range(gin.NUM_SUITS):
+			if not s==c.suit:
+				neighbors.append(gin.Card(c.rank,s))
+		for n in neighbors:
+			if hand.contains(n):
+				matchcount+=1
+		if matchcount>1:
+			match = True
+			if matchcount>2:
+				match4 = True
+
+        # check run
+		neighbors = []
+		runcount = 0
+		if c.rank>0:
+			leftNeighbor=gin.Card(c.rank-1,c.suit)
+			if hand.contains(leftNeighbor):
+				runcount+=1
+				if c.rank>1:
+					leftNeighbor2=gin.Card(c.rank-2,c.suit)
+					if hand.contains(leftNeighbor2):
+						runcount+=1                    
+		if c.rank<gin.NUM_RANKS-1:
+			rightNeighbor=gin.Card(c.rank+1,c.suit)
+			if hand.contains(rightNeighbor):
+				runcount+=1
+				if c.rank<gin.NUM_RANKS-2:
+					rightNeighbor2=gin.Card(c.rank+2,c.suit)
+					if hand.contains(rightNeighbor2):
+						runcount+=1
+		if runcount>1:
+			run = True
+			if runcount>2:
+				run4 = True
+
+		score = runcount + matchcount
+		if match or run:
+			score += 50
+		if match4 or run4:
+			score += 100
+		return score						
 
 ## ##############################
 class BrandiacGinStrategy(BrainiacGinStrategy): 
