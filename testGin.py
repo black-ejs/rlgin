@@ -1,11 +1,13 @@
 import copy
+from operator import or_
 import random
 import gin
 
 def testInts():
+	d = gin.Deck()
 	i=0
 	for c in gin.Deck.cardList():
-		print(f"{i}: {c} {c.toInt()} {c.fromInt(c.toInt())}")
+		print(f"{i}: {c} {c.toInt()} {gin.Card.fromInt(c.toInt())}")
 		i+=1
 
 def testWins():
@@ -27,7 +29,13 @@ def testWins():
 								gin.Card(10,0),gin.Card(11,0),gin.Card(12,1)])
 	wf1 = gin.Hand([gin.Card(0,0),gin.Card(0,1),gin.Card(0,2),gin.Card(0,3),
 								gin.Card(1,1),gin.Card(11,0),gin.Card(12,1)])
-
+	# 7C 7D 7H 5D 6D 8D 9D
+	sawThis_f = gin.Hand([gin.Card(5,0),gin.Card(5,1),gin.Card(5,2),gin.Card(3,2),
+								gin.Card(4,2),gin.Card(6,2),gin.Card(7,2)])
+	# JD QD KD 10C 10D 10H AD
+	run4match_m = gin.Hand([gin.Card(9,1),gin.Card(10,1),gin.Card(11,1),gin.Card(8,0),
+								gin.Card(8,1),gin.Card(8,3),gin.Card(12,1)])
+	
 	print(f"h2match_3matchs {h2match_3matchs.wins()}")
 	print(f"        {h2match_3matchs.prettyStr()}")
 	print(f"h2match_fail {h2match_fail.wins()}")
@@ -44,6 +52,12 @@ def testWins():
 	print(f"        {tricky_m.prettyStr()}")
 	print(f"tricky_f {tricky_f.wins()}")
 	print(f"        {tricky_f.prettyStr()}")
+	print(f"wf1 {wf1.wins()}")
+	print(f"        {wf1.prettyStr()}")
+	print(f"sawThis_f {sawThis_f.wins()}")
+	print(f"        {sawThis_f.prettyStr()}")
+	print(f"run4match_m {run4match_m.wins()}")
+	print(f"        {run4match_m.prettyStr()}")
 
 def testWins2():
 	d = gin.Deck()
@@ -58,28 +72,43 @@ def testWins2():
 		h = gin.Hand(cards)
 		if (h.wins()):
 			wincount+=1
-			print(f"Winner {h}")
+			print(f"Winner {h.prettyStr()}")
 	print(f"***** {wincount} random hands won out of {count}")
 
 def testWins3():
 	initWinners()
 	print(f"***** {len(winningHands)} winning hands generated")
 	count=0
+	jj = 0
 	for hand in winningHands:
+		jj+=1
 		if not hand.wins():
-			print(f"non-winning winner: {hand}")
+			print(f"non-winning winner: {jj} - {hand.prettyStr()}  -- {hand}")
 			count+=1
 	print(f"***** {count} hands flunked")
 
 def testWins4():
 	initWinners()
 	for hand in winningHands:
+		if not hand.wins():
+			print(f"hmm, this doesn't seem to be a winner: {hand.prettyStr()}")
 		myHand = copy.copy(hand)
 		random.shuffle(myHand.card)
 		print(f"** winner: {myHand.prettyStr()}")
 		print(f"xx ugly..: {myHand}")
 
 winningHands=[]
+def addWinner(hand):
+	for c in hand.card:
+		e=0
+		for x in hand.card:
+			if x == c:
+				e+=1
+		if e>1:
+			print("wtf")
+			print(f"{len(winningHands)}  {hand}")
+
+	winningHands.append(hand)
 
 def initWinners():
 	if len(winningHands)>0:
@@ -105,18 +134,18 @@ def initWinners():
 						if suit!=xsuit: ## leave out 1 suit
 							hand[i]=gin.Card(rank3,xsuit)
 							i+=1
-					winningHands.append(gin.Hand(hand))
+					addWinner(gin.Hand(hand))
 			
 		## with 3-sequence
 		for seqstart in range(gin.NUM_RANKS-2):
-			if seqstart==hand[0].rank | (seqstart+1)==hand[0].rank | (seqstart+2)==hand[0].rank:
+			if seqstart==hand[0].rank or (seqstart+1)==hand[0].rank or (seqstart+2)==hand[0].rank:
 				continue	## skip runs containing our four-of-a-kind
 				
 			for suit in range(gin.NUM_SUITS):
 				hand[4]=gin.Card(seqstart,suit)
 				hand[5]=gin.Card(seqstart+1,suit)
 				hand[6]=gin.Card(seqstart+2,suit)
-				winningHands.append(gin.Hand(hand))
+				addWinner(gin.Hand(hand))
 		
 		
 	## ///////////////////////
@@ -137,23 +166,23 @@ def initWinners():
 		for seqstart in range(gin.NUM_RANKS-3):
 			for suit in range(gin.NUM_SUITS):
 				c1 = gin.Card(seqstart,suit)
-				if (hand[0]==c1) | (hand[1]==c1) | (hand[2]==c1):
+				if (hand[0]==c1) or (hand[1]==c1) or (hand[2]==c1):
 					break
 				c2 = gin.Card(seqstart+1,suit)
-				if (hand[0]==c2) | (hand[1]==c2) | (hand[2]==c2):
+				if (hand[0]==c2) or (hand[1]==c2) or (hand[2]==c2):
 					break
 				c3 = gin.Card(seqstart+2,suit)
-				if (hand[0]==c3) | (hand[1]==c3) | (hand[2]==c3):
+				if (hand[0]==c3) or (hand[1]==c3) or (hand[2]==c3):
 					break
 				c4 = gin.Card(seqstart+3,suit)
-				if (hand[0]==c4) | (hand[1]==c4) | (hand[2]==c4):
+				if (hand[0]==c4) or (hand[1]==c4) or (hand[2]==c4):
 					break
 						
 				hand[3] = c1
 				hand[4] = c2
 				hand[5] = c3
 				hand[6] = c4
-				winningHands.append(gin.Hand(hand))
+				addWinner(gin.Hand(hand))
 		
 	## ///////////////////////
 	## all-sequence hands
@@ -169,7 +198,7 @@ def initWinners():
 					hand[4] = gin.Card(hiStart+1, hiSuit)
 					hand[5] = gin.Card(hiStart+2, hiSuit)
 					hand[6] = gin.Card(hiStart+3, hiSuit)
-					winningHands.append(gin.Hand(hand))
+					addWinner(gin.Hand(hand))
 					
 			## 4-sequence lo, 3-sequence hi
 			if lowStart+3 < gin.NUM_RANKS:
@@ -184,8 +213,14 @@ def initWinners():
 						hand[4] = gin.Card(hiStart, hiSuit)
 						hand[5] = gin.Card(hiStart+1, hiSuit)
 						hand[6] = gin.Card(hiStart+2, hiSuit)
-						winningHands.append(gin.Hand(hand))
+						addWinner(gin.Hand(hand))
 
+	i=0;
+	while i<len(winningHands):
+		h = winningHands[i]
+		if not len(h.card) == gin.HAND_SIZE:
+			winningHands.remove(h)
+		i+=1
 
 def winnersString():
 	winnersStr = ""
@@ -200,7 +235,7 @@ def winnersString():
 if __name__ == '__main__':	
 	testInts()
 	testWins()
-	testWins2()
+	#testWins2()
 	testWins3()
 	testWins4()
 
