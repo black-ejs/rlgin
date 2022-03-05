@@ -108,7 +108,7 @@ def run(params):
     winMap[NO_WIN_NAME] = 0				
 
     stats = Stats()
-    stats.put("run_timestamp", eval('f"{datetime.datetime.now()}"'))
+    stats.put("run_timestamp", datetime.datetime.now())
     stats.put("params", params)
     stats.put("winMap", winMap)
 
