@@ -63,15 +63,15 @@ class BayesianOptimizer():
             return score
 
         optim_params = [
-            {"name": "learning_rate", "type": "continuous", "domain": (0.001, 0.05)},
-            {"name": "first_layer_size", "type": "discrete", "domain": (20,50,100,200)},
-            {"name": "second_layer_size", "type": "discrete", "domain": (20,50,100,200)},
-            {"name": "third_layer_size", "type": "discrete", "domain": (20,50,100,200)},
-            {"name":'epsilon_decay_linear', "type": "discrete", "domain": (float(2/self.params['episodes']),
-                                                                           float(4/self.params['episodes']),
-                                                                           float(8/self.params['episodes']),
+            {"name": "learning_rate", "type": "continuous", "domain": (0.001, 0.01)},
+            {"name": "first_layer_size", "type": "discrete", "domain": (100,150,200,300)},
+            {"name": "second_layer_size", "type": "discrete", "domain": (200,300,400,800)},
+            {"name": "third_layer_size", "type": "discrete", "domain": (10,20,30,50)},
+            {"name":'epsilon_decay_linear', "type": "discrete", "domain": (float(8/self.params['episodes']),
                                                                            float(16/self.params['episodes']),
-                                                                           float(32/self.params['episodes']))}
+                                                                           float(32/self.params['episodes']),
+                                                                           float(64/self.params['episodes']),
+                                                                           float(128/self.params['episodes']))}
             ]
 
         bayes_optimizer = BayesianOptimization(f=optimize,
