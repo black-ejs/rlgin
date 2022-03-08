@@ -119,15 +119,42 @@ def create_score_stats():
     count = 0
     tot1 = 0
     tot2 = 0
+    min1 = 100000
+    min2 = 100000
+    max1 = -1
+    max2 = -1
+    minr = 100000
+    maxr = -1
     for st in statsList:
         if 'wins2' in st:
             count+=1
-            tot1+= st['wins1']
-            tot2+= st['wins2']
+            w1 = st['wins1']
+            w2 = st['wins2']
+            tot1+= w1
+            tot2+= w2
+            if w1>max1:
+                max1=w1
+            if w2>max2:
+                max2=w2
+            if w1<min1:
+                min1=w1
+            if w2<min2:
+                min2=w2
+            ratio = w1/w2
+            if ratio>maxr:
+                maxr=ratio
+            if ratio<minr:
+                minr=ratio
     mean_losses = tot1/count
     mean_wins = tot2/count      
     score_stats['mean_losses']=mean_losses
     score_stats['mean_wins']=mean_wins
+    score_stats['max_losses']=max1
+    score_stats['max_wins']=max2
+    score_stats['min_losses']=min1
+    score_stats['min_wins']=min2
+    score_stats['max_ratio']=maxr
+    score_stats['min_ratio']=minr
     for st in statsList:
         if 'wins2' in st:
             count+=1
