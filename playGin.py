@@ -2,6 +2,8 @@ import gin
 import time
 import random
 import math
+import argparse
+import distutils.util
 
 class playGin:	
 	def playHand(strategyOne, strategyTwo, 
@@ -166,8 +168,15 @@ class BrandiacGinStrategy(BrainiacGinStrategy):
 		return BrainiacGinStrategy.scoreCandidate(self, myHand, candidate, ginhand)
 
 ## ##############################
-if __name__ == '__main__':	
-	num_hands_to_play = 500
+## ##############################
+## command-line and reporting support
+## ##############################
+def play(num_hands_to_play: int =500, 
+			strategy1: str ="b", 
+			strategy2: str ="r", 
+			name1: str ="player1", 
+			name2: str ="player2",
+			show_card_counts: bool =False):
 
 	max_duration = -1
 	min_duration = 10000000
@@ -176,28 +185,36 @@ if __name__ == '__main__':
 
 	print("playGin says hello")
 
-	p1="schuyler"
-	p2="francesca"
-
 	winMap = {}
-	winMap[p1] = 0				
-	winMap[p2] = 0		
+	winMap[name1] = 0				
+	winMap[name2] = 0		
 	winMap['nobody'] = 0		
+ 
+	card_counts = []
+	for i in range(52):
+		card_counts.append(0)
+
+	_strategy1 = get_strategy(strategy1)
+	_strategy2 = get_strategy(strategy2)
 
 	for i in range(num_hands_to_play):
 
 		handStartTime = time.time()
-		ginhand = playGin.playHand(BrainiacGinStrategy(), 
-								BrainiacGinStrategy(), 
-								player1_name=p1, player2_name=p2)
+		ginhand = playGin.playHand(_strategy1, 
+								_strategy2, 
+								player1_name=name1, 
+								player2_name=name2)
 		duration = time.time() - handStartTime
 
 		if not ginhand.winner == None:
 			wins+=1
 			print(f"{i:5} WINNER: {ginhand.winner.player.name} {ginhand.winner.playerHand.prettyStr()} in {len(ginhand.turns)} turns, {duration:3.2f}s")
 			winMap[ginhand.winner.player.name]+=1
+			for card in ginhand.winner.playerHand.card:
+				card_counts[card.toInt()]+=1
 		else:
 			print(f"{i:5} WINNER: nobody in {len(ginhand.turns)} turns, {duration:3.2f}s")
+			winMap['nobody']+=1
 			
 		if duration < min_duration:
 			min_duration = duration
@@ -210,4 +227,72 @@ if __name__ == '__main__':
 		  		f" in {duration*1000:.2f}ms ({(duration/num_hands_to_play)*1000:.2f}ms/hand)"
 		  		f" min/max duration(ms): {min_duration*1000:3.2f}/{max_duration*1000:3.2f}")
 	print(f"winners: {winMap}")
+	if (show_card_counts):
+		for i in range(len(card_counts)):
+			print(f'{gin.Card.fromInt(i)}: {card_counts[i]}')
+
+## ############################################################
+_strategies = { 'B': BrainiacGinStrategy(), 
+				'R': RandomGinStrategy(), 
+				'D': DumbassGinStrategy(),
+				'BR': BrandiacGinStrategy(10)
+ 			}
+def get_strategy(key: str):
+	key = key.upper().strip()
+	if len(key) > 1:
+		if key[0:2] == 'BR':
+			if len(key)>2:
+				random_percent=int(key[2:])
+			else:
+				random_percent=10
+			return BrandiacGinStrategy(random_percent)
+	return _strategies[key]
+
+## ##############################
+if __name__ == '__main__':	
+
+	strategy_help = "(r=random, d=dumbass, b=brainiac, brNN=brandiac with NN percent random)"
+
+	parser = argparse.ArgumentParser()
+	parser.add_argument('num_hands_to_play',
+                    default=500, type=int,
+                    nargs='?', help='number of hands to play ' + strategy_help)
+	parser.add_argument('strategy1',
+                    default='b', type=str,
+                    nargs='?', help='the strategy for the first player' + strategy_help)
+	parser.add_argument('name1',
+                    default='player1', type=str,
+                    nargs='?', help='the name for the first player')
+	parser.add_argument('strategy2',
+                    default='b', type=str,
+                    nargs='?', help='the strategy for the second player' + strategy_help)
+	parser.add_argument('name2',
+                    default='player2', type=str,
+                    nargs='?', help='the name for the second player')
+	#parser.add_argument('--feature', dest='feature', default=False, action='store_true')				
+	parser.add_argument('show_card_counts',
+                    default='False', 
+					type=str,
+					# action=bool(),
+					# action=bool,
+					# type=bool,
+					# action=distutils.util.strtobool,
+					# action=lambda x:bool(distutils.util.strtobool(x)),
+					# action=argparse.BooleanOptionalAction, 
+					#action='store_true',
+                    nargs='?', 
+					help='show frequency counts of cards in winning hands')
+	args = parser.parse_args()
+
+	if not args.show_card_counts == 'False':
+		show_card_counts = distutils.util.strtobool(args.show_card_counts)
+	else:
+		show_card_counts = False
+
+	play(num_hands_to_play=args.num_hands_to_play, 
+			strategy1=args.strategy1, 
+			strategy2=args.strategy2, 
+			name1=args.name1, 
+			name2=args.name2,
+			show_card_counts=show_card_counts)
 
