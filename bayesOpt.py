@@ -79,6 +79,7 @@ class BayesianOptimizer():
                                                initial_design_numdata=6,
                                                acquisition_type="EI",
                                                exact_feval=True,
+                                               # verbosity=True,
                                                maximize=True)
 
         bayes_optimizer.run_optimization(max_iter=20)
