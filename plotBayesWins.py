@@ -5,6 +5,7 @@ import math
 import plotBayes
 
 statsList = []
+maList = []
 
 def extract_prop(key, line, stats):
     if key in line:
@@ -38,9 +39,10 @@ def print_score_stats(score_stats):
     for key in score_stats.keys():
         print(f"{key}={score_stats[key]}")
 
-def save_training_session(stats, hands):
+def save_training_session(stats, hands, ma_array):
     stats['hands'] = hands
     statsList.append(stats)
+    maList.append(ma_array)
     plotBayes.count_stats+=1
 
 def print_statsList():
@@ -96,20 +98,45 @@ def plot_wins_trend():
         plot_seaborn(array_cumu_wins, array_ordinals, st['name_scenario'], True)
 
 ## ##############################
+def plot_maList():
+    array_score = []
+    array_param = []
+    for ma in maList:
+        for ma_val in ma:
+            array_param.append(len(array_score))
+            array_score.append(ma_val)
+        if len(array_param)>0:
+            plot_seaborn(array_score, array_param, "Moving Average", True)
+            array_param = []
+            array_score = []
+
+## ##############################
 def parseLogs(filepath):
     stats = {}
     hands = []
     wins = 0
+    ma_window = []
+    ma_size = 100
+    for i in range(ma_size):
+        ma_window.append(0)
+    ma_count = 0
+    ma_name = "Tempo"
+    ma_array = []
 
     with open(filepath, 'r') as f:
         lines=f.readlines()
     for line in lines:
         if "INPUT" in line and len(stats)>0:
-            save_training_session(stats, hands)
+            save_training_session(stats, hands, ma_array)
+            for i in range(ma_size):
+                ma_window.append(0)    
+            ma_array = []
+            ma_count = 0
             stats = {}
             hands = []
             wins = 0
         if "Winner: " in line:
+            ## cumulative wins
             toks = line.split()
             hand_index = toks[1]
             winner = toks[3]
@@ -118,6 +145,16 @@ def parseLogs(filepath):
             hands.append({'hand_index': hand_index, 
                             'winner': winner, 
                             'wins': wins})
+            ## moving average wins
+            ma_count += 1
+            name=line.split()[3]
+            if ma_name in name:
+                w = 1
+            else:   
+                w = 0
+            ma_window[ma_count%ma_size] = w
+            if ma_count>ma_size:
+                ma_array.append(float(sum(ma_window))/float(len(ma_window)))                            
         if "winMap: " in line:
             cpos = line.find(",")            
             stats['wins1'] = int(line[cpos-3:cpos])
@@ -139,7 +176,7 @@ def parseLogs(filepath):
             stats["l2"] = int(layers[1])
             stats["l3"] = int(layers[2])
 
-    save_training_session(stats, hands)
+    save_training_session(stats, hands, ma_array)
 
 ## ##############################
 def create_score_stats():
@@ -213,6 +250,8 @@ if __name__ == '__main__':
     print("* * * * * * * * * * * * * * * * * * * ")
 
     ## plot_statsList()
-    plot_wins_trend()
+    ## plot_wins_trend()
+    plot_maList()
+
             
 
