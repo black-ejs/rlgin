@@ -1,0 +1,48 @@
+(rlgin) edward@sketchAir rlgin % for uu in 1 8 7 8 7 8 7 8 7 8 7 8 7 8 7 8 7 8 7 8 7 8 7; do python playGin.py 500 br90 Schuyler br90 Frankie | tail -2; done
+won 52 hands out of 500 = 10.40% in 227120.40ms (454.24ms/hand) min/max duration(ms): 11.44/964.80
+winners: {'Schuyler': 23, 'Frankie': 29, 'nobody': 448}
+won 57 hands out of 500 = 11.40% in 224630.56ms (449.26ms/hand) min/max duration(ms): 9.11/824.90
+winners: {'Schuyler': 27, 'Frankie': 30, 'nobody': 443}
+won 52 hands out of 500 = 10.40% in 221925.99ms (443.85ms/hand) min/max duration(ms): 7.04/777.32
+winners: {'Schuyler': 24, 'Frankie': 28, 'nobody': 448}
+won 59 hands out of 500 = 11.80% in 224911.43ms (449.82ms/hand) min/max duration(ms): 5.23/889.71
+winners: {'Schuyler': 27, 'Frankie': 32, 'nobody': 441}
+won 50 hands out of 500 = 10.00% in 227925.45ms (455.85ms/hand) min/max duration(ms): 9.87/991.14
+winners: {'Schuyler': 27, 'Frankie': 23, 'nobody': 450}
+won 51 hands out of 500 = 10.20% in 217948.84ms (435.90ms/hand) min/max duration(ms): 19.61/865.91
+winners: {'Schuyler': 26, 'Frankie': 25, 'nobody': 449}
+won 46 hands out of 500 = 9.20% in 211898.26ms (423.80ms/hand) min/max duration(ms): 7.67/978.33
+winners: {'Schuyler': 22, 'Frankie': 24, 'nobody': 454}
+won 52 hands out of 500 = 10.40% in 208117.72ms (416.24ms/hand) min/max duration(ms): 1.32/591.69
+winners: {'Schuyler': 27, 'Frankie': 25, 'nobody': 448}
+won 55 hands out of 500 = 11.00% in 208649.21ms (417.30ms/hand) min/max duration(ms): 11.45/828.57
+winners: {'Schuyler': 36, 'Frankie': 19, 'nobody': 445}
+won 37 hands out of 500 = 7.40% in 209260.76ms (418.52ms/hand) min/max duration(ms): 5.04/529.45
+winners: {'Schuyler': 22, 'Frankie': 15, 'nobody': 463}
+won 47 hands out of 500 = 9.40% in 208252.52ms (416.51ms/hand) min/max duration(ms): 7.08/905.35
+winners: {'Schuyler': 27, 'Frankie': 20, 'nobody': 453}
+won 34 hands out of 500 = 6.80% in 212159.54ms (424.32ms/hand) min/max duration(ms): 10.63/552.80
+winners: {'Schuyler': 18, 'Frankie': 16, 'nobody': 466}
+won 44 hands out of 500 = 8.80% in 222461.83ms (444.92ms/hand) min/max duration(ms): 17.74/1084.81
+winners: {'Schuyler': 16, 'Frankie': 28, 'nobody': 456}
+won 41 hands out of 500 = 8.20% in 233340.14ms (466.68ms/hand) min/max duration(ms): 0.81/1041.41
+winners: {'Schuyler': 25, 'Frankie': 16, 'nobody': 459}
+won 50 hands out of 500 = 10.00% in 228267.49ms (456.53ms/hand) min/max duration(ms): 3.47/1015.59
+winners: {'Schuyler': 19, 'Frankie': 31, 'nobody': 450}
+won 40 hands out of 500 = 8.00% in 233442.92ms (466.89ms/hand) min/max duration(ms): 6.83/1211.37
+winners: {'Schuyler': 17, 'Frankie': 23, 'nobody': 460}
+won 42 hands out of 500 = 8.40% in 233900.60ms (467.80ms/hand) min/max duration(ms): 1.48/1027.80
+winners: {'Schuyler': 13, 'Frankie': 29, 'nobody': 458}
+won 53 hands out of 500 = 10.60% in 245522.82ms (491.05ms/hand) min/max duration(ms): 4.35/957.43
+winners: {'Schuyler': 33, 'Frankie': 20, 'nobody': 447}
+won 41 hands out of 500 = 8.20% in 238956.77ms (477.91ms/hand) min/max duration(ms): 10.18/962.59
+winners: {'Schuyler': 14, 'Frankie': 27, 'nobody': 459}
+won 47 hands out of 500 = 9.40% in 216824.12ms (433.65ms/hand) min/max duration(ms): 8.98/1135.92
+winners: {'Schuyler': 24, 'Frankie': 23, 'nobody': 453}
+won 48 hands out of 500 = 9.60% in 214054.48ms (428.11ms/hand) min/max duration(ms): 11.77/988.53
+winners: {'Schuyler': 25, 'Frankie': 23, 'nobody': 452}
+won 53 hands out of 500 = 10.60% in 208530.32ms (417.06ms/hand) min/max duration(ms): 5.80/490.38
+winners: {'Schuyler': 25, 'Frankie': 28, 'nobody': 447}
+won 48 hands out of 500 = 9.60% in 205876.51ms (411.75ms/hand) min/max duration(ms): 2.48/524.38
+winners: {'Schuyler': 26, 'Frankie': 22, 'nobody': 452}
+(rlgin) edward@sketchAir rlgin % 

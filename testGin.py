@@ -234,7 +234,7 @@ def winnersString():
 if __name__ == '__main__':	
 	testInts()
 	testWins()
-	#testWins2()
+	testWins2()
 	testWins3()
 	testWins4()
 
