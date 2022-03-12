@@ -75,10 +75,10 @@ class Hand:
 
 	def __str__(self):
 		rez=""
-		for i in range(len(self.card)):
-			rez += self.card[i].__str__()
-			if i<(len(self.card)-1):
-				rez+=" "
+		for c in self.card:
+			rez += c.__str__()
+			rez+=" "
+		res = res[:-1]
 		return rez
 
 	def __eq__(self, other):
@@ -167,6 +167,7 @@ class Hand:
 						else:
 							# one will be destroyed
 							m.clear()
+
 		return runs, matches, cards
 
 	def prettyStr(self):
@@ -187,7 +188,12 @@ class Hand:
 		result = ""
 		for c in prettyHand:
 			result = result + c.__str__() + " "
-		return result[:-1]
+		result = result[:-1]
+
+		if not len(prettyHand) == HAND_SIZE:
+			print(f"error: analyzed hand contains duoplicates: {result}" )
+
+		return result
 
 ## //////////////////////////////////////////////////
 class Deck:
@@ -427,12 +433,14 @@ class GinHand:
 			drawCard = self.deck.next()
 		else:
 			drawCard = self.discard
+			self.discard = None
 		
 		self.currentlyPlaying.playerHand.card.append(drawCard)
 		self.lastTurn().draw = Draw(drawSource, drawCard)
 	
 	def doDiscard(self,discardCard):
-		self.out_of_play.append(self.discard)
+		if not self.discard == None:
+			self.out_of_play.append(self.discard)
 		self.discard = discardCard
 		self.currentlyPlaying.playerHand.card.remove(discardCard)
 		self.lastTurn().discard = discardCard	
