@@ -3,13 +3,9 @@ import sys
 import time
 import argparse
 import numpy as np
-import seaborn as sns
-import matplotlib.pyplot as plt
 import statistics
 import torch.optim as optim
 import torch 
-from GPyOpt.methods import BayesianOptimization
-#from bayesOpt import *
 import distutils.util
 DEVICE = 'cpu' # 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -41,29 +37,6 @@ def display(counter_hands, hand_duration, ginhand):
         print(f'Game {counter_hands}    Winner: {winner.player}    Hand: {winner.playerHand.prettyStr()}    Turns: {len(ginhand.turns)}    Time: {hand_duration*1000:3.2f}')
     else:
         print(f'Game {counter_hands}    Winner: {NO_WIN_NAME}    Turns: {len(ginhand.turns)}    Time: {hand_duration*1000:3.2f}')
-
-## #############################################
-def plot_seaborn(array_counter, array_score, train):
-    sns.set(color_codes=True, font_scale=1.5)
-    sns.set_style("white")
-    plt.figure(figsize=(13,8))
-    fit_reg = False if train== False else True        
-    ax = sns.regplot(
-        np.array([array_counter])[0],
-        np.array([array_score])[0],
-        #color="#36688D",
-        x_jitter=.1,
-        scatter_kws={"color": "#36688D"},
-        label='Data',
-        fit_reg = fit_reg,
-        line_kws={"color": "#F49F05"}
-    )
-    # Plot the average line
-    y_mean = [np.mean(array_score)]*len(array_counter)
-    ax.plot(array_counter,y_mean, label='Mean', linestyle='--')
-    ax.legend(loc='upper right')
-    ax.set(xlabel='# games', ylabel='score')
-    plt.show()
 
 ## #############################################
 def get_mean_stdev(array):
@@ -153,9 +126,6 @@ def run(params):
         if params['display']:
             display(counter_hands, hand_duration, ginhand)
 
-        # score_plot.append(game.score)
-        # counter_plot.append(counter_games)
-
     total_duration = time.time() - startTime
     
     if params['train']:
@@ -164,8 +134,6 @@ def run(params):
 
     mean_durations, stdev_durations = get_mean_stdev(durations)
     mean_turns, stdev_turns = get_mean_stdev(turns_in_hand)
-    ## if params['plot_score']:
-    ##    plot_seaborn(counter_plot, score_plot, params['train'])
 
     stats.put("count_hands", counter_hands)
     stats.put("total duration", total_duration)
@@ -180,24 +148,18 @@ def run(params):
 ## #############################################
 if __name__ == '__main__':
 
-    # Set options to activate or deactivate the game view, and its speed
+    # Set options 
     parser = argparse.ArgumentParser()
     params = ginDQNParameters.define_parameters()
     parser.add_argument("--display", nargs='?', type=distutils.util.strtobool, default=True)
-    parser.add_argument("--speed", nargs='?', type=int, default=50)
-    parser.add_argument("--bayesianopt", nargs='?', type=distutils.util.strtobool, default=False)
     args = parser.parse_args()
     print("Args", args)
     params['display'] = args.display
-    params['speed'] = args.speed
 
     start_time = time.time()
     print(f"****** learningGin execution at {datetime.datetime.now()} ")
     print(f"params: {params}")
 
-    #if args.bayesianopt:
-    #    bayesOpt = BayesianOptimizer(params)
-    #    bayesOpt.optimize_RL()
     if params['train']:
         print("Training...")
         # params['load_weights'] = False   # depends on params, might be retraining
