@@ -168,8 +168,7 @@ class BrandiacGinStrategy(BrainiacGinStrategy):
 		return BrainiacGinStrategy.scoreCandidate(self, myHand, candidate, ginhand)
 
 ## ##############################
-## ##############################
-## command-line and reporting support
+## with reporting 
 ## ##############################
 def play(num_hands_to_play: int =500, 
 			strategy1: str ="b", 
@@ -228,9 +227,19 @@ def play(num_hands_to_play: int =500,
 		  		f" min/max duration(ms): {min_duration*1000:3.2f}/{max_duration*1000:3.2f}")
 	print(f"winners: {winMap}")
 	if (show_card_counts):
-		for i in range(len(card_counts)):
-			print(f'{gin.Card.fromInt(i)}: {card_counts[i]}')
-
+		#for i in range(len(card_counts)):
+		#	print(f'{gin.Card.fromInt(i)}: {card_counts[i]}')
+		draw_sources = {}	
+		draw_sources['deck'] = 0
+		draw_sources['pile'] = 0
+		for t in ginhand.turns:
+			if t.draw.source == gin.Draw.DECK:
+				draw_sources['deck'] += 1
+			else:
+				draw_sources['pile'] += 1
+		print(f"draw_sources: {draw_sources}")
+## ############################################################
+## command-line interface
 ## ############################################################
 _strategies = { 'B': BrainiacGinStrategy(), 
 				'R': RandomGinStrategy(), 
