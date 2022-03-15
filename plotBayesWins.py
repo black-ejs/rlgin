@@ -1,11 +1,9 @@
-import seaborn as sns
+import regplot
 import matplotlib.pyplot as plt
 import numpy as np
 import math
-import plotBayes
 
 statsList = []
-maList = []
 
 def extract_prop(key, line, stats):
     if key in line:
@@ -41,36 +39,62 @@ def print_score_stats(score_stats):
 
 def save_training_session(stats, hands, ma_array):
     stats['hands'] = hands
+    stats['ma_array'] = ma_array
     statsList.append(stats)
-    maList.append(ma_array)
-    plotBayes.count_stats+=1
 
 def print_statsList():
     for stats in statsList:
         print_stats(stats)
 
 ## #############################################
-def plot_seaborn(array_score, array_param, param_name, train):
-    sns.set(color_codes=True, font_scale=1.5)
-    sns.set_style("darkgrid")
+def do_poly_regression(array_y, array_x, title, order:(int)=1):
+    fit_results = regplot.polyfit(
+        x=np.array([array_x])[0],
+        y=np.array([array_y])[0],
+        dropna=True,
+        order=order
+    )
+    return report_regression(fit_results, array_x, title)
+
+## #############################################
+def report_regression(fit_results, array_x, title):
+    #print(f"{title}: pvalues {fit_results.pvalues}")
+    #print(f"{title}: tvalues {fit_results.tvalues}")
+    vals = fit_results.fittedvalues
+    deltay = vals[len(vals)-1] - vals[0]
+    deltax = array_x[len(array_x)-1] - array_x[0]
+    slope = deltay/deltax;
+    print(f"{title}: slope of fittedvalues {slope:1.6f}")
+    return slope
+
+## #############################################
+def plot_regression(array_y, array_x, title, order:(int)=1):
+    # sns.set(color_codes=True, font_scale=1.5)
+    # sns.set_style("darkgrid")
     plt.figure(figsize=(13,7))
-    fit_reg = False if train== False else True        
-    ax = sns.regplot(
-        x=np.array([array_param])[0],
-        y=np.array([array_score])[0],
+    ax = plt.gca()      
+    fit_results = regplot.regplot(
+        x=np.array([array_x])[0],
+        y=np.array([array_y])[0],
         color="#36688D",
         #x_jitter=.1,
         scatter_kws={"color": "#36688D"},
         label='Data',
-        fit_reg = fit_reg,
-        line_kws={"color": "#F49F05"}
+        order=order,
+        fit_reg=True,
+        line_kws={"color": "#F49F05"},
+        ax=ax
     )
     # Plot the average line
-    y_mean = [np.mean(array_score)]*len(array_param)
-    ax.plot(array_param,y_mean, label='Mean', linestyle='--')
+    y_mean = [np.mean(array_y)]*len(array_x)
+    ax.plot(array_x,y_mean, label='Mean', linestyle='--')
     ax.legend(loc='lower right')
-    ax.set(xlabel=param_name, ylabel='score')
+
+    slope = report_regression(fit_results, array_x, title)
+    ylabel = "wins (slope={:1.7f})".format(slope)
+    ax.set(xlabel=title, ylabel=ylabel)
     plt.show()
+    return slope
 
 ## ##############################
 def plot_statsList():
@@ -83,7 +107,7 @@ def plot_statsList():
                 array_score.append(st['wins2'])
         
         if len(array_param)>0:
-            plot_seaborn(array_score, array_param, param_name, True)
+            plot_regression(array_score, array_param, param_name)
 
 ## ##############################
 def plot_wins_trend():
@@ -95,20 +119,40 @@ def plot_wins_trend():
             array_ordinals.append(int(hand['hand_index']))
             array_cumu_wins.append(int(hand['wins']))
 
-        plot_seaborn(array_cumu_wins, array_ordinals, st['name_scenario'], True)
+        plot_regression(array_cumu_wins, array_ordinals, st['name_scenario'])
 
 ## ##############################
-def plot_maList():
+def rank_moving_average():
+    return _rank_or_plot_ma('rank')
+    
+def plot_moving_average():
+    return _rank_or_plot_ma('plot')
+
+def _rank_or_plot_ma(which):
     array_score = []
     array_param = []
-    for ma in maList:
+    max_slope = -10000000
+    min_slope = 10000000
+    for st in statsList:
+        ma = st['ma_array']
         for ma_val in ma:
             array_param.append(len(array_score))
             array_score.append(ma_val)
         if len(array_param)>0:
-            plot_seaborn(array_score, array_param, "Moving Average", True)
+            if which == 'plot':
+                slope = plot_regression(array_score, array_param, st['name_scenario'])
+            else:
+                slope = do_poly_regression(array_score, array_param, st['name_scenario'])
             array_param = []
             array_score = []
+            if slope > max_slope:
+                max_slope = slope
+                max_slope_st = st
+            if slope < min_slope:
+                min_slope = slope
+                min_slope_st = st
+            st['moving_avarage_slope'] = slope
+        return max_slope
 
 ## ##############################
 def parseLogs(filepath):
@@ -154,7 +198,8 @@ def parseLogs(filepath):
                 w = 0
             ma_window[ma_count%ma_size] = w
             if ma_count>ma_size:
-                ma_array.append(float(sum(ma_window))/float(len(ma_window)))                            
+                # ma_array.append(float(sum(ma_window))/float(len(ma_window)))                            
+                ma_array.append(sum(ma_window))                            
         if "winMap: " in line:
             cpos = line.find(",")            
             stats['wins1'] = int(line[cpos-3:cpos])
@@ -238,7 +283,7 @@ import argparse
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('path_to_logfile',
-                    default='logs/megalog', 
+                    default='logs/mega2', 
                     nargs='?', help='path to the logfile to be plotted')
     args = parser.parse_args()
 
@@ -249,9 +294,10 @@ if __name__ == '__main__':
     print_score_stats(create_score_stats())
     print("* * * * * * * * * * * * * * * * * * * ")
 
-    ## plot_statsList()
-    ## plot_wins_trend()
-    plot_maList()
+    # plot_statsList()
+    # plot_wins_trend()
+    rank_moving_average()
+    plot_moving_average()
 
             
 
