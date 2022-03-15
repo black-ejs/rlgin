@@ -147,12 +147,10 @@ def _rank_or_plot_ma(which):
             array_score = []
             if slope > max_slope:
                 max_slope = slope
-                max_slope_st = st
             if slope < min_slope:
                 min_slope = slope
-                min_slope_st = st
             st['moving_avarage_slope'] = slope
-        return max_slope
+    return max_slope
 
 ## ##############################
 def parseLogs(filepath):
