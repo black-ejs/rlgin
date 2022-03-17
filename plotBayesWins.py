@@ -1,7 +1,12 @@
+import sys
 import regplot
+import matplotlib.axes as axes
 import matplotlib.pyplot as plt
 import numpy as np
 import math
+import copy
+
+SPLINES = 3
 
 statsList = []
 
@@ -47,33 +52,94 @@ def print_statsList():
         print_stats(stats)
 
 ## #############################################
-def do_poly_regression(array_y, array_x, title, order:(int)=1):
-    fit_results = regplot.polyfit(
-        x=np.array([array_x])[0],
-        y=np.array([array_y])[0],
-        dropna=True,
-        order=order
-    )
-    return report_regression(fit_results, array_x, title)
+def do_poly_regression(array_y, array_x, splines:(int)=1, order:(int)=1):
+    return do_splines("rank",array_y, array_x, splines=splines, order=order)
 
 ## #############################################
-def report_regression(fit_results, array_x, title):
+def minmax(array_x):
+    max_x = sys.float_info.min
+    min_x = sys.float_info.max
+    for x in array_x:
+        if x > max_x:
+            max_x = x
+        if x < min_x:
+            min_x = x   
+    return max_x, min_x         
+
+## #############################################
+def calc_slope(fit_results, array_x):
     #print(f"{title}: pvalues {fit_results.pvalues}")
     #print(f"{title}: tvalues {fit_results.tvalues}")
     vals = fit_results.fittedvalues
     deltay = vals[len(vals)-1] - vals[0]
-    deltax = array_x[len(array_x)-1] - array_x[0]
-    slope = deltay/deltax;
-    print(f"{title}: slope of fittedvalues {slope:1.6f}")
+    max_x, min_x = minmax(array_x)
+    deltax = max_x-min_x
+    if deltax > 0:
+        slope = deltay/deltax
+    else:
+        slope = math.nan
+    # print(f"{title}: slope of fittedvalues {slope:1.6f}")
     return slope
 
 ## #############################################
-def plot_regression(array_y, array_x, title, order:(int)=1):
+def do_splines(which, array_y, array_x, splines:(int)=1, order:(int)=1, ax:(axes.Axes)=None):
+
+    my_array_x = copy.copy(array_x)
+    my_array_x.sort()
+    spline_length = int(len(my_array_x)/splines)
+    results = []
+    slopes = []
+
+    for spline in range(splines):
+        spline_start = spline*spline_length
+        if spline == splines-1:
+            spline_end = len(my_array_x)
+        else:
+            spline_end = spline_start+spline_length
+        spline_array_x = my_array_x[spline_start:spline_end]
+        spline_array_y = array_y[spline_start:spline_end]
+        if which == 'rank':
+            fit_results = (
+                regplot.polyfit(
+                    x=np.array([spline_array_x])[0],
+                    y=np.array([spline_array_y])[0],
+                    dropna=True,
+                    order=order
+                ))
+        else:                
+            fit_results = (
+                regplot.regplot(
+                    x=np.array([spline_array_x])[0],
+                    y=np.array([spline_array_y])[0],
+                    color="#36688D",
+                    #x_jitter=.1,
+                    scatter=False,
+                    label='Data',
+                    order=order,
+                    fit_reg=True,
+                    line_kws={"color": "#F49F05"},
+                    ax=ax
+                ))
+        results.append(fit_results)
+        slopes.append(calc_slope(fit_results, spline_array_x))
+
+    return slopes
+
+def plot_regression(array_y, array_x, title, splines:(int)=1, order:(int)=1, ax:(axes.Axes)=None):
     # sns.set(color_codes=True, font_scale=1.5)
     # sns.set_style("darkgrid")
-    plt.figure(figsize=(13,7))
-    ax = plt.gca()      
-    fit_results = regplot.regplot(
+    
+    ##doShow = False
+    ##if ax == None:
+    ##    figure = plt.figure(figsize=(13,7))
+    ##    ax = figure.add_axes([0,0,100,100])    
+    ##    doShow = True
+
+    figure = plt.figure(figsize=(13,7))
+    ax = plt.gca()
+
+    # scatter
+    regplot.regplot(
         x=np.array([array_x])[0],
         y=np.array([array_y])[0],
         color="#36688D",
@@ -81,33 +147,50 @@ def plot_regression(array_y, array_x, title, order:(int)=1):
         scatter_kws={"color": "#36688D"},
         label='Data',
         order=order,
-        fit_reg=True,
+        fit_reg=False,
         line_kws={"color": "#F49F05"},
         ax=ax
     )
+
+    slopes = do_splines('plot', array_y, array_x, splines=splines, order=order, ax=ax)
+    slope = slopes[len(slopes)-1]
+
     # Plot the average line
     y_mean = [np.mean(array_y)]*len(array_x)
     ax.plot(array_x,y_mean, label='Mean', linestyle='--')
     ax.legend(loc='lower right')
 
-    slope = report_regression(fit_results, array_x, title)
-    ylabel = "wins (slope={:1.7f})".format(slope)
-    ax.set(xlabel=title, ylabel=ylabel)
+    xlabel = "{} (last spline slope={:1.7f})".format(title,slope)
+    ylabel = "wins last 100 hands"
+    ax.set(xlabel=xlabel, ylabel=ylabel)
+
+    #if doShow:
     plt.show()
-    return slope
+
+    return slopes
 
 ## ##############################
-def plot_statsList():
-    for param_name in ["l1","l2","l3","learning_rate", "epsilon_decay_linear"]:
+def plot_bayesParams():
+    #figure = plt.figure(figsize=(13,7))
+    #big_ax = plt.gca()  
+    param_names = ["l1","l2","l3","learning_rate", "epsilon_decay_linear"]    
+    for i in range(len(param_names)):
+        param_name = param_names[i]
         array_score = []
         array_param = []
         for st in statsList:
-            if param_name in st and 'wins2' in st:
+            if param_name in st and 'moving_average_slopes' in st:
+                slopes = st['moving_average_slopes']
                 array_param.append(st[param_name])
-                array_score.append(st['wins2'])
+                ## array_score.append(st['wins2'])
+                array_score.append(slopes[len(slopes)-1])
         
         if len(array_param)>0:
-            plot_regression(array_score, array_param, param_name)
+            #subax = figure.add_subplot(3,2,i+1)
+            #plot_regression(array_score, array_param, param_name, splines=SPLINES, ax=subax)
+            plot_regression(array_score, array_param, param_name, splines=SPLINES)
+
+    #plt.show()
 
 ## ##############################
 def plot_wins_trend():
@@ -119,7 +202,8 @@ def plot_wins_trend():
             array_ordinals.append(int(hand['hand_index']))
             array_cumu_wins.append(int(hand['wins']))
 
-        plot_regression(array_cumu_wins, array_ordinals, st['name_scenario'])
+        plot_regression(array_cumu_wins, array_ordinals, st['name_scenario'], 
+                        splines=SPLINES)
 
 ## ##############################
 def rank_moving_average():
@@ -131,27 +215,26 @@ def plot_moving_average():
 def _rank_or_plot_ma(which):
     array_score = []
     array_param = []
-    max_slope = -10000000
-    min_slope = 10000000
     for st in statsList:
         ma = st['ma_array']
         for ma_val in ma:
             array_param.append(len(array_score))
             array_score.append(ma_val)
+            
         if len(array_param)>0:
             if which == 'plot':
-                slope = plot_regression(array_score, array_param, st['name_scenario'])
+                slopes = plot_regression(array_score, array_param, 
+                                st['name_scenario'], splines=SPLINES)
             else:
-                slope = do_poly_regression(array_score, array_param, st['name_scenario'])
+                slopes = do_poly_regression(array_score, array_param, splines=SPLINES)
             array_param = []
             array_score = []
-            if slope > max_slope:
-                max_slope = slope
-            if slope < min_slope:
-                min_slope = slope
-            st['moving_avarage_slope'] = slope
-    return max_slope
-
+            st['moving_average_slopes'] = slopes
+            st['moving_average_last_spline_slope'] = slopes[len(slopes)-1]
+ 
+## ##############################
+## ##############################
+## ##############################
 ## ##############################
 def parseLogs(filepath):
     stats = {}
@@ -288,14 +371,22 @@ if __name__ == '__main__':
     parseLogs(args.path_to_logfile)
     #print_statsList()
 
+    rank_moving_average()
+
     print("* * * * * * * * * * * * * * * * * * * ")
     print_score_stats(create_score_stats())
     print("* * * * * * * * * * * * * * * * * * * ")
 
-    # plot_statsList()
-    # plot_wins_trend()
-    rank_moving_average()
+    plot_bayesParams()
+
+    plot_wins_trend()
+    
+    statsList.sort(key=lambda x: x['moving_average_last_spline_slope'])
+    for st in statsList:
+        print(f"{st['name_scenario']}: moving_average_last_spline_slope={st['moving_average_last_spline_slope']:1.7f}")
+
     plot_moving_average()
+
 
             
 
