@@ -3,7 +3,7 @@ import copy
 
 NUM_SUITS=4
 NUM_RANKS=13
-HAND_SIZE=7
+HAND_SIZE=4
 
 class Card:
 	rankNames = ["2","3","4","5","6","7","8","9","10","J","Q","K","A"]
@@ -112,8 +112,7 @@ class Hand:
 
 	def analyze(self):
 		"""
-		prints as a 'sorted' hand, 
-		with runs and matches together
+		separate into runs, matches, and cards in neither
 		"""
 		cards = copy.copy(self.card)
 
