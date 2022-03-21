@@ -1,11 +1,13 @@
 import sys
+from collections.abc import Iterable
+from typing import Union
+import math
+import copy
 import regplot
 import matplotlib.axes as axes
 import matplotlib.pyplot as plt
 import matplotlib.widgets as widgets
 import numpy as np
-import math
-import copy
 
 MA_SIZE = 50
 FIGURE_WIDTH = 11
@@ -59,7 +61,9 @@ def calc_slope(fit_results, array_x):
     return slope
 
 ## #############################################
-def do_splines(which, array_y, array_x, splines:(int)=1, order:(int)=1, ax:(axes.Axes)=None):
+def do_splines(which, array_y, array_x, 
+                splines:(int)=1, order:(int)=1, 
+                ax:(axes.Axes)=None, linecolor="#F49F05"):
 
     my_array_x = copy.copy(array_x)
     my_array_x.sort()
@@ -89,12 +93,11 @@ def do_splines(which, array_y, array_x, splines:(int)=1, order:(int)=1, ax:(axes
                     x=np.array([spline_array_x])[0],
                     y=np.array([spline_array_y])[0],
                     color="#36688D",
-                    #x_jitter=.1,
                     scatter=False,
-                    label='Data',
+                    # label='Data',
                     order=order,
                     fit_reg=True,
-                    line_kws={"color": "#F49F05"},
+                    line_kws={"color": linecolor},
                     ax=ax
                 ))
         results.append(fit_results)
@@ -105,29 +108,32 @@ def do_splines(which, array_y, array_x, splines:(int)=1, order:(int)=1, ax:(axes
 xbnext = [] 
 xbprev = []
 ## #############################################
-def install_navbar():
-    figure = plt.figure(NAV_LABEL, figsize=(2,0.2))
-    ax1 = figure.add_subplot(1,2,1)
-    bprev = widgets.Button(ax1, 'prev', color='yellow', hovercolor='red')
-    bprev.on_clicked(onclickl)
-    ax2 = figure.add_subplot(1,2,2)
-    bnext = widgets.Button(ax2, 'next', color='green', hovercolor='red')
-    bnext.on_clicked(onclickr)
 
+def install_navigation(fig_label):
+    rrr = plt.get_figlabels()
+    if not fig_label in plt.get_figlabels():
+        print(f'wtf: fig_label={fig_label}')
+    fig = plt.figure(fig_label)
+    fig.subplots_adjust(bottom=0.2)
+    axprev = plt.axes([0.7, 0.05, 0.1, 0.075])
+    axnext = plt.axes([0.81, 0.05, 0.1, 0.075])
+    bnext = widgets.Button(axnext, 'Next')
+    bnext.on_clicked(onclickn)
+    bprev = widgets.Button(axprev, 'Previous')
+    bprev.on_clicked(onclickp)
     xbprev.append(bprev)
     xbnext.append(bnext)
-    cid = figure.canvas.mpl_connect('button_press_event', xxonclick)
 
 ### #############################################
 def do_poly_regression(array_y, array_x, splines:(int)=1, order:(int)=1):
     return do_splines("rank",array_y, array_x, splines=splines, order=order)
 
 # #############################################
-def plot_regression(array_y, array_x, title, splines:(int)=1, order:(int)=1, ax:(axes.Axes)=None, figure_id:(str)=None):
+def plot_regression(array_y, array_x, title, splines:(Union[int,Iterable])=1, order:(int)=1, ax:(axes.Axes)=None, figure_id:(str)=None):
     # sns.set(color_codes=True, font_scale=1.5)
     # sns.set_style("darkgrid")
     
-    ##doShow = False
+    ##doShow = Fals
     ##if ax == None:
     ##    figure = plt.figure(figsize=(13,7))
     ##    ax = figure.add_axes([0,0,100,100])    
@@ -145,8 +151,7 @@ def plot_regression(array_y, array_x, title, splines:(int)=1, order:(int)=1, ax:
         cid = figure.canvas.mpl_connect('button_press_event', onclick)
     """
     figure = plt.figure(figure_id, figsize=(FIGURE_WIDTH,FIGURE_HEIGHT))
-
-    ax = plt.gca()
+    ax = figure.gca()
 
     # scatter
     regplot.regplot(
@@ -162,12 +167,21 @@ def plot_regression(array_y, array_x, title, splines:(int)=1, order:(int)=1, ax:
         ax=ax
     )
 
-    slopes = do_splines('plot', array_y, array_x, splines=splines, order=order, ax=ax)
+    if isinstance(splines,Iterable):
+        linecolors = ["orange","blue","green","violet","yellow"]
+        color_ndx=0
+        for spl in splines:
+            linecolor = linecolors[color_ndx]
+            slopes = do_splines('plot', array_y, array_x, splines=spl, order=order, ax=ax,
+                                linecolor=linecolor)
+            color_ndx = (color_ndx + 1)%len(linecolors)
+    else:
+        slopes = do_splines('plot', array_y, array_x, splines=splines, order=order, ax=ax)
     slope = slopes[len(slopes)-1]
 
     # Plot the average line
     y_mean = [np.mean(array_y)]*len(array_x)
-    ax.plot(array_x,y_mean, label='Mean', linestyle='--')
+    ax.plot(array_x,y_mean, label='Mean', linestyle='--', color="#0F0F00")
     ## ax.legend(loc='lower right')
 
     xlabel = "{} (last spline slope={:1.7f})".format(title,slope)
@@ -230,66 +244,50 @@ def plot_moving_average(st):
     return _rank_or_plot_ma('plot', st) 
 
 def _rank_or_plot_ma(which, st):
-    array_score = []
-    array_param = []
+    array_ma = []
+    array_count = []
     ma = st['ma_array']
     for ma_val in ma:
-        array_param.append(len(array_score))
-        array_score.append(ma_val)
+        array_ma.append(ma_val)
+        array_count.append(len(array_ma))
         
-    if len(array_param)>0:
+    if len(array_count)>0:
         if which == 'plot':
-            slopes = plot_regression(array_score, array_param, 
-                            st['name_scenario'], splines=3)
+            slopes = plot_regression(array_ma, array_count, 
+                            st['name_scenario'], splines=[1,3])
         else:
-            slopes = do_poly_regression(array_score, array_param, splines=3)
-        array_param = []
-        array_score = []
+            slopes = do_poly_regression(array_ma, array_count, splines=3)
+        array_count = []
+        array_ma = []
         st['moving_average_slopes'] = slopes
         st['moving_average_last_spline_slope'] = slopes[len(slopes)-1]
 
 ## ##############################
 ## ##############################
-def onclickl(event):
-    onclick(event, 'l')
-def onclickr(event):
-    onclick(event, 'r')
+def onclickp(event):
+    onclick(event, 'p')
+def onclickn(event):
+    onclick(event, 'n')
 def onclick(event,direction):
+    # print(f"onclick: direction={direction} event={vars(event)}")
     figure_id = get_figure_id(event)
-    print(f'click: figure_id={figure_id}')
+    #print(f'click: figure_id={figure_id}')
     if figure_id == None:
         return
 
-    """
-    for i in range(len(rl_param_names)):
-        param_name = rl_param_names[i]
-        print(f"rl_param_names[{i}]={param_name}  figure_id={figure_id}")
-        if param_name == figure_id:
-            plt.close(figure_id)
-            if direction == 'r':
-                rl_param_name = rl_param_names[(i+1)%len(rl_param_names)]
-            else:
-                rl_param_name = rl_param_names[(i-1)%len(rl_param_names)]
-            plot_rl_param(rl_param_name)
-            global lastOpened
-            print(f"lastOpened={lastOpened} (pre)")
-            lastOpened = rl_param_name
-            print(f"lastOpened={lastOpened} (post)")
-
-            plt.show()
-    """
-    
     for i in range(len(figures)):
         fig_label = figures[i]
-        print(f"figures[{i}]={fig_label}  figure_id={figure_id}")
         if fig_label == figure_id:
             plt.close(figure_id)
-            if direction == 'r':
+            if direction == 'n':
                 fig_label = figures[(i+1)%len(figures)]
             else:
-                fig_label = figures[(i-1)%len(figures)]
+                if i>0:
+                    fig_label = figures[i-1]
+                else:
+                    fig_label = figures[-1]
             if '_struct' in fig_label:
-                scenario_string = fig_label[20:]
+                scenario_string = fig_label[fig_label.find("gin_"):]
                 if 'cumu' in fig_label:
                     plot_cumulative_wins(find_stats(scenario_string))
                 else:
@@ -297,16 +295,10 @@ def onclick(event,direction):
             else:
                 plot_rl_param(fig_label)
             global lastOpened
-            print(f"lastOpened={lastOpened} (pre)")
             lastOpened = fig_label
-            print(f"lastOpened={lastOpened} (post)")
 
-            plt.figure(NAV_LABEL)
+            install_navigation(fig_label)
             plt.show()
-
-def xxonclick(event):
-    figure_id = get_figure_id(event)
-    print(f'xxxclick: figure_id={figure_id}')
 
 ## ##############################
 def find_stats(scenario_string):
@@ -535,10 +527,11 @@ if __name__ == '__main__':
             figures.append(st['name_scenario'])
             figures.append('cumu - ' + st['name_scenario'])
 
-        install_navbar()
+        # install_navbar()
         lastOpened='l1'
-        plot_rl_param('l1')
+        plot_rl_param(lastOpened)
 
+        install_navigation(lastOpened)
         plt.show()
 
     finally:
