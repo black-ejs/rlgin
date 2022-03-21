@@ -2,36 +2,19 @@ import sys
 import regplot
 import matplotlib.axes as axes
 import matplotlib.pyplot as plt
+import matplotlib.widgets as widgets
 import numpy as np
 import math
 import copy
 
-SPLINES = 3
-
+MA_SIZE = 50
+FIGURE_WIDTH = 11
+FIGURE_HEIGHT = 6
+NAV_LABEL = 'plot_controls'
 statsList = []
-
-def extract_prop(key, line, stats):
-    if key in line:
-        stats[key] = get_prop(key, line)
-
-def get_prop(key, line):
-    cpos = line.find(key)+len(key)+3
-    val = line[cpos:]
-    # print (f"valA={val}")
-    if val[0] == '"':
-        delim='"'
-        val = val[1:]
-    elif val[0] == "'":
-        delim="'"
-        val = val[1:]
-    elif val[0] == "[":
-        delim="]"
-        val = val[1:]
-    else:
-        delim=","
-    val = val[:val.find(delim)]
-    # print (f"valB={val}")
-    return val
+rl_param_names = ["l1","l2","l3","learning_rate", "epsilon_decay_linear"]
+figures = []
+lastOpened = ""
 
 def print_stats(stats):
     for key in stats.keys():
@@ -52,19 +35,13 @@ def print_statsList():
         print_stats(stats)
 
 ## #############################################
-def do_poly_regression(array_y, array_x, splines:(int)=1, order:(int)=1):
-    return do_splines("rank",array_y, array_x, splines=splines, order=order)
-
-## #############################################
 def minmax(array_x):
     max_x = sys.float_info.min
     min_x = sys.float_info.max
     for x in array_x:
-        if x > max_x:
-            max_x = x
-        if x < min_x:
-            min_x = x   
-    return max_x, min_x         
+        max_x = max(x,max_x)
+        min_x = min(x, min_x)   
+    return max_x, min_x          
 
 ## #############################################
 def calc_slope(fit_results, array_x):
@@ -125,7 +102,28 @@ def do_splines(which, array_y, array_x, splines:(int)=1, order:(int)=1, ax:(axes
 
     return slopes
 
-def plot_regression(array_y, array_x, title, splines:(int)=1, order:(int)=1, ax:(axes.Axes)=None):
+xbnext = [] 
+xbprev = []
+## #############################################
+def install_navbar():
+    figure = plt.figure(NAV_LABEL, figsize=(2,0.2))
+    ax1 = figure.add_subplot(1,2,1)
+    bprev = widgets.Button(ax1, 'prev', color='yellow', hovercolor='red')
+    bprev.on_clicked(onclickl)
+    ax2 = figure.add_subplot(1,2,2)
+    bnext = widgets.Button(ax2, 'next', color='green', hovercolor='red')
+    bnext.on_clicked(onclickr)
+
+    xbprev.append(bprev)
+    xbnext.append(bnext)
+    cid = figure.canvas.mpl_connect('button_press_event', xxonclick)
+
+### #############################################
+def do_poly_regression(array_y, array_x, splines:(int)=1, order:(int)=1):
+    return do_splines("rank",array_y, array_x, splines=splines, order=order)
+
+# #############################################
+def plot_regression(array_y, array_x, title, splines:(int)=1, order:(int)=1, ax:(axes.Axes)=None, figure_id:(str)=None):
     # sns.set(color_codes=True, font_scale=1.5)
     # sns.set_style("darkgrid")
     
@@ -135,7 +133,19 @@ def plot_regression(array_y, array_x, title, splines:(int)=1, order:(int)=1, ax:
     ##    ax = figure.add_axes([0,0,100,100])    
     ##    doShow = True
 
-    figure = plt.figure(figsize=(13,7))
+    if figure_id == None:
+        figure_id = title
+
+    """
+    if figure_id in figures:
+        figure = figure[figure_id]
+    else:
+        figure = plt.figure(figure_id,figsize=(FIGURE_WIDTH,FIGURE_HEIGHT))
+        figures.append(figure_id)
+        cid = figure.canvas.mpl_connect('button_press_event', onclick)
+    """
+    figure = plt.figure(figure_id, figsize=(FIGURE_WIDTH,FIGURE_HEIGHT))
+
     ax = plt.gca()
 
     # scatter
@@ -158,90 +168,207 @@ def plot_regression(array_y, array_x, title, splines:(int)=1, order:(int)=1, ax:
     # Plot the average line
     y_mean = [np.mean(array_y)]*len(array_x)
     ax.plot(array_x,y_mean, label='Mean', linestyle='--')
-    ax.legend(loc='lower right')
+    ## ax.legend(loc='lower right')
 
     xlabel = "{} (last spline slope={:1.7f})".format(title,slope)
-    ylabel = "wins last 100 hands"
+    ylabel = "wins last {} hands".format(MA_SIZE)
     ax.set(xlabel=xlabel, ylabel=ylabel)
 
-    #if doShow:
-    plt.show()
+    ######if doShow:
+    plt.draw()
+    # plt.show()
 
     return slopes
 
 ## ##############################
-def plot_bayesParams():
-    #figure = plt.figure(figsize=(13,7))
-    #big_ax = plt.gca()  
-    param_names = ["l1","l2","l3","learning_rate", "epsilon_decay_linear"]    
-    for i in range(len(param_names)):
-        param_name = param_names[i]
-        array_score = []
-        array_param = []
-        for st in statsList:
-            if param_name in st and 'moving_average_slopes' in st:
-                slopes = st['moving_average_slopes']
-                array_param.append(st[param_name])
-                ## array_score.append(st['wins2'])
-                array_score.append(slopes[len(slopes)-1])
-        
-        if len(array_param)>0:
-            #subax = figure.add_subplot(3,2,i+1)
-            #plot_regression(array_score, array_param, param_name, splines=SPLINES, ax=subax)
-            plot_regression(array_score, array_param, param_name, splines=SPLINES)
+def plot_all_rl_params():
+    for param_name in rl_param_names:
+        plot_rl_param(param_name)
 
-    #plt.show()
-
-## ##############################
-def plot_wins_trend():
-    for st in statsList:
-        hands = st['hands']
-        array_ordinals = []
-        array_cumu_wins = []
-        for hand in hands:
-            array_ordinals.append(int(hand['hand_index']))
-            array_cumu_wins.append(int(hand['wins']))
-
-        plot_regression(array_cumu_wins, array_ordinals, st['name_scenario'], 
-                        splines=SPLINES)
-
-## ##############################
-def rank_moving_average():
-    return _rank_or_plot_ma('rank')
-    
-def plot_moving_average():
-    return _rank_or_plot_ma('plot')
-
-def _rank_or_plot_ma(which):
+def plot_rl_param(param_name):
     array_score = []
     array_param = []
     for st in statsList:
-        ma = st['ma_array']
-        for ma_val in ma:
-            array_param.append(len(array_score))
-            array_score.append(ma_val)
-            
-        if len(array_param)>0:
-            if which == 'plot':
-                slopes = plot_regression(array_score, array_param, 
-                                st['name_scenario'], splines=SPLINES)
+        if param_name in st and 'moving_average_slopes' in st:
+            slopes = st['moving_average_slopes']
+            array_param.append(st[param_name])
+            ## array_score.append(st['wins2'])
+            array_score.append(slopes[len(slopes)-1])
+    
+    if len(array_param)>0:
+        plot_regression(array_score, array_param, param_name, splines=1 )
+
+## ##############################
+def plot_all_cumulative_wins():
+    for st in statsList:
+        plot_cumulative_wins(st)
+
+def plot_cumulative_wins(st):
+    hands = st['hands']
+    array_ordinals = []
+    array_cumu_wins = []
+    for hand in hands:
+        array_ordinals.append(int(hand['hand_index']))
+        array_cumu_wins.append(int(hand['wins']))
+
+    plot_regression(array_cumu_wins, array_ordinals, 'cumu - ' + st['name_scenario'], 
+                    splines=3)
+
+## ##############################
+def rank_all_moving_averages():
+    for st in statsList:
+        _rank_or_plot_ma('rank', st) 
+    
+def plot_all_moving_averages():
+    for st in statsList:
+        plot_moving_average(st) 
+
+def rank_moving_average(st):
+    return _rank_or_plot_ma('rank', st) 
+
+def plot_moving_average(st):
+    return _rank_or_plot_ma('plot', st) 
+
+def _rank_or_plot_ma(which, st):
+    array_score = []
+    array_param = []
+    ma = st['ma_array']
+    for ma_val in ma:
+        array_param.append(len(array_score))
+        array_score.append(ma_val)
+        
+    if len(array_param)>0:
+        if which == 'plot':
+            slopes = plot_regression(array_score, array_param, 
+                            st['name_scenario'], splines=3)
+        else:
+            slopes = do_poly_regression(array_score, array_param, splines=3)
+        array_param = []
+        array_score = []
+        st['moving_average_slopes'] = slopes
+        st['moving_average_last_spline_slope'] = slopes[len(slopes)-1]
+
+## ##############################
+## ##############################
+def onclickl(event):
+    onclick(event, 'l')
+def onclickr(event):
+    onclick(event, 'r')
+def onclick(event,direction):
+    figure_id = get_figure_id(event)
+    print(f'click: figure_id={figure_id}')
+    if figure_id == None:
+        return
+
+    """
+    for i in range(len(rl_param_names)):
+        param_name = rl_param_names[i]
+        print(f"rl_param_names[{i}]={param_name}  figure_id={figure_id}")
+        if param_name == figure_id:
+            plt.close(figure_id)
+            if direction == 'r':
+                rl_param_name = rl_param_names[(i+1)%len(rl_param_names)]
             else:
-                slopes = do_poly_regression(array_score, array_param, splines=SPLINES)
-            array_param = []
-            array_score = []
-            st['moving_average_slopes'] = slopes
-            st['moving_average_last_spline_slope'] = slopes[len(slopes)-1]
- 
+                rl_param_name = rl_param_names[(i-1)%len(rl_param_names)]
+            plot_rl_param(rl_param_name)
+            global lastOpened
+            print(f"lastOpened={lastOpened} (pre)")
+            lastOpened = rl_param_name
+            print(f"lastOpened={lastOpened} (post)")
+
+            plt.show()
+    """
+    
+    for i in range(len(figures)):
+        fig_label = figures[i]
+        print(f"figures[{i}]={fig_label}  figure_id={figure_id}")
+        if fig_label == figure_id:
+            plt.close(figure_id)
+            if direction == 'r':
+                fig_label = figures[(i+1)%len(figures)]
+            else:
+                fig_label = figures[(i-1)%len(figures)]
+            if '_struct' in fig_label:
+                scenario_string = fig_label[20:]
+                if 'cumu' in fig_label:
+                    plot_cumulative_wins(find_stats(scenario_string))
+                else:
+                    plot_moving_average(find_stats(scenario_string))
+            else:
+                plot_rl_param(fig_label)
+            global lastOpened
+            print(f"lastOpened={lastOpened} (pre)")
+            lastOpened = fig_label
+            print(f"lastOpened={lastOpened} (post)")
+
+            plt.figure(NAV_LABEL)
+            plt.show()
+
+def xxonclick(event):
+    figure_id = get_figure_id(event)
+    print(f'xxxclick: figure_id={figure_id}')
+
+## ##############################
+def find_stats(scenario_string):
+    for st in statsList:
+        if scenario_string in st['name_scenario']:
+            return st
+    return "dang!"
+
+## ##############################
+def get_figure_id(event):
+    return lastOpened
+    if event.dblclick:
+        click_type = 'double'
+    else:
+        click_type = 'single'
+    print(f'{click_type} click: button={event.button}, x={event.x}, y={event.y}, xdata={event.xdata}, ydata={event.ydata}')
+    if not hasattr(event,'canvas'):
+        print('no canvas attribute')
+    elif event.canvas == None:
+        print('canvas == None')
+    elif not hasattr(event.canvas,'figure'):
+        print('no figure attribute on canvas')
+    elif event.canvas.figure == None:
+        print('canvas.figure == None')
+    elif not hasattr(event.canvas.figure,'get_label'):
+        print('cannot call get_label() on canvas.figure')
+
+    return  event.canvas.figure.get_label()
+
 ## ##############################
 ## ##############################
 ## ##############################
 ## ##############################
-def parseLogs(filepath):
+
+def extract_prop(key, line, stats):
+    if key in line:
+        stats[key] = get_prop(key, line)
+
+def get_prop(key, line):
+    cpos = line.find(key)+len(key)+3
+    val = line[cpos:]
+    if val[0] == '"':
+        delim='"'
+        val = val[1:]
+    elif val[0] == "'":
+        delim="'"
+        val = val[1:]
+    elif val[0] == "[":
+        delim="]"
+        val = val[1:]
+    else:
+        delim=","
+    val = val[:val.find(delim)]
+    return val
+
+## ##############################
+def parseLogs(filepath): 
     stats = {}
     hands = []
     wins = 0
     ma_window = []
-    ma_size = 100
+    ma_size = MA_SIZE
     for i in range(ma_size):
         ma_window.append(0)
     ma_count = 0
@@ -360,6 +487,18 @@ def create_score_stats():
     return score_stats
 
 ## ##############################
+## ##############################
+## ##############################
+## ##############################
+## ##############################
+## ##############################
+## ##############################
+## ##############################
+## ##############################
+## ##############################
+## ##############################
+## ##############################
+## ##############################
 import argparse
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -371,21 +510,39 @@ if __name__ == '__main__':
     parseLogs(args.path_to_logfile)
     #print_statsList()
 
-    rank_moving_average()
+    rank_all_moving_averages()
 
     print("* * * * * * * * * * * * * * * * * * * ")
     print_score_stats(create_score_stats())
     print("* * * * * * * * * * * * * * * * * * * ")
 
-    plot_bayesParams()
-
-    plot_wins_trend()
-    
     statsList.sort(key=lambda x: x['moving_average_last_spline_slope'])
     for st in statsList:
-        print(f"{st['name_scenario']}: moving_average_last_spline_slope={st['moving_average_last_spline_slope']:1.7f}")
+        star = ""
+        if not 'wins2' in st:
+            star = "*"
+        print(f"{st['name_scenario']}: moving_average_last_spline_slope={st['moving_average_last_spline_slope']:1.7f}{star}")
 
-    plot_moving_average()
+    try:
+        #plot_all_rl_params()
+        #plot_all_cumulative_wins()
+        #plot_all_moving_averages()
+
+        for param_name in rl_param_names:
+            figures.append(param_name)
+
+        for st in statsList:
+            figures.append(st['name_scenario'])
+            figures.append('cumu - ' + st['name_scenario'])
+
+        install_navbar()
+        lastOpened='l1'
+        plot_rl_param('l1')
+
+        plt.show()
+
+    finally:
+        pass
 
 
             
