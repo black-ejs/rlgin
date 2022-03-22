@@ -50,7 +50,7 @@ def calc_slope(fit_results, array_x):
     #print(f"{title}: pvalues {fit_results.pvalues}")
     #print(f"{title}: tvalues {fit_results.tvalues}")
     vals = fit_results.fittedvalues
-    deltay = vals[len(vals)-1] - vals[0]
+    deltay = vals[-1] - vals[0]
     max_x, min_x = minmax(array_x)
     deltax = max_x-min_x
     if deltax > 0:
@@ -125,8 +125,17 @@ def install_navigation(fig_label):
     xbnext.append(bnext)
 
 ### #############################################
-def do_poly_regression(array_y, array_x, splines:(int)=1, order:(int)=1):
-    return do_splines("rank",array_y, array_x, splines=splines, order=order)
+def do_poly_regression(array_y, array_x,
+                        splines:(Union[int,Iterable])=1, order:(int)=1):
+    
+    if isinstance(splines,Iterable):
+        slopes = []
+        for spl in splines:
+            spline_slopes = do_splines("rank",array_y, array_x, splines=spl, order=order)
+            slopes.extend(spline_slopes)                                
+    else:
+        slopes = do_splines("rank",array_y, array_x, splines=splines, order=order)
+    return slopes
 
 # #############################################
 def plot_regression(array_y, array_x, title, 
@@ -160,14 +169,15 @@ def plot_regression(array_y, array_x, title,
     if isinstance(splines,Iterable):
         linecolors = ["orange","blue","green","violet","yellow"]
         color_ndx=0
+        slopes = []
         for spl in splines:
             linecolor = linecolors[color_ndx]
-            slopes = do_splines('plot', array_y, array_x, splines=spl, order=order, ax=ax,
+            spline_slopes = do_splines('plot', array_y, array_x, splines=spl, order=order, ax=ax,
                                 linecolor=linecolor)
+            slopes.extend(spline_slopes)                                
             color_ndx = (color_ndx + 1)%len(linecolors)
     else:
         slopes = do_splines('plot', array_y, array_x, splines=splines, order=order, ax=ax)
-    slope = slopes[len(slopes)-1]
 
     # Plot the average line
     y_mean = [np.mean(array_y)]*len(array_x)
@@ -175,7 +185,7 @@ def plot_regression(array_y, array_x, title,
     ## ax.legend(loc='lower right')
 
     if xlabel == None:
-        xlabel = "{} (last spline slope={:1.7f})".format(title,slope)
+        xlabel = "{} (last spline slope={:1.7f})".format(title,slopes[-1])
     if ylabel == None:
         ylabel = "wins last {} hands".format(MA_SIZE)
     ax.set(xlabel=xlabel, ylabel=ylabel)
@@ -193,11 +203,11 @@ def plot_rl_param(param_name):
     array_score = []
     array_param = []
     for st in statsList:
-        if param_name in st and 'moving_average_slopes' in st:
-            slopes = st['moving_average_slopes']
+        if param_name in st and 'moving_average_spline_slopes' in st:
+            slopes = st['moving_average_spline_slopes']
             array_param.append(st[param_name])
             ## array_score.append(st['wins2'])
-            array_score.append(slopes[len(slopes)-1])
+            array_score.append(slopes[-1])
     
     if len(array_param)>0:
         plot_regression(array_score, array_param, param_name, splines=1,
@@ -208,7 +218,11 @@ def plot_all_cumulative_wins():
     for st in statsList:
         plot_cumulative_wins(st)
 
-def plot_cumulative_wins(st):
+def rank_all_cumulative_wins():
+    for st in statsList:
+        plot_cumulative_wins(st, rank_only=True)
+
+def plot_cumulative_wins(st, rank_only:(bool)=False):
     hands = st['hands']
     array_ordinals = []
     array_cumu_wins = []
@@ -216,9 +230,18 @@ def plot_cumulative_wins(st):
         array_ordinals.append(int(hand['hand_index']))
         array_cumu_wins.append(int(hand['wins']))
 
-    plot_regression(array_cumu_wins, array_ordinals, 'cumu - ' + st['name_scenario'], 
-                    splines=3,
-                    ylabel="cumulative wins")
+    if rank_only:
+        slopes = do_poly_regression(array_cumu_wins,
+                        array_ordinals, 
+                        splines=3)
+    else:                        
+        slopes = plot_regression(array_cumu_wins, 
+                        array_ordinals, 'cumu - ' + st['name_scenario'], 
+                        splines=3,
+                        ylabel="cumulative wins")
+    st['cumulative_wins_slopes'] = slopes
+    st['cumulative_wins_last_spline_slope'] = slopes[-1]
+    st['cumulative_wins_ratio'] = slopes[-1]/slopes[0]
 
 ## ##############################
 def rank_all_moving_averages():
@@ -249,11 +272,12 @@ def _rank_or_plot_ma(which, st):
                             st['name_scenario'], splines=[1,3],
                             ylabel="wins last {} hands".format(MA_SIZE))
         else:
-            slopes = do_poly_regression(array_ma, array_count, splines=3)
+            slopes = do_poly_regression(array_ma, array_count, splines=[1,3])
         array_count = []
         array_ma = []
-        st['moving_average_slopes'] = slopes
-        st['moving_average_last_spline_slope'] = slopes[len(slopes)-1]
+        st['moving_average_overall_slope'] = slopes[0]
+        st['moving_average_spline_slopes'] = slopes[1:]
+        st['moving_average_last_spline_slope'] = slopes[-1]
 
 ## ##############################
 ## ##############################
@@ -493,18 +517,25 @@ if __name__ == '__main__':
     parseLogs(args.path_to_logfile)
     #print_statsList()
 
-    rank_all_moving_averages()
-
     print("* * * * * * * * * * * * * * * * * * * ")
     print_score_stats(create_score_stats())
     print("* * * * * * * * * * * * * * * * * * * ")
 
+    rank_all_cumulative_wins()
+    rank_all_moving_averages()
+
     statsList.sort(key=lambda x: x['moving_average_last_spline_slope'])
+    print("     -------- name_scenario ----------     \tma_last_slope\tma_overall_slope\tcum_last_slope\tcum_ratio")
     for st in statsList:
         star = ""
         if not 'wins2' in st:
             star = "*"
-        print(f"{st['name_scenario']}: moving_average_last_spline_slope={st['moving_average_last_spline_slope']:1.7f}{star}")
+        print(f"{star}{st['name_scenario']}:"
+                f"\t{st['moving_average_last_spline_slope']: 1.7f}  "
+                f"\t{st['moving_average_overall_slope']: 1.7f}"
+                f"\t{st['cumulative_wins_last_spline_slope']:1.7f}"
+                f"\t{st['cumulative_wins_ratio']:1.7f}"
+                )
 
     try:
 
