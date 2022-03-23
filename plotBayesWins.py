@@ -554,11 +554,18 @@ if __name__ == '__main__':
         plot_rl_param(lastOpened)
         install_navigation(lastOpened)
 
+        #p=0
         while True:
-            plt.pause(0.01)
-            if len(plt.get_figlabels()) ==0:
+            plt.pause(0.1)
+            if len(plt.get_figlabels())==0:
                 break
-
+            #if True: # p==0:
+            #    p+=1
+            #    mgr = plt.get_current_fig_manager()
+            #    print(f'{p} current_fig_manager={mgr}')
+            #    print(f'{p}                vals={vars(mgr)}')
+            #    print(f'{p}        vals(canvas)={vars(mgr.canvas)}')
+                
     finally:
         pass
 
