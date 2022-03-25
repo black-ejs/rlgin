@@ -192,7 +192,6 @@ def plot_regression(array_y, array_x, title,
             average_array.pop()
         # y_mean = np.array([average_array])[0]
         y_mean = average_array
-        print(f"len(array_y)={len(array_y)}  len(array_x)={len(array_x)}  len(average_array)={len(average_array)}  len(y_mean)={len(y_mean)}")
     ax.plot(array_x,y_mean, label='Mean', linestyle='--', color="#0F0F00")
     ## ax.legend(loc='lower right')
 
