@@ -3,6 +3,7 @@ from collections.abc import Iterable
 import sys
 import math
 import copy
+import distutils.util
 import numpy as np
 import matplotlib.axes as axes
 import matplotlib.pyplot as plt
@@ -17,6 +18,7 @@ rl_param_names = ["l1","l2","l3","learning_rate", "epsilon_decay_linear"]
 statsList = []
 figures = []
 lastOpened = ""
+cumulative_averages = []
 
 def print_stats(stats):
     for key in stats.keys():
@@ -142,7 +144,8 @@ def plot_regression(array_y, array_x, title,
                     splines:(Union[int,Iterable])=1, 
                     order:(int)=1, 
                     ax:(axes.Axes)=None, figure_id:(str)=None,
-                    xlabel:(str)=None, ylabel:(str)=None):
+                    xlabel:(str)=None, ylabel:(str)=None,
+                    average_array:(Iterable)=None):
     
     if figure_id == None:
         figure_id = title
@@ -180,7 +183,16 @@ def plot_regression(array_y, array_x, title,
         slopes = do_splines('plot', array_y, array_x, splines=splines, order=order, ax=ax)
 
     # Plot the average line
-    y_mean = [np.mean(array_y)]*len(array_x)
+    if average_array == None:
+        y_mean = [np.mean(array_y)]*len(array_x)
+    else:
+        while len(average_array) < len(array_x):
+            average_array.append(average_array[-1])
+        while len(average_array) > len(array_x):
+            average_array.pop()
+        # y_mean = np.array([average_array])[0]
+        y_mean = average_array
+        print(f"len(array_y)={len(array_y)}  len(array_x)={len(array_x)}  len(average_array)={len(average_array)}  len(y_mean)={len(y_mean)}")
     ax.plot(array_x,y_mean, label='Mean', linestyle='--', color="#0F0F00")
     ## ax.legend(loc='lower right')
 
@@ -238,7 +250,8 @@ def plot_cumulative_wins(st, rank_only:(bool)=False):
         slopes = plot_regression(array_cumu_wins, 
                         array_ordinals, 'cumu - ' + st['name_scenario'], 
                         splines=3,
-                        ylabel="cumulative wins")
+                        ylabel="cumulative wins",
+                        average_array=cumulative_averages)
     st['cumulative_wins_slopes'] = slopes
     st['cumulative_wins_last_spline_slope'] = slopes[-1]
     st['cumulative_wins_ratio'] = slopes[-1]/slopes[0]
@@ -371,7 +384,7 @@ def get_prop(key, line):
     return val
 
 ## ##############################
-def parseLogs(filepath): 
+def parseLogs(filepath:(str), include_partials:(bool)=False): 
     stats = {}
     hands = []
     wins = 0
@@ -387,7 +400,8 @@ def parseLogs(filepath):
         lines=f.readlines()
     for line in lines:
         if "INPUT" in line and len(stats)>0:
-            save_training_session(stats, hands, ma_array)
+            if 'wins2' in stats or include_partials:
+                save_training_session(stats, hands, ma_array)
             for i in range(ma_size):
                 ma_window.append(0)    
             ma_array = []
@@ -437,7 +451,8 @@ def parseLogs(filepath):
             stats["l2"] = int(layers[1])
             stats["l3"] = int(layers[2])
 
-    save_training_session(stats, hands, ma_array)
+    if 'wins2' in stats or include_partials:
+        save_training_session(stats, hands, ma_array)
 
 ## ##############################
 def create_score_stats():
@@ -473,8 +488,17 @@ def create_score_stats():
                 maxr=ratio
             if ratio<minr:
                 minr=ratio
+            for hand in st['hands']:
+                ndx = int(hand['hand_index'])
+                cumu = int(hand['wins'])
+                if ndx>=len(cumulative_averages):
+                    cumulative_averages.append(cumu)
+                else:
+                    cumulative_averages[ndx] += cumu
     mean_losses = tot1/count_scenarios
-    mean_wins = tot2/count_scenarios      
+    mean_wins = tot2/count_scenarios 
+    for i in range(len(cumulative_averages)):
+        cumulative_averages[i]/=count_scenarios             
     score_stats['mean_losses']=mean_losses
     score_stats['mean_wins']=mean_wins
     score_stats['max_losses']=max1
@@ -512,9 +536,12 @@ if __name__ == '__main__':
     parser.add_argument('path_to_logfile',
                     default='logs/mega2', 
                     nargs='?', help='path to the logfile to be plotted')
+    parser.add_argument('include_partials',
+                    default='False', 
+                    nargs='?', help='path to the logfile to be plotted')
     args = parser.parse_args()
 
-    parseLogs(args.path_to_logfile)
+    parseLogs(args.path_to_logfile, distutils.util.strtobool(args.include_partials))
     #print_statsList()
 
     print("* * * * * * * * * * * * * * * * * * * ")
