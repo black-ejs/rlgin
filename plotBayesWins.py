@@ -4,10 +4,12 @@ import sys
 import math
 import copy
 import distutils.util
+
 import numpy as np
 import matplotlib.axes as axes
 import matplotlib.pyplot as plt
 import matplotlib.widgets as widgets
+
 import regplot
 
 MA_SIZE = 50
@@ -249,7 +251,7 @@ def plot_cumulative_wins(st, rank_only:(bool)=False):
         slopes = plot_regression(array_cumu_wins, 
                         array_ordinals, 'cumu - ' + st['name_scenario'], 
                         splines=3,
-                        ylabel="cumulative wins",
+                        ylabel="cumulative wins   total=" + str(st['wins2']),
                         average_array=cumulative_averages)
     st['cumulative_wins_slopes'] = slopes
     st['cumulative_wins_last_spline_slope'] = slopes[-1]
@@ -551,17 +553,18 @@ if __name__ == '__main__':
     rank_all_moving_averages()
 
     statsList.sort(key=lambda x: x['moving_average_last_spline_slope'])
-    print("     -------- name_scenario ----------     \tma_last_slope\tma_overall_slope\tcum_last_slope\tcum_ratio")
+    print("     -------- name_scenario ----------     \tma_last_slope  ma_overall_slope  cum_last_slope  cum_ratio")
     for st in statsList:
         star = ""
         if not 'wins2' in st:
-            star = "*"
+            star = "*"  # should only happen if "include_partials==True"
         print(f"{star}{st['name_scenario']}:"
                 f"\t{st['moving_average_last_spline_slope']: 1.7f}  "
                 f"\t{st['moving_average_overall_slope']: 1.7f}"
                 f"\t{st['cumulative_wins_last_spline_slope']:1.7f}"
                 f"\t{st['cumulative_wins_ratio']:1.7f}"
                 )
+    print(f"{len(statsList)} scenarios")    
 
     try:
 
