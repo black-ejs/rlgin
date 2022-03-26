@@ -15,6 +15,7 @@ import regplot
 MA_SIZE = 50
 FIGURE_WIDTH = 9
 FIGURE_HEIGHT = 4
+DQN_PLAYER_NAME = "Tempo"
 rl_param_names = ["l1","l2","l3","learning_rate", "epsilon_decay_linear"]
 
 statsList = []
@@ -32,11 +33,6 @@ def print_stats(stats):
 def print_score_stats(score_stats):
     for key in score_stats.keys():
         print(f"{key}={score_stats[key]}")
-
-def save_training_session(stats, hands, ma_array):
-    stats['hands'] = hands
-    stats['ma_array'] = ma_array
-    statsList.append(stats)
 
 def print_statsList():
     for stats in statsList:
@@ -363,6 +359,10 @@ def get_figure_id(event):
 ## ##############################
 ## ##############################
 ## ##############################
+def save_training_session(stats, hands, ma_array):
+    stats['hands'] = hands
+    stats['ma_array'] = ma_array
+    statsList.append(stats)
 
 def extract_prop(key, line, stats):
     if key in line:
@@ -395,7 +395,7 @@ def parseLogs(filepath:(str), include_partials:(bool)=False):
     for i in range(ma_size):
         ma_window.append(0)
     ma_count = 0
-    ma_name = "Tempo"
+    ma_name = DQN_PLAYER_NAME
     ma_array = []
 
     with open(filepath, 'r') as f:
@@ -416,7 +416,7 @@ def parseLogs(filepath:(str), include_partials:(bool)=False):
             toks = line.split()
             hand_index = toks[1]
             winner = toks[3]
-            if winner == "Tempo":
+            if winner == DQN_PLAYER_NAME:
                 wins = wins + 1
             hands.append({'hand_index': hand_index, 
                             'winner': winner, 
