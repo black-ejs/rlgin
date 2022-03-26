@@ -13,14 +13,16 @@ import matplotlib.widgets as widgets
 import regplot
 
 MA_SIZE = 50
-FIGURE_WIDTH = 11
-FIGURE_HEIGHT = 6
+FIGURE_WIDTH = 9
+FIGURE_HEIGHT = 4
 rl_param_names = ["l1","l2","l3","learning_rate", "epsilon_decay_linear"]
 
 statsList = []
+cumulative_averages = []
 figures = []
 lastOpened = ""
-cumulative_averages = []
+xbnext = [] 
+xbprev = []
 
 def print_stats(stats):
     for key in stats.keys():
@@ -109,18 +111,17 @@ def do_splines(which, array_y, array_x,
 
     return slopes
 
-xbnext = [] 
-xbprev = []
 ## #############################################
 
 def install_navigation(fig_label):
+    button_height=0.075
     rrr = plt.get_figlabels()
     if not fig_label in plt.get_figlabels():
         print(f'wtf: fig_label={fig_label}')
     fig = plt.figure(fig_label)
-    fig.subplots_adjust(bottom=0.2)
-    axprev = plt.axes([0.7, 0.05, 0.1, 0.075])
-    axnext = plt.axes([0.81, 0.05, 0.1, 0.075])
+    axx = fig.subplots_adjust(bottom=0.2, top=0.99, right=0.99)
+    axprev = plt.axes([0.77, 0.01, 0.1, button_height])
+    axnext = plt.axes([0.89, 0.01, 0.1, button_height])
     bnext = widgets.Button(axnext, 'Next')
     bnext.on_clicked(onclickn)
     bprev = widgets.Button(axprev, 'Previous')
@@ -142,7 +143,7 @@ def do_poly_regression(array_y, array_x,
     return slopes
 
 # #############################################
-def plot_regression(array_y, array_x, title, 
+def plot_regression(array_y, array_x, title:(str), 
                     splines:(Union[int,Iterable])=1, 
                     order:(int)=1, 
                     ax:(axes.Axes)=None, figure_id:(str)=None,
