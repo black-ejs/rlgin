@@ -18,10 +18,10 @@ def define_parameters():
     #  
     #  the DQN can have any number of layers between the input and output
     #  as specified in the 'layer_sizes' array
-    params['episodes'] = 1000             # gin hands
-    params['layer_sizes'] = [60,150,16]   # 'hidden'/interior layers
-    params['learning_rate'] = 0.012       # snake_ga = 0.00013629
-    params['epsilon_decay_linear'] = .016 # while learning, how quickly randomness decreases in each hand
+    params['episodes'] = 5000             # gin hands
+    params['layer_sizes'] = [100, 800, 20]   # 'hidden'/interior layers
+    params['learning_rate'] = 0.00332519     # snake_ga = 0.00013629
+    params['epsilon_decay_linear'] = .0256 # while learning, how quickly randomness decreases in each hand
     params['gamma'] = 0.99                # value of future rewards
     params['noise_epsilon'] = 1/200       # randomness in actions when not training
     params['memory_size'] = 25000
