@@ -17,19 +17,6 @@ FIGURE_WIDTH = 9
 FIGURE_HEIGHT = 4
 DQN_PLAYER_NAME = "Tempo"
 
-def print_stats(stats):
-    for key in stats.keys():
-        if not key == "hands":
-            print(f"{key}={stats[key]}")
-
-def print_score_stats(score_stats):
-    for key in score_stats.keys():
-        print(f"{key}={score_stats[key]}")
-
-def print_statsList(statsList):
-    for stats in statsList:
-        print_stats(stats)
-
 ## #############################################
 ## #############################################
 ## #############################################
@@ -538,8 +525,24 @@ class BayesLogParser:
                 tot2 += (st['wins2']-mean_wins)**2
         score_stats['std_losses']=math.sqrt(tot1/count_scenarios)
         score_stats['std_wins']=math.sqrt(tot2/count_scenarios)
-        
+        score_stats['cumulative_average_slope']=(
+                        self.cumulative_averages[-1] - self.cumulative_averages[0]
+                                        )/len(self.cumulative_averages)
+                        
         return score_stats
+
+    def print_stats(stats):
+        for key in stats.keys():
+            if not key == "hands":
+                print(f"{key}={stats[key]}")
+
+    def print_score_stats(score_stats):
+        for key in score_stats.keys():
+            print(f"{key}={score_stats[key]}")
+
+    def print_statsList(statsList):
+        for stats in statsList:
+            BayesLogParser.print_stats(stats)
 
 ## ##############################
 ## ##############################
@@ -559,7 +562,7 @@ class BayesAnalyzer:
         # print_statsList(logParser.statsList)
 
         print("* * * * * * * * * * * * * * * * * * * ")
-        print_score_stats(logParser.create_score_stats())
+        BayesLogParser.print_score_stats(logParser.create_score_stats())
         print("* * * * * * * * * * * * * * * * * * * ")
 
         #statsList = logParser.statsList
@@ -601,7 +604,16 @@ class BayesAnalyzer:
         finally:
             pass
 
-
+## ##############################
+## ##############################
+## ##############################
+## ##############################
+## ##############################
+## ##############################
+## ##############################
+## ##############################
+## ##############################
+## ##############################
 ## ##############################
 import argparse
 if __name__ == '__main__':
@@ -611,7 +623,7 @@ if __name__ == '__main__':
                     nargs='?', help='path to the logfile to be plotted')
     argparser.add_argument('include_partials',
                     default='False', 
-                    nargs='?', help='path to the logfile to be plotted')
+                    nargs='?', help='include results eve without bayesian end-tags')
     args = argparser.parse_args()
 
     BayesAnalyzer.analyze(args.path_to_logfile, 
