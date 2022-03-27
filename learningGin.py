@@ -130,7 +130,7 @@ def run(params):
     
     if params['train']:
         model_weights = agent.state_dict()
-        torch.save(model_weights, params["weights_path"])
+        torch.save(model_weights, params["weights_path"] + ".post_training")
 
     mean_durations, stdev_durations = get_mean_stdev(durations)
     mean_turns, stdev_turns = get_mean_stdev(turns_in_hand)
