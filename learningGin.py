@@ -130,7 +130,8 @@ def run(params):
     
     if params['train']:
         model_weights = agent.state_dict()
-        torch.save(model_weights, params["weights_path"] + ".post_training")
+        params["weights_path"] += ".post_training"
+        torch.save(model_weights, params["weights_path"])
 
     mean_durations, stdev_durations = get_mean_stdev(durations)
     mean_turns, stdev_turns = get_mean_stdev(turns_in_hand)
@@ -162,7 +163,6 @@ if __name__ == '__main__':
 
     if params['train']:
         print("Training...")
-        # params['load_weights'] = False   # depends on params, might be retraining
         stats = run(params)
         print_stats(stats)
     if params['test']:
