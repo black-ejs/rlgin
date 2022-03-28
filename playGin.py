@@ -1,4 +1,5 @@
 import gin
+import datetime
 import time
 import random
 import math
@@ -182,8 +183,6 @@ def play(num_hands_to_play: int =500,
 	wins = 0
 	startTime = time.time()
 
-	print("playGin says hello")
-
 	winMap = {}
 	winMap[name1] = 0				
 	winMap[name2] = 0		
@@ -195,6 +194,13 @@ def play(num_hands_to_play: int =500,
 
 	_strategy1 = get_strategy(strategy1)
 	_strategy2 = get_strategy(strategy2)
+
+	print(f"playGin execution at {datetime.datetime.now().strftime('%Y%m%d.%H%M%S')}")
+	print(f"playGin num_hands_to_play: {name1}")
+	print(f"vars()={vars(_strategy1.__class__)}")
+	print(f"playGin strategy1: {_strategy1.__class__.__name__}")
+	print(f"playGin player2: {name2}")
+	print(f"playGin strategy2: {_strategy2.__class__.__name__}")
 
 	for i in range(num_hands_to_play):
 
