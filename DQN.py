@@ -43,7 +43,7 @@ class DQNAgent(torch.nn.Module):
         # weights
         if self.load_weights:
             self.model = self.load_state_dict(torch.load(self.weights))
-            self.model.eval()
+            self.eval()
             print(f"weights loaded from {self.weights}")
 
     def forward(self, x):
