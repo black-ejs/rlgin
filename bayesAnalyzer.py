@@ -444,6 +444,10 @@ class BayesLogParser:
                 cpos +=1
                 cpos = line[cpos:].find(",")+cpos
                 stats['wins2'] = int(line[cpos-3:cpos])
+                if len(hands)>0:
+                    stats['wins_per_1000_hands'] = stats['wins2']/len(hands)
+                else:
+                    stats['wins_per_1000_hands'] = -1
             BayesLogParser.extract_prop("name_scenario", line,stats)
             if "learning_rate" in line:
                 lr = BayesLogParser.get_prop("learning_rate", line)
@@ -471,6 +475,7 @@ class BayesLogParser:
         count_hands = 0
         tot1 = 0
         tot2 = 0
+        totwpk = 0
         min1 = 100000
         min2 = 100000
         max1 = -1
@@ -485,19 +490,14 @@ class BayesLogParser:
                 w2 = st['wins2']
                 tot1+= w1
                 tot2+= w2
-                if w1>max1:
-                    max1=w1
-                if w2>max2:
-                    max2=w2
-                if w1<min1:
-                    min1=w1
-                if w2<min2:
-                    min2=w2
+                totwpk += st['wins_per_1000_hands']
+                max1=max(max1,w1)
+                max2=max(max2,w2)
+                min1=min(min1,w1)
+                min2=min(min2,w2)
                 ratio = w1/w2
-                if ratio>maxr:
-                    maxr=ratio
-                if ratio<minr:
-                    minr=ratio
+                maxr = max(ratio, maxr)
+                minr = min(ratio, minr)
                 for hand in st['hands']:
                     ndx = int(hand['hand_index'])
                     cumu = int(hand['wins'])
@@ -509,6 +509,7 @@ class BayesLogParser:
         mean_wins = tot2/count_scenarios 
         for i in range(len(self.cumulative_averages)):
             self.cumulative_averages[i]/=count_scenarios             
+        score_stats['mean_wins_per_1000_hands']=totwpk/count_scenarios
         score_stats['mean_losses']=mean_losses
         score_stats['mean_wins']=mean_wins
         score_stats['max_losses']=max1
@@ -571,7 +572,7 @@ class BayesAnalyzer:
         BayesPlotter.rank_all_moving_averages(logParser.statsList)
 
         logParser.statsList.sort(key=lambda x: x['moving_average_last_spline_slope'])
-        print("     -------- name_scenario ----------     \tma_last_slope  ma_overall_slope  cum_last_slope  cum_ratio")
+        print("     -------- name_scenario ----------     \tma_last_slope  ma_full_slope\tcum_last_slope\tcum_ratio\twpk")
         for st in logParser.statsList:
             star = ""
             if not 'wins2' in st:
@@ -581,6 +582,7 @@ class BayesAnalyzer:
                     f"\t{st['moving_average_overall_slope']: 1.7f}"
                     f"\t{st['cumulative_wins_last_spline_slope']:1.7f}"
                     f"\t{st['cumulative_wins_ratio']:1.7f}"
+                    f"\t{st['wins_per_1000_hands']:1.7f}"
                     )
         print(f"{len(logParser.statsList)} scenarios")    
 
