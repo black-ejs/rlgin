@@ -213,12 +213,12 @@ def play(num_hands_to_play: int =500,
 
 		if not ginhand.winner == None:
 			wins+=1
-			print(f"{i:5} WINNER: {ginhand.winner.player.name} {ginhand.winner.playerHand.prettyStr()} in {len(ginhand.turns)} turns, {duration:3.2f}s")
+			print(f'Game {i}    Winner: {ginhand.winner.player}    Hand: {ginhand.winner.playerHand.prettyStr()}    Turns: {len(ginhand.turns)}    Time: {duration*1000:3.3f}')
 			winMap[ginhand.winner.player.name]+=1
 			for card in ginhand.winner.playerHand.card:
 				card_counts[card.toInt()]+=1
 		else:
-			print(f"{i:5} WINNER: nobody in {len(ginhand.turns)} turns, {duration:3.2f}s")
+			print(f'Game {i}    Winner: nobody    Turns: {len(ginhand.turns)}    Time: {duration*1000:3.3f}')
 			winMap['nobody']+=1
 			
 		if duration < min_duration:
