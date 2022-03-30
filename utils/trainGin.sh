@@ -1,18 +1,20 @@
 ##!/usr/bin/bash
 ## run a test cycle, this script is usually invoked with "nohup" or the equivalent
 
+TIMESTAMP=`date -u +%Y-%m-%d_%H:%M:%S`
+echo '#####################################################'
+echo RLGIN TRAINING session started at "${TIMESTAMP}"
+
 MODEL_NICKNAME=${PWD##*/}
 RUN_DIR=rlgin
 
-TIMESTAMP=`date -u +%Y-%m-%d_%H:%M:%S`
+echo locating latest-generation weights....
 INPUT_WEIGHTS=`ls $RUN_DIR/weights/weights.h5.* | grep '[0-9]$' | tail -1`
 INPUT_GENERATION_NUMBER=${INPUT_WEIGHTS##*.}
 OUTPUT_GENERATION_NUMBER=$((INPUT_GENERATION_NUMBER+1))
 OUTPUT_WEIGHTS="weights/weights.h5.${OUTPUT_GENERATION_NUMBER}"
 LOGFILE="logs/learning_${MODEL_NICKNAME}_${TIMESTAMP}"
 
-echo '#####################################################'
-echo RLGIN TRAINING session started at "${TIMESTAMP}"
 echo MODEL_NICKNAME=${MODEL_NICKNAME}
 echo INPUT_WEIGHTS=${INPUT_WEIGHTS}
 echo INPUT_GENERATION_NUMBER=${INPUT_GENERATION_NUMBER}
