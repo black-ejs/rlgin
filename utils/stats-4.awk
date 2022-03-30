@@ -22,6 +22,6 @@ END {
 	      p/t " ratio\n" \
 	      f-t-p " nobody\n" \
 	      ((t+p)/f)*100 "% decided \n"\
-	      pp/1000 " s\n"  pp/60000 " m\n" pp/3600000 " h" 
+	      pp/1000 " s   " pp/60000 " m   " pp/3600000 " h" 
 }
 
