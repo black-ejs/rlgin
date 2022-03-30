@@ -266,8 +266,10 @@ class BayesPlotManager:
     def __init__(self, statsList:(Iterable), cumulative_averages:(Iterable)):
         self.statsList = statsList
         self.figures = []
-        for param_name in BayesPlotManager.rl_param_names:
-            self.figures.append(param_name)
+        scenario = statsList[0]['name_scenario']
+        if 'gin_lr' in scenario:
+            for param_name in BayesPlotManager.rl_param_names:
+                self.figures.append(param_name)
         for st in statsList:
              self.figures.append(st['name_scenario'])
              self.figures.append('cumu - ' + st['name_scenario'])
@@ -315,14 +317,13 @@ class BayesPlotManager:
 
     ## ##############################
     def activateFigure(self, fig_label:(str)):
-        if '_struct' in fig_label:
-            scenario_string = fig_label[fig_label.find("gin_"):]
-            if 'cumu' in fig_label:
-                BayesPlotter.plot_cumulative_wins(self.find_stats(scenario_string), self.cumulative_averages)
-            else:
-                BayesPlotter.plot_moving_average(self.find_stats(scenario_string))
-        else:
+        if fig_label in BayesPlotManager.rl_param_names:
             BayesPlotter.plot_rl_param(self.statsList, fig_label)
+        else:
+            if 'cumu' in fig_label:
+                BayesPlotter.plot_cumulative_wins(self.find_stats(fig_label[7:]), self.cumulative_averages)
+            else:
+                BayesPlotter.plot_moving_average(self.find_stats(fig_label))
 
         self.install_navigation(fig_label)
         self.lastOpened = fig_label
@@ -394,6 +395,8 @@ class BayesLogParser:
     ## ##############################
     def parseLogs(self, filepath:(str), include_partials:(bool)=False): 
         stats = {}
+        stats['name_scenario'] = filepath + '.train'
+
         hands = []
         wins = 0
         ma_window = []
@@ -407,7 +410,7 @@ class BayesLogParser:
         with open(filepath, 'r') as f:
             lines=f.readlines()
         for line in lines:
-            if "INPUT" in line and len(stats)>0:
+            if (("INPUT" in line) or ("Testing." in line)) and len(stats)>0:
                 if 'wins2' in stats or include_partials:
                     self.save_training_session(stats, hands, ma_array)
                 for i in range(ma_size):
@@ -415,6 +418,7 @@ class BayesLogParser:
                 ma_array = []
                 ma_count = 0
                 stats = {}
+                stats['name_scenario'] = filepath + '.validation_test'
                 hands = []
                 wins = 0
             if "Winner: " in line:
@@ -445,7 +449,7 @@ class BayesLogParser:
                 cpos = line[cpos:].find(",")+cpos
                 stats['wins2'] = int(line[cpos-3:cpos])
                 if len(hands)>0:
-                    stats['wins_per_1000_hands'] = stats['wins2']/len(hands)
+                    stats['wins_per_1000_hands'] = stats['wins2']*1000/len(hands)
                 else:
                     stats['wins_per_1000_hands'] = -1
             BayesLogParser.extract_prop("name_scenario", line,stats)
@@ -588,8 +592,14 @@ class BayesAnalyzer:
 
         try:
 
+            scenario = logParser.statsList[0]['name_scenario']
+            if 'gin_lr' in scenario:
+                first_figure = 'l1'
+            else:
+                first_figure = scenario
+
             plotManager = BayesPlotManager(logParser.statsList, logParser.cumulative_averages)
-            plotManager.activateFigure("l1")
+            plotManager.activateFigure(first_figure)
 
             #p=0
             while True:
@@ -621,7 +631,7 @@ import argparse
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser()
     argparser.add_argument('path_to_logfile',
-                    default='logs/mega2', 
+                    default='logs/learning_lr00332519_struct100_800_20_eps0.0256.log.0',  #'logs/mega2', 
                     nargs='?', help='path to the logfile to be plotted')
     argparser.add_argument('include_partials',
                     default='False', 
