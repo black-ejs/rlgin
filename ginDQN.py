@@ -11,6 +11,9 @@ class ginDQNAgent(DQNAgent):
         super().__init__(params)
 
         self.state_size = params['input_size']
+        self.win_reward = params['win_reward']
+        self.loss_reward = params['loss_reward']
+        self.no_winner_reward = params['no_winner_reward']
           
     def get_state(self, ginhand, player, pile_substitute = None):
         """
@@ -45,12 +48,19 @@ class ginDQNAgent(DQNAgent):
         my_hand = ginhand.playing[me].playerHand
         top_of_pile = ginhand.firstPileCard
         for turn in ginhand.turns:
+
+            if turn.draw == None:
+                break  # current turn, not yet drawn
             if not turn.draw.source == gin.Draw.PILE:
                 state[top_of_pile.toInt()] = OUT_OF_PLAY
             elif not turn.player == me:
                 state[top_of_pile.toInt()] = IN_OTHER_HAND
+
+            if turn.discard == None:
+                break  # current turn, no discard yet
             state[turn.discard.toInt()] = JUST_DISCARDED
             top_of_pile = turn.discard
+
         for c in my_hand.card:
             if not c == pile_substitute:
                 state[c.toInt()] = IN_MY_HAND
@@ -63,22 +73,17 @@ class ginDQNAgent(DQNAgent):
     def set_reward(self, ginhand, player):
         """
         Return the reward.
-        The reward is:
-            +100 when the NN wins
-            -10 when the opponent wins
-            -5 if the game ends without a winner
-            0 otherwise
         """
         self.reward = 0
         if ginhand.playing[player].playerHand.wins():
             # I won!
-            self.reward = 100
+            self.reward = self.win_reward
         elif ginhand.currentlyPlaying.playerHand.wins():
             # I lost!
-            self.reward = -10
+            self.reward = self.loss_reward
         elif ginhand.lifecycle_stage == gin.GinHand.DONE:
             # no winner - not helping
-            self.reward = -5
+            self.reward = self.no_winner_reward
 
         return self.reward
 
@@ -111,17 +116,20 @@ class ginDQNStrategy(playGin.OneDecisionGinStrategy):
                     # store the new data into a long term memory
                     self.agent.remember(old_state, action, reward, new_state, isDone)
 
-    def scoreCandidate(self, sevenCardHand, candidate, ginhand):
+    def startOfTurn(self, ginhand):
         self.myPlayer = ginhand.currentlyPlaying.player
         new_state = self.agent.get_state(ginhand,self.myPlayer)
         if not self.turns==0:
             # set reward for the new state
             reward = self.agent.set_reward(ginhand,self.myPlayer)
-            self.learnTurn(self.old_state, self.turn_scores, reward, new_state)
+            self.learnTurn(self.old_state, self.turn_scores, reward, new_state, 
+                                is_first_turn=(self.turns==1))
+            ginhand.turns[-3].turn_scores = self.turn_scores
         self.old_state = new_state
         self.turns += 1
         self.turn_scores = []
-
+        
+    def scoreCandidate(self, sevenCardHand, candidate, ginhand):
         # perform random actions based on agent.epsilon, or choose the action
         
         if random.uniform(0, 1) < self.agent.epsilon:
@@ -141,7 +149,13 @@ class ginDQNStrategy(playGin.OneDecisionGinStrategy):
             # the other player was dealt a winning hand
             # nothing to learn here, except perhaps philosophically
             return
+        ## deal with our last turn
         new_state = self.agent.get_state(ginhand,self.myPlayer)
         reward = self.agent.set_reward(ginhand,self.myPlayer)
-        self.learnTurn(self.old_state, self.turn_scores, reward, new_state, True)
+        self.learnTurn(self.old_state, self.turn_scores, reward, new_state, isDone=True)
+        if ginhand.currentlyPlaying.player.name == self.myPlayer.name: 
+            ginhand.lastTurn().turn_scores = self.turn_scores
+        else:
+            ginhand.turns[-2].turn_scores = self.turn_scores
+        
             
