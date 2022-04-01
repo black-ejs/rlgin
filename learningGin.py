@@ -38,6 +38,13 @@ def display(counter_hands, hand_duration, ginhand):
     else:
         print(f'Game {counter_hands}    Winner: {NO_WIN_NAME}    Turns: {len(ginhand.turns)}    Time: {hand_duration*1000:3.2f}')
 
+    if ('log_decisions' in params) and params['log_decisions']:
+        i=0
+        for t in ginhand.turns:
+            if hasattr(t, 'turn_scores'):
+                print(f"  turn {i} {t} > {t.turn_scores}")
+            i+=1
+
 ## #############################################
 def get_mean_stdev(array):
     return statistics.mean(array), statistics.stdev(array)    
@@ -63,6 +70,28 @@ def initalizeDQN(params):
 def print_stats(stats, file=sys.stdout):
     for key, value in stats.stats.items():
         print(f"{key}: {value}", file=file)
+
+## #############################################
+def model_is_crashed(ginhand:gin.Hand):
+    if not hasattr(ginhand, 'turns'):
+        return False
+    count_flunks = 0
+    for t in ginhand.turns:
+        if not hasattr(t, "turn_scores"):
+            continue
+        count_zeroes_turn = 0
+        for ts in t.turn_scores:
+            if ts == 0:
+                count_zeroes_turn +=1
+        if count_zeroes_turn > len(t.turn_scores)-1:
+            count_flunks +=1  # zero or one non-zero value returned
+        elif t.turn_scores[0] != 0:
+            count_flunks = 0  # something interesting, anyway
+    
+    if count_flunks > 10:
+        return True
+
+    return  False
 
 ## #############################################
 def run(params):
@@ -99,7 +128,7 @@ def run(params):
             agent.epsilon = float(params['noise_epsilon'])
         else:
             agent.epsilon = max(1 - (counter_hands * params['epsilon_decay_linear']),
-                                float(params['noise_epsilon']),)
+                                float(params['noise_epsilon']))
 
         # create GinHand, re-using the agent each time
         ginhand = gin.GinHand(gin.Player(params['player_one_name']),
@@ -125,6 +154,9 @@ def run(params):
 
         if params['display']:
             display(counter_hands, hand_duration, ginhand)
+
+        if model_is_crashed(ginhand):
+            print(f"** possible model crash at hand {counter_hands} **")
 
     total_duration = time.time() - startTime
     
