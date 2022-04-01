@@ -25,8 +25,9 @@ class DQNAgent(torch.nn.Module):
         self.output_size = params['output_size']
         self.layer_sizes = params['layer_sizes'] # 'hidden'/interior layers
         self.memory = collections.deque(maxlen=params['memory_size'])
-        self.weights = params['weights_path']
+        self.weights_path = params['weights_path']
         self.load_weights = params['load_weights']
+        self.load_weights_success = False
         self.optimizer = None
         self.network()
           
@@ -42,9 +43,9 @@ class DQNAgent(torch.nn.Module):
 
         # weights
         if self.load_weights:
-            self.model = self.load_state_dict(torch.load(self.weights))
+            self.model = self.load_state_dict(torch.load(self.weights_path))
             self.eval()
-            print(f"weights loaded from {self.weights}")
+            self.load_weights_success = True
 
     def forward(self, x):
         num_layers = len(self.layers)

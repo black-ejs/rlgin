@@ -1,5 +1,6 @@
 import datetime
 import sys
+import contextlib
 import time
 import argparse
 import numpy as np
@@ -11,7 +12,7 @@ DEVICE = 'cpu' # 'cuda' if torch.cuda.is_available() else 'cpu'
 
 from DQN import DQNAgent
 import gin
-import playGin
+from playGin import BrandiacGinStrategy
 import ginDQN
 import ginDQNParameters
 NO_WIN_NAME = 'nobody'
@@ -99,6 +100,8 @@ def run(params):
     Use the DQN to play gin, via a ginDQNStrategy            
     """
     agent = initalizeDQN(params)
+    if agent.load_weights_success:
+        print(f"weights loaded from {agent.weights_path}")
 
     counter_hands = 0
     score_plot = []
@@ -132,7 +135,7 @@ def run(params):
 
         # create GinHand, re-using the agent each time
         ginhand = gin.GinHand(gin.Player(params['player_one_name']),
-                                    playGin.BrandiacGinStrategy(params['brandiac_random_percent']),
+                                    BrandiacGinStrategy(params['brandiac_random_percent']),
                                 gin.Player(params['player_two_name']),
                                     ginDQN.ginDQNStrategy(params,agent))
 
@@ -185,25 +188,43 @@ if __name__ == '__main__':
 
     # Set options 
     parser = argparse.ArgumentParser()
-    params = ginDQNParameters.define_parameters()
     parser.add_argument("--display", nargs='?', type=distutils.util.strtobool, default=True)
     args = parser.parse_args()
-    print("Args", args)
-    params['display'] = args.display
+    print("learningGin: args ", args)
 
-    start_time = time.time()
-    print(f"****** learningGin execution at {datetime.datetime.now()} ")
-    print(f"params: {params}")
+    try:
 
-    if params['train']:
-        print("Training...")
-        stats = run(params)
-        print_stats(stats)
-    if params['test']:
-        print("Testing...")
-        params['train'] = False
-        params['load_weights'] = True
-        stats = run(params)
-        print_stats(stats)
+        params = ginDQNParameters.define_parameters()
+        params['display'] = args.display
+        
+        log = None
+        old_stdout = None
+        if 'log_path' in params:
+            log_path = params['log_path']
+            log = open(log_path, "a")
+            if log.writable:
+                old_stdout = sys.stdout
+                sys.stdout = log
 
-    print(f"****** learningGin execution took {time.time() - start_time} seconds")
+        start_time = time.time()
+        print(f"****** learningGin execution at {datetime.datetime.now()} ")
+        print(f"params: {params}")
+
+        if params['train']:
+            print("Training...")
+            stats = run(params)
+            print_stats(stats)
+        if params['test']:
+            print("Testing...")
+            params['train'] = False
+            params['load_weights'] = True
+            stats = run(params)
+            print_stats(stats)
+
+        print(f"****** learningGin execution took {time.time() - start_time} seconds")
+
+    finally:
+        if not old_stdout == None:
+            sys.stdout = old_stdout
+        if not log == None:
+            log.close()

@@ -190,7 +190,7 @@ class Hand:
 		result = result[:-1]
 
 		if not len(prettyHand) == HAND_SIZE:
-			print(f"error: analyzed hand contains duplicates: {result}" )
+			print(f"gin error: analyzed hand contains duplicates: {result}")
 
 		return result
 
