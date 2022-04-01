@@ -271,19 +271,15 @@ class Turn:
 	DRAW=0
 	DISCARD=1
 	
-	def __init__(self, player, draw=Draw(Draw.DECK,Card(0,0)), discard=Card(0,0)):
+	def __init__(self, player):
 		self.player=player   ## a Player
-		self.draw=draw       ## a Draw
-		self.discard=discard ## a Card
+		self.draw=None       ## a Draw
+		self.discard=None ## a Card
 	
 	def __str__(self):
-		rez = "opponent drew "
-		if self.draw.source == "PILE":
-			# only show cards opponent picks up from the PILE
-			rez += self.draw.card
-			rez += " "
-		rez += f"from the {self.draw.source}\n"
-		rez += f"opponent discarded {self.discard}" 
+		rez  = f"{self.player.name} drew {self.draw.card} from the {self.draw.source}"
+		rez += f", and "
+		rez += f"discarded {self.discard}" 
 		return rez
 
 class Playing:
