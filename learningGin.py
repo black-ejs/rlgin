@@ -31,14 +31,14 @@ class Stats:
         return "unknown statistic"
 
 ## #############################################
-def display(counter_hands, hand_duration, ginhand):
+def display(counter_hands, hand_duration, ginhand, log_decisions):
     winner = ginhand.winner
     if not winner == None:
         print(f'Game {counter_hands}    Winner: {winner.player}    Hand: {winner.playerHand.prettyStr()}    Turns: {len(ginhand.turns)}    Time: {hand_duration*1000:3.2f}')
     else:
         print(f'Game {counter_hands}    Winner: {NO_WIN_NAME}    Turns: {len(ginhand.turns)}    Time: {hand_duration*1000:3.2f}')
 
-    if ('log_decisions' in params) and params['log_decisions']:
+    if log_decisions:
         i=0
         for t in ginhand.turns:
             if hasattr(t, 'turn_scores'):
@@ -153,7 +153,8 @@ def run(params):
             winMap[NO_WIN_NAME] = winMap[NO_WIN_NAME]+1
 
         if params['display']:
-            display(counter_hands, hand_duration, ginhand)
+            display(counter_hands, hand_duration, ginhand, 
+                ('log_decisions' in params) and params['log_decisions'])
 
         if model_is_crashed(ginhand):
             print(f"** possible model crash at hand {counter_hands} **")
