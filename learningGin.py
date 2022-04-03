@@ -68,7 +68,9 @@ def initalizeDQN(params):
     return agent
 
 ## #############################################
-def print_stats(stats, file=sys.stdout):
+def print_stats(stats, file=None):
+    if file == None:
+        file = sys.stdout
     for key, value in stats.stats.items():
         print(f"{key}: {value}", file=file)
 
@@ -161,6 +163,8 @@ def run(params):
 
         if model_is_crashed(ginhand):
             print(f"** possible model crash at hand {counter_hands} **")
+            state_dict = agent.state_dict()
+            # print(state_dict)
 
     total_duration = time.time() - startTime
     
