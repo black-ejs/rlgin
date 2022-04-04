@@ -78,20 +78,27 @@ def print_stats(stats, file=None):
 def model_is_crashed(ginhand:gin.Hand):
     if not hasattr(ginhand, 'turns'):
         return False
+    total_flunks = 0
+    total_turns = 0
     count_flunks = 0
     for t in ginhand.turns:
         if not hasattr(t, "turn_scores"):
             continue
+        total_turns += 1
         count_zeroes_turn = 0
         for ts in t.turn_scores:
             if ts == 0:
                 count_zeroes_turn +=1
         if count_zeroes_turn > len(t.turn_scores)-1:
             count_flunks +=1  # zero or one non-zero value returned
+            total_flunks += 1
         elif t.turn_scores[0] != 0:
             count_flunks = 0  # something interesting, anyway
     
     if count_flunks > 10:
+        return True
+
+    if total_flunks > total_turns*0.9:
         return True
 
     return  False
