@@ -86,7 +86,7 @@ def compare_weights(pretrain_weights, posttrain_weights):
                 print(f"unequal -- {p}:  (pre) {pre}")
                 print(f"{p}: (post) {post}")
         except RuntimeError as err:
-            print(f"error processing element {p}: {err=}, {type(err)=}")
+            print(f"error processing element {p}: {err}")
             print 
         
     return count_diffs
