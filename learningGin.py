@@ -75,6 +75,23 @@ def print_stats(stats, file=None):
         print(f"{key}: {value}", file=file)
 
 ## #############################################
+def compare_weights(pretrain_weights, posttrain_weights):
+    count_diffs = 0
+    for p in pretrain_weights:
+        try:
+            pre = pretrain_weights[p]
+            post = posttrain_weights[p]
+            if not (torch.equal(pre, post)):
+                count_diffs += 1
+                print(f"unequal -- {p}:  (pre) {pre}")
+                print(f"{p}: (post) {post}")
+        except RuntimeError as err:
+            print(f"error processing element {p}: {err=}, {type(err)=}")
+            print 
+        
+    return count_diffs
+
+## #############################################
 def model_is_crashed(ginhand:gin.Hand):
     if not hasattr(ginhand, 'turns'):
         return False
@@ -94,28 +111,29 @@ def model_is_crashed(ginhand:gin.Hand):
             total_flunks += 1
         elif t.turn_scores[0] != 0:
             count_flunks = 0  # something interesting, anyway
-    
+
     if count_flunks > 10:
         return True
 
     if total_flunks > total_turns*0.9:
         return True
 
-    return  False
+    return False
 
 ## #############################################
 def run(params):
     """
     Use the DQN to play gin, via a ginDQNStrategy            
     """
+    pretrain_weights = None
+
     agent = initalizeDQN(params)
     if agent.load_weights_success:
         print(f"weights loaded from {agent.weights_path}")
+        if params['train']:
+            pretrain_weights = agent.state_dict()
 
     counter_hands = 0
-    score_plot = []
-    counter_plot = []
-
     winMap = {}
     winMap[params['player_one_name']] = 0				
     winMap[params['player_two_name']] = 0				
@@ -176,10 +194,14 @@ def run(params):
     total_duration = time.time() - startTime
     
     if params['train']:
-        model_weights = agent.state_dict()
+        posttrain_weights = agent.state_dict()
         params["weights_path"] += ".post_training"
-        torch.save(model_weights, params["weights_path"])
+        torch.save(posttrain_weights, params["weights_path"])
         print(f"weights saved to {params['weights_path']}")
+        if not pretrain_weights==None:
+            count_diffs = compare_weights(pretrain_weights, posttrain_weights)
+            if count_diffs == 0:
+                print(f"** WARNING: weights appear unchanged after training **")
 
     mean_durations, stdev_durations = get_mean_stdev(durations)
     mean_turns, stdev_turns = get_mean_stdev(turns_in_hand)
@@ -190,6 +212,7 @@ def run(params):
     stats.put("mean_turns", mean_turns)
     stats.put("stdev_turns", stdev_turns)
     stats.put("mean_durations", mean_durations)
+    stats.put("stdev_durations", stdev_durations)
     stats.put("stdev_durations", stdev_durations)
 
     return stats
@@ -223,13 +246,14 @@ if __name__ == '__main__':
 
         if params['train']:
             print("Training...")
-            stats = run(params)
+            stats = run(params) 
             print_stats(stats)
+
         if params['test']:
             print("Testing...")
             params['train'] = False
-            params['load_weights'] = True
-            stats = run(params)
+            params['load_weights'] = True 
+            stats = run(params)  
             print_stats(stats)
 
         print(f"****** learningGin execution took {time.time() - start_time} seconds")
