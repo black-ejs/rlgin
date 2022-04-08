@@ -171,12 +171,13 @@ class BrandiacGinStrategy(BrainiacGinStrategy):
 ## ##############################
 ## with reporting 
 ## ##############################
-def play(num_hands_to_play: int =500, 
-			strategy1: str ="b", 
-			strategy2: str ="r", 
-			name1: str ="player1", 
-			name2: str ="player2",
-			show_card_counts: bool =False):
+def play(num_hands_to_play:(int)=500, 
+			strategy1:(str)="b", 
+			strategy2:(str)="r", 
+			name1:(str)="player1", 
+			name2:(str)="player2",
+			show_card_counts:(bool)=False,
+			show_turns:(bool)=False):
 
 	max_duration = -1
 	min_duration = 10000000
@@ -217,6 +218,11 @@ def play(num_hands_to_play: int =500,
 			winMap[ginhand.winner.player.name]+=1
 			for card in ginhand.winner.playerHand.card:
 				card_counts[card.toInt()]+=1
+			if show_turns:
+				i=0
+				for t in ginhand.turns:
+					print(f"  turn {i} {t}")
+					i+=1
 		else:
 			print(f'Game {i}    Winner: nobody    Turns: {len(ginhand.turns)}    Time: {duration*1000:3.3f}')
 			winMap['nobody']+=1
@@ -288,15 +294,13 @@ if __name__ == '__main__':
 	parser.add_argument('show_card_counts',
                     default='False', 
 					type=str,
-					# action=bool(),
-					# action=bool,
-					# type=bool,
-					# action=distutils.util.strtobool,
-					# action=lambda x:bool(distutils.util.strtobool(x)),
-					# action=argparse.BooleanOptionalAction, 
-					#action='store_true',
                     nargs='?', 
 					help='show frequency counts of cards in winning hands')
+	parser.add_argument('show_turns',
+                    default='False', 
+					type=str,
+                    nargs='?', 
+					help='show turn-by-turn info')
 	args = parser.parse_args()
 
 	if not args.show_card_counts == 'False':
@@ -304,10 +308,16 @@ if __name__ == '__main__':
 	else:
 		show_card_counts = False
 
+	if not args.show_turns == 'False':
+		show_turns = distutils.util.strtobool(args.show_turns)
+	else:
+		show_turns = False
+
 	play(num_hands_to_play=args.num_hands_to_play, 
 			strategy1=args.strategy1, 
 			strategy2=args.strategy2, 
 			name1=args.name1, 
 			name2=args.name2,
-			show_card_counts=show_card_counts)
+			show_card_counts=show_card_counts,
+			show_turns=show_turns)
 
