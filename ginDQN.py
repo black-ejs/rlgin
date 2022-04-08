@@ -103,6 +103,7 @@ class ginDQNStrategy(playGin.OneDecisionGinStrategy):
         self.turns = 0
         self.batch_size = params['batch_size']
         self.train = params['train']
+        self.pretrain_weights = None
 
     def learnTurn(self, old_state, turn_actions, reward, new_state, isDone = False, is_first_turn=False):
         if is_first_turn: 
@@ -115,18 +116,22 @@ class ginDQNStrategy(playGin.OneDecisionGinStrategy):
                 self.agent.train_short_memory(old_state, action, reward, new_state, isDone)
                 # store the new data into a long term memory
                 self.agent.remember(old_state, action, reward, new_state, isDone)
+        if not self.pretrain_weights==None:
+            count_diffs = ginDQNStrategy.compare_weights(self.pretrain_weights, self.agent.state_dict())
+            if count_diffs == 0:
+                    print(f"** WARNING: weights appear unchanged at turn {self.turns}")
 
     def startOfTurn(self, ginhand):
         self.myPlayer = ginhand.currentlyPlaying.player
         new_state = self.agent.get_state(ginhand,self.myPlayer)
-        if (self.train):
-            ## deal with previous term
-            if not self.turns==0:
+        ## deal with previous term
+        if not self.turns==0:
+            ginhand.turns[-3].turn_scores = self.turn_scores # my previous turn
+            if self.train:
                 # set reward for the new state
                 reward = self.agent.set_reward(ginhand,self.myPlayer)
                 self.learnTurn(self.old_state, self.turn_scores, reward, new_state, 
                                     is_first_turn=(self.turns==1))
-                ginhand.turns[-3].turn_scores = self.turn_scores
         self.old_state = new_state
         self.turns += 1
         self.turn_scores = []
@@ -161,4 +166,21 @@ class ginDQNStrategy(playGin.OneDecisionGinStrategy):
         else:
             ginhand.turns[-2].turn_scores = self.turn_scores
         
+    ## #############################################
+    def compare_weights(pretrain_weights, posttrain_weights):
+        count_diffs = 0
+        for p in pretrain_weights:
+            try:
+                pre = pretrain_weights[p]
+                post = posttrain_weights[p]
+                if not (torch.equal(pre, post)):
+                    count_diffs += 1
+                    print(f"unequal state_dict: ")
+                    print(f"(pre) {p}: {pre}")
+                    print(f"(post){p}: {post}")
+            except RuntimeError as err:
+                print(f"error processing element {p}: {err}")
+                print 
+            
+        return count_diffs
             
