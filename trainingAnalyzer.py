@@ -190,6 +190,11 @@ class LearningLogParser:
 
     def save_training_session(self):
         self.stats['hands'] = self.hands
+        if len(self.ma_array) == 0:
+            # we never made it to the window
+            # dummy something up to avoid problems
+            for hand in self.hands:
+                self.ma_array.append(1)
         self.stats['ma_array'] = self.ma_array
         self.statsList.append(self.stats)
         self.session_count += 1
@@ -268,11 +273,17 @@ class LearningLogParser:
                 # ma_array.append(float(sum(self.ma_window))/float(len(self.ma_window)))                            
                 self.ma_array.append(sum(self.ma_window))                            
         if "winMap: " in line:
-            cpos = line.find(",")            
-            self.stats['wins1'] = int(line[cpos-3:cpos])
+            cpos = line.find(",")
+            x = cpos-1
+            while not line[x] == ' ':
+                x-=1        
+            self.stats['wins1'] = int(line[x:cpos])
             cpos +=1
             cpos = line[cpos:].find(",")+cpos
-            self.stats['wins2'] = int(line[cpos-3:cpos])
+            x = cpos-1
+            while not line[x] == ' ':
+                x-=1        
+            self.stats['wins2'] = int(line[x:cpos])
             if len(self.hands)>0:
                 self.stats['wins_per_1000_hands'] = self.stats['wins2']*1000/len(self.hands)
             else:

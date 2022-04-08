@@ -206,7 +206,7 @@ class DecisionProfiler(TrainingAnalyzer):
         DecisionPlotter.rank_all_cumulative_wins(logParser.statsList)
         DecisionPlotter.rank_all_moving_averages(logParser.statsList)
 
-        logParser.statsList.sort(key=lambda x: x['moving_average_last_spline_slope'])
+        # logParser.statsList.sort(key=lambda x: x['moving_average_last_spline_slope'])
         print("     -------- name_scenario ----------     \tma_last_slope  ma_full_slope\tcum_last_slope\tcum_ratio\twpk")
         for st in logParser.statsList:
             star = ""
@@ -257,7 +257,7 @@ import argparse
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser()
     argparser.add_argument('path_to_logfile',
-                    default='logs/histo',  #'logs/mega2', 
+                    default='logs/learningGin_log.20220408001554.txt', # 'logs/histo',  #'logs/mega2', 
                     nargs='?', help='path to the logfile to be plotted')
     argparser.add_argument('include_partials',
                     default='False', 
