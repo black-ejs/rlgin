@@ -34,6 +34,43 @@ class RegressionPlotter:
         return slopes
 
     # #############################################
+    def plot_histogram(array_x, bins, title:(str),
+                        figure_id:(str)=None,
+                        xlabel:(str)=None, 
+                        ylabel:(str)=None):
+
+        if figure_id == None:
+            figure_id = title
+
+        figure = plt.figure(figure_id, figsize=(FIGURE_WIDTH,FIGURE_HEIGHT))
+        ax = figure.gca()
+
+        plt.hist(array_x, 
+                bins=bins, 
+                range=None, 
+                density=False, 
+                weights=None, 
+                cumulative=False, 
+                bottom=None, 
+                histtype='bar', 
+                align='mid', 
+                orientation='vertical', 
+                rwidth=None, 
+                log=False, 
+                color=None, 
+                label=None)
+
+        if xlabel == None:
+            xlabel = "decision values"
+        if ylabel == None:
+            ylabel = "frequency"
+        ax.set(xlabel=xlabel, ylabel=ylabel)
+
+        plt.draw()
+
+        return 
+
+    # #############################################
     def plot_regression(array_y, array_x, title:(str), 
                         splines:(Union[int,Iterable])=1, 
                         order:(int)=1, 
