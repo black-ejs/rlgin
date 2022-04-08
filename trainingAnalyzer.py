@@ -349,7 +349,10 @@ class LearningLogParser:
                 max2=max(max2,w2)
                 min1=min(min1,w1)
                 min2=min(min2,w2)
-                ratio = w1/w2
+                if w2 > 0:
+                    ratio = w1/w2
+                else:
+                    ratio = w1
                 maxr = max(ratio, maxr)
                 minr = min(ratio, minr)
                 for hand in st['hands']:
