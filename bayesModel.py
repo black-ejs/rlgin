@@ -94,7 +94,6 @@ if __name__ == '__main__':
     # Define optimizer
     params = ginDQNParameters.define_parameters()
     params['log_path'] = 'logs/bayesian_log.' + params['timestamp'] +'.txt'
-    params['episodes'] = 5
     bayesOpt = BayesianOptimizer(params)
     startTime = time.time()
     bayesOpt.optimize_RL()
