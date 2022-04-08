@@ -50,12 +50,14 @@ class DecisionPlotter(TrainingPlotter):
                         xlabel="decision {}".format(target))
 
     ## ##############################
-    def plot_zeroes_by_hand(st, fig_label):
+    def get_zeroes_by_hand(st, fig_label):
         hands = st['hands']        
         array_zeroes = []
         array_ordinals = []
         array_winners = []
         array_wordinals = []
+        array_losers = []
+        array_lordinals = []
 
         decision_count = DecisionPlotter.get_decision_count(st)
         if decision_count == -1:
@@ -77,9 +79,26 @@ class DecisionPlotter(TrainingPlotter):
                         count_zeroes += 1
                 array_zeroes.append(count_zeroes)
                 array_ordinals.append(hand['hand_index'])
-            if not (hand['winner'] == 'nobody'):
+            if hand['winner'] == LearningLogParser.DQN_PLAYER_NAME:
                 array_winners.append(count_zeroes)
                 array_wordinals.append(hand['hand_index'])
+            elif not (hand['winner'] == 'nobody'):
+                array_losers.append(count_zeroes)
+                array_lordinals.append(hand['hand_index'])
+
+        return [array_zeroes,array_ordinals,
+                array_winners, array_wordinals,
+                array_losers, array_lordinals]
+
+    ####################################
+    def plot_zeroes_by_hand(st, fig_label):
+        arrays = DecisionPlotter.get_zeroes_by_hand(st, fig_label)
+        array_zeroes = arrays[0]
+        array_ordinals = arrays[1]
+        array_winners = arrays[2]
+        array_wordinals = arrays[3]
+        array_losers = arrays[4]
+        array_lordinals = arrays[5]
 
         DecisionPlotter.plot_regression(array_zeroes, array_ordinals,
                         fig_label, 
@@ -91,8 +110,13 @@ class DecisionPlotter(TrainingPlotter):
                         color="#F8283D"
                         #ax=plt.gca(),
                         ) 
-        plt.draw()
 
+        regplot.scatter(array_lordinals,
+                        array_losers, 
+                        color="#08B83D"
+                        #ax=plt.gca(),
+                        ) 
+        plt.draw()
 
 ## #############################################
 ## #############################################
@@ -159,7 +183,7 @@ class DecisionLogParser(LearningLogParser):
     def processLine(self, line:(str), include_partials:(bool)=False):
         self.lines += 1
         if self.lines%10000 == 0:
-            print(f"parsed {self.lines} lines in {time.time()-self.start_time}ms")
+            print(f"parsed {self.lines} lines in {time.time()-self.start_time:3.3f}s")
         if ("  turn " == line[:7]) and ("[" in line):
             toks = line.split()
             turn_index = toks[1]
