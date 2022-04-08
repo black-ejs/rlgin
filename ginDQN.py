@@ -18,27 +18,31 @@ class ginDQNAgent(DQNAgent):
     def get_state(self, ginhand, player, pile_substitute = None):
         """
         Return the state.
-        The state is a numpy array of 52 values, representing:
+        The state is a numpy array of 53 values, representing:
             - tbe 52 cards in the deck, in 2-to-Ace order within suit, suits are Clubs, Diamonds, Hearts then Spades
                   these 52 values represent the location in the of the card 
                   in the Gin Hand (from the POV of the Player):
-                        -500 = IN THE OTHER HAND, i.e. the other player 
+                       -.500 = IN THE OTHER HAND, i.e. the other player 
                                picked it up from the discard pile, 
                                but has not discarded it
-                        -100 = OUT OF PLAY, i.e. in the DISCARD PILE, 
+                       -.100 = OUT OF PLAY, i.e. in the DISCARD PILE, 
                                but not the top card available for draw
                            0 = unknown, i.e. in the DECK or 
                                the other Player's hand
-                          10 = the JUST-DISCARDED card, i.e. the one at 
+                        .100 = the JUST-DISCARDED card, i.e. the one at 
                                the top of the PILE, available for draw
-                         100 = in the PLAYER'S HAND
-
+                        .500 = in the PLAYER'S HAND
+            - the stage in the players turn, either 
+                           0 = deciding the DRAW SOURCE  
+                           1 = deciding the DISCARD CARD  
         """
-        IN_OTHER_HAND = -500
-        OUT_OF_PLAY = -100
-        UNKNOWN = 0
-        JUST_DISCARDED = 10
-        IN_MY_HAND = 100
+        IN_OTHER_HAND = -0.500
+        OUT_OF_PLAY = -0.100
+        UNKNOWN = 0.0
+        JUST_DISCARDED = 0.100
+        IN_MY_HAND = 0.500
+        DECIDE_DRAW_SOURCE = 0.000
+        DECIDE_DISCARD_CARD = 1.000
 
         state = []
         for i in range(self.state_size):
@@ -66,7 +70,12 @@ class ginDQNAgent(DQNAgent):
                 state[c.toInt()] = IN_MY_HAND
             else:
                 state[top_of_pile.toInt()] = OUT_OF_PLAY
-                state[c] = JUST_DISCARDED        
+                state[c.toInt()] = JUST_DISCARDED        
+
+        if pile_substitute == None:
+            state[-1] = DECIDE_DRAW_SOURCE
+        else:
+            state[-1] = DECIDE_DISCARD_CARD
 
         return DQNAgent.as_numpy_array(state)
 
@@ -98,26 +107,31 @@ class ginDQNStrategy(playGin.OneDecisionGinStrategy):
         self.epsilon_decay_linear = params['epsilon_decay_linear']
         self.state_size = params['input_size']
         self.agent = agent
-        self.old_state = None
         self.myPlayer = None
         self.turns = 0
         self.batch_size = params['batch_size']
         self.train = params['train']
         self.pretrain_weights = None
 
-    def learnTurn(self, old_state, turn_actions, reward, new_state, isDone = False, is_first_turn=False):
-        if is_first_turn: 
+    def learnTurn(self, turn_states, turn_actions, reward, new_state, isDone = False, is_first_turn=False):
+        if is_first_turn:
+            i=0 
             for action in turn_actions:
+                old_state = turn_states[i]
                 self.agent.remember(old_state, action, reward, new_state, isDone)
+                i+=1
             self.agent.replay_new(self.agent.memory, self.batch_size)
         else:
+            i=0 
             for action in turn_actions:
+                old_state = turn_states[i]
                 # train short memory base on the new action and state
                 self.agent.train_short_memory(old_state, action, reward, new_state, isDone)
                 # store the new data into a long term memory
                 self.agent.remember(old_state, action, reward, new_state, isDone)
         if not self.pretrain_weights==None:
-            count_diffs = ginDQNStrategy.compare_weights(self.pretrain_weights, self.agent.state_dict())
+            count_diffs = ginDQNStrategy.compare_weights(self.pretrain_weights, 
+                                                    self.agent.state_dict())
             if count_diffs == 0:
                     print(f"** WARNING: weights appear unchanged at turn {self.turns}")
 
@@ -130,25 +144,27 @@ class ginDQNStrategy(playGin.OneDecisionGinStrategy):
             if self.train:
                 # set reward for the new state
                 reward = self.agent.set_reward(ginhand,self.myPlayer)
-                self.learnTurn(self.old_state, self.turn_scores, reward, new_state, 
+                self.learnTurn(self.turn_states, self.turn_scores, reward, new_state, 
                                     is_first_turn=(self.turns==1))
-        self.old_state = new_state
         self.turns += 1
         self.turn_scores = []
+        self.turn_states = []
         
     def scoreCandidate(self, sevenCardHand, candidate, ginhand):
         # perform random actions based on agent.epsilon, or choose the action
         
+        current_state = self.agent.get_state(ginhand,self.myPlayer,candidate)
         if random.uniform(0, 1) < self.agent.epsilon:
             score = random.random()
         else:
             # predict action based on the old state
             with torch.no_grad():
-                state_old_tensor = torch.tensor(self.old_state.reshape((1, self.state_size)), 
+                state_old_tensor = torch.tensor(current_state.reshape((1, self.state_size)), 
                                                 dtype=torch.float32).to(DEVICE)
                 prediction = self.agent(state_old_tensor)
                 score = DQNAgent.translatePrediction(prediction)
         self.turn_scores.append(score)
+        self.turn_states.append(current_state)
         return score
         
     def endOfHand(self, ginhand):
@@ -160,7 +176,7 @@ class ginDQNStrategy(playGin.OneDecisionGinStrategy):
             ## deal with our last turn
             new_state = self.agent.get_state(ginhand,self.myPlayer)
             reward = self.agent.set_reward(ginhand,self.myPlayer)
-            self.learnTurn(self.old_state, self.turn_scores, reward, new_state, isDone=True)
+            self.learnTurn(self.turn_states, self.turn_scores, reward, new_state, isDone=True)
         if ginhand.currentlyPlaying.player.name == self.myPlayer.name: 
             ginhand.lastTurn().turn_scores = self.turn_scores
         else:
