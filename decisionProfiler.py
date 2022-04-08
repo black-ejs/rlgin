@@ -1,5 +1,4 @@
 from collections.abc import Iterable
-import sys
 import time
 import distutils.util
 
