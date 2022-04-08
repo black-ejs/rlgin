@@ -29,6 +29,7 @@ class DQNAgent(torch.nn.Module):
         self.load_weights = params['load_weights']
         self.load_weights_success = False
         self.optimizer = None
+        self.posttrain_weights = None
         self.network()
           
     def network(self):
@@ -43,8 +44,13 @@ class DQNAgent(torch.nn.Module):
 
         # weights
         if self.load_weights:
-            self.model = self.load_state_dict(torch.load(self.weights_path))
+            if self.posttrain_weights == None:
+                state_dict = torch.load(self.weights_path)
+                self.model = self.load_state_dict(torch.load(self.weights_path))
+            else:
+                self.load_state_dict(self.posttrain_weights)
             self.eval()
+            state_dict = self.state_dict()
             self.load_weights_success = True
 
     def forward(self, x):
@@ -105,7 +111,8 @@ class DQNAgent(torch.nn.Module):
             self.optimizer.step()            
 
     def translatePrediction(prediction):
-        return np.argmax(prediction.detach().cpu().numpy()[0])
+        translation = np.argmax(prediction.detach().cpu().numpy()[0])
+        return translation
 
     def train_short_memory(self, state, action, reward, next_state, done):
         """
