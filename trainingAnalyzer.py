@@ -8,7 +8,6 @@ import matplotlib.widgets as widgets
 import regressionPlotter
 
 MA_SIZE = 50
-DQN_PLAYER_NAME = "Tempo"
 
 ## #############################################
 ## #############################################
@@ -184,6 +183,7 @@ class TrainingPlotManager:
 ## ###################################################
 ## ###################################################
 class LearningLogParser:
+    DQN_PLAYER_NAME = "Tempo"
     statsList = []
     cumulative_averages = []
     score_stats = {}
@@ -234,7 +234,7 @@ class LearningLogParser:
 
     ## ##############################
     def processLine(self, line:(str), include_partials:(bool)=False):
-        ma_name = DQN_PLAYER_NAME
+        ma_name = LearningLogParser.DQN_PLAYER_NAME
 
         if LearningLogParser.is_session_start(line) and len(self.stats)>0:
             if 'wins2' in self.stats or include_partials:
@@ -249,9 +249,9 @@ class LearningLogParser:
         if "Winner: " in line:
             ## cumulative wins
             toks = line.split()
-            hand_index = toks[1]
+            hand_index = int(toks[1])
             winner = toks[3]
-            if winner == DQN_PLAYER_NAME:
+            if winner == LearningLogParser.DQN_PLAYER_NAME:
                 self.wins += 1
             self.hands.append({'hand_index': hand_index, 
                             'winner': winner, 
@@ -409,8 +409,11 @@ class TrainingAnalyzer:
     def create_PlotManager(self,statsList, cumulative_averages):
         return TrainingPlotManager(statsList, cumulative_averages)
 
+    def create_LogParser(self):
+        return LearningLogParser()
+
     def analyze(self, path_to_logfile, include_partials:(bool)=False):
-        logParser = LearningLogParser()
+        logParser = self.create_LogParser()
         logParser.parseLogs(path_to_logfile, include_partials)
 
         print("* * * * * * * * * * * * * * * * * * * ")
