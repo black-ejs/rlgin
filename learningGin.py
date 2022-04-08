@@ -1,6 +1,6 @@
 import datetime
 import sys
-import contextlib
+import copy
 import time
 import argparse
 import numpy as np
@@ -63,8 +63,9 @@ def initalizeDQN(params):
     params['output_size'] = 1 # size of desired response, length of list of numpys 
     agent = ginDQN.ginDQNAgent(params)
     agent = agent.to(DEVICE)
-    agent.optimizer = optim.Adam(agent.parameters(), 
-                            weight_decay=0, lr=params['learning_rate'])
+    if params['train']:
+        agent.optimizer = optim.Adam(agent.parameters(), 
+                                weight_decay=0, lr=params['learning_rate'])
     return agent
 
 ## #############################################
@@ -73,23 +74,6 @@ def print_stats(stats, file=None):
         file = sys.stdout
     for key, value in stats.stats.items():
         print(f"{key}: {value}", file=file)
-
-## #############################################
-def compare_weights(pretrain_weights, posttrain_weights):
-    count_diffs = 0
-    for p in pretrain_weights:
-        try:
-            pre = pretrain_weights[p]
-            post = posttrain_weights[p]
-            if not (torch.equal(pre, post)):
-                count_diffs += 1
-                print(f"unequal -- {p}:  (pre) {pre}")
-                print(f"{p}: (post) {post}")
-        except RuntimeError as err:
-            print(f"error processing element {p}: {err}")
-            print 
-        
-    return count_diffs
 
 ## #############################################
 def model_is_crashed(ginhand:gin.Hand):
@@ -131,7 +115,7 @@ def run(params):
     if agent.load_weights_success:
         print(f"weights loaded from {agent.weights_path}")
         if params['train']:
-            pretrain_weights = agent.state_dict()
+            pretrain_weights = copy.deepcopy(agent.state_dict())
 
     counter_hands = 0
     winMap = {}
@@ -161,11 +145,14 @@ def run(params):
                                 float(params['noise_epsilon']))
 
         # create GinHand, re-using the agent each time
+        opponentStrategy = BrandiacGinStrategy(params['brandiac_random_percent'])
+        dqnStrategy = ginDQN.ginDQNStrategy(params,agent)
+        if params['train'] and (not pretrain_weights==None):
+            dqnStrategy.pretrain_weights = pretrain_weights
         ginhand = gin.GinHand(gin.Player(params['player_one_name']),
-                                    BrandiacGinStrategy(params['brandiac_random_percent']),
+                                opponentStrategy,
                                 gin.Player(params['player_two_name']),
-                                    ginDQN.ginDQNStrategy(params,agent))
-
+                                dqnStrategy)
         ginhand.deal()
         
         hand_startTime = time.time()
@@ -175,13 +162,13 @@ def run(params):
             agent.replay_new(agent.memory, params['batch_size'])
         hand_duration = time.time() - hand_startTime
 
+        # stats and reporting
         durations.append(hand_duration)
         turns_in_hand.append(len(ginhand.turns))
         if not winner == None:
             winMap[winner.player.name] = winMap[winner.player.name]+1
         else:
             winMap[NO_WIN_NAME] = winMap[NO_WIN_NAME]+1
-
         if params['display']:
             display(counter_hands, hand_duration, ginhand, 
                 ('log_decisions' in params) and params['log_decisions'])
@@ -199,7 +186,7 @@ def run(params):
         torch.save(posttrain_weights, params["weights_path"])
         print(f"weights saved to {params['weights_path']}")
         if not pretrain_weights==None:
-            count_diffs = compare_weights(pretrain_weights, posttrain_weights)
+            count_diffs = ginDQN.ginDQNStrategy.compare_weights(pretrain_weights, posttrain_weights)
             if count_diffs == 0:
                 print(f"** WARNING: weights appear unchanged after training **")
 
