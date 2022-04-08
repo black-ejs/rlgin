@@ -60,9 +60,9 @@ class BayesianOptimizer():
             return score
 
         optim_params = [
-            {"name": "win_reward", "type": "continuous", "domain": (0.99, 0.75), "fmt": "0.3f"},
-            {"name": "loss_reward", "type": "continuous", "domain": (-0.009, -0.20), "fmt": "0.3f"},
-            {"name": "no_win_reward", "type": "continuous", "domain": (-0.001, -0.01), "fmt": "0.3f"}
+            {"name": "win_reward", "type": "continuous", "domain": (0.75, 0.99), "fmt": "0.3f"},
+            {"name": "loss_reward", "type": "continuous", "domain": (-0.20, -0.009), "fmt": "0.3f"},
+            {"name": "no_win_reward", "type": "continuous", "domain": (-0.01, -0.001), "fmt": "0.3f"}
             ]
 
         bayes_optimizer = BayesianOptimization(f=optimize,
