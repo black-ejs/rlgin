@@ -8,13 +8,18 @@ DQN_PLAYER_NAME = "Tempo"
 
 ## #############################################
 class BayesPlotter(TrainingPlotter):
-    def plot_rl_param(statsList, param_name):
+    def plot_bayes_param(statsList, param_name):
         array_score = []
         array_param = []
         for st in statsList:
-            if param_name in st and 'moving_average_spline_slopes' in st:
+            param_val = None
+            if param_name in st:
+                param_val = st[param_name]
+            elif 'params' in st and param_name in st['params']:
+                param_val = st['params'][param_name]
+            if (not (param_val==None)) and ('moving_average_spline_slopes' in st):
                 slopes = st['moving_average_spline_slopes']
-                array_param.append(st[param_name])
+                array_param.append(param_val)
                 ## array_score.append(st['wins2'])
                 array_score.append(slopes[-1])
         
@@ -24,20 +29,22 @@ class BayesPlotter(TrainingPlotter):
 
 ## #############################################
 class BayesPlotManager(TrainingPlotManager):
-    rl_param_names = ["l1","l2","l3","learning_rate", "epsilon_decay_linear"]
+
+    def get_bayes_param_names(self):
+        return ["l1","l2","l3","learning_rate", "epsilon_decay_linear"]
 
     def __init__(self, statsList:(Iterable), cumulative_averages:(Iterable)):
         super().__init__(statsList, cumulative_averages)
         for st in statsList:
-            for param_name in BayesPlotManager.rl_param_names:
+            for param_name in self.get_bayes_param_names():
                 self.figures.append(param_name)
             break
 
     def activateFigure(self, fig_label:(str)):
-        if not fig_label in self.rl_param_names:
+        if not fig_label in self.get_bayes_param_names():
             return super().activateFigure(fig_label)
         else:
-            BayesPlotter.plot_rl_param(self.statsList, fig_label)            
+            BayesPlotter.plot_bayes_param(self.statsList, fig_label)            
             self.install_navigation(fig_label)
             self.lastOpened = fig_label
 
