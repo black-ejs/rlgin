@@ -4,7 +4,7 @@ import distutils.util
 
 import matplotlib.pyplot as plt
 
-from trainingAnalyzer import TrainingPlotManager, LearningLogParser, TrainingAnalyzer, TrainingPlotter
+from trainingAnalyzer import TrainingPlotManager, TrainingLogParser, TrainingAnalyzer, TrainingPlotter
 import regplot
 
 ## #############################################
@@ -70,19 +70,21 @@ class DecisionPlotter(TrainingPlotter):
                 break
 
         for hand in hands:
-            if 'decisions' in hand:
-                count_zeroes = 0
-                hand_decisions = hand['decisions']
-                for d in hand_decisions:
-                    if d[target] == 0:
-                        count_zeroes += 1
-                array_zeroes.append(count_zeroes)
-                array_ordinals.append(hand['hand_index'])
-            if hand['winner'] == LearningLogParser.DQN_PLAYER_NAME:
-                array_winners.append(count_zeroes)
+            if not (('decisions' in hand) 
+                    and (len(hand['decisions'])>0)):
+                continue
+            count_zeroes = 0
+            hand_decisions = hand['decisions']
+            for d in hand_decisions:
+                if d[target] == 0:
+                    count_zeroes += 1
+            array_zeroes.append(count_zeroes/len(hand_decisions))
+            array_ordinals.append(hand['hand_index'])
+            if hand['winner'] == TrainingLogParser.DQN_PLAYER_NAME:
+                array_winners.append(count_zeroes/len(hand_decisions))
                 array_wordinals.append(hand['hand_index'])
             elif not (hand['winner'] == 'nobody'):
-                array_losers.append(count_zeroes)
+                array_losers.append(count_zeroes/len(hand_decisions))
                 array_lordinals.append(hand['hand_index'])
 
         return [array_zeroes,array_ordinals,
@@ -99,10 +101,11 @@ class DecisionPlotter(TrainingPlotter):
         array_losers = arrays[4]
         array_lordinals = arrays[5]
 
-        DecisionPlotter.plot_regression(array_zeroes, array_ordinals,
+        DecisionPlotter.plot_regression(array_zeroes, 
+                        array_ordinals,
                         fig_label, 
-                        ylabel="zeroes in hand",
-                        xlabel="successive hand")
+                        ylabel="% zero in hand",
+                        xlabel="hands")
 
         regplot.scatter(array_wordinals,
                         array_winners, 
@@ -162,7 +165,7 @@ class DecisionPlotManager(TrainingPlotManager):
 ## ###################################################
 ## ###################################################
 ## ###################################################
-class DecisionLogParser(LearningLogParser):
+class DecisionLogParser(TrainingLogParser):
 
     ## ##############################
     def __init__(self):
@@ -280,7 +283,7 @@ import argparse
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser()
     argparser.add_argument('path_to_logfile',
-                    default='logs/learningGin_log.20220408001554.txt', # 'logs/histo',  #'logs/mega2', 
+                    default='logs/bayesModel_reward-bayes_2022-04-08_214231', # 'logs/histo',  #'logs/mega2', 
                     nargs='?', help='path to the logfile to be plotted')
     argparser.add_argument('include_partials',
                     default='False', 
