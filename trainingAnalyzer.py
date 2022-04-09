@@ -182,7 +182,7 @@ class TrainingPlotManager:
 ## ###################################################
 ## ###################################################
 ## ###################################################
-class LearningLogParser:
+class TrainingLogParser:
     DQN_PLAYER_NAME = "Tempo"
     statsList = []
     cumulative_averages = []
@@ -212,36 +212,32 @@ class LearningLogParser:
         self.hands = []
         self.wins = 0
 
-    def extract_prop(self, key, line, stats):
-        if key in line:
-            stats[key] = self.get_prop(key, line)
-
-    def get_prop(self, key, line):
-        cpos = line.find(key)+len(key)+3
-        val = line[cpos:]
-        if val[0] == '"':
-            delim='"'
-            val = val[1:]
-        elif val[0] == "'":
-            delim="'"
-            val = val[1:]
-        elif val[0] == "[":
-            delim="]"
-            val = val[1:]
-        else:
-            delim=","
-        val = val[:val.find(delim)]
-        return val
+    def extract_param(self, key, params):
+        if key in params:
+            self.stats[key] = params[key]
 
     ## ##############################
     def is_session_start(line):
         return (("INPUT" in line) or ("Testing." in line) or ("Training." in line))
 
     ## ##############################
-    def processLine(self, line:(str), include_partials:(bool)=False):
-        ma_name = LearningLogParser.DQN_PLAYER_NAME
+    def parse_params(self, line:(str)):
+        params = eval(line[line.find('{'):])
+        self.extract_param("name_scenario", params)
+        self.extract_param("learning_rate", params)
+        self.extract_param("epsilon_decay_linear", params)
+        if "layer_sizes" in params:
+            ls = params["layer_sizes"]
+            self.stats["l1"] = int(ls[0])
+            self.stats["l2"] = int(ls[1])
+            self.stats["l3"] = int(ls[2])
+        self.stats['params'] = params
 
-        if LearningLogParser.is_session_start(line) and len(self.stats)>0:
+    ## ##############################
+    def processLine(self, line:(str), include_partials:(bool)=False):
+        ma_name = TrainingLogParser.DQN_PLAYER_NAME
+
+        if TrainingLogParser.is_session_start(line) and len(self.stats)>0:
             if 'wins2' in self.stats or include_partials:
                 self.save_training_session()
             self.init_training_session()
@@ -251,12 +247,14 @@ class LearningLogParser:
         if "Testing.." in line:
             self.stats['mode']='test'
             self.stats['name_scenario'] += '.' + self.stats['mode']
+        if "{'episodes':" in line:
+            self.parse_params(line)
         if "Winner: " in line:
             ## cumulative wins
             toks = line.split()
             hand_index = int(toks[1])
             winner = toks[3]
-            if winner == LearningLogParser.DQN_PLAYER_NAME:
+            if winner == TrainingLogParser.DQN_PLAYER_NAME:
                 self.wins += 1
             self.hands.append({'hand_index': hand_index, 
                             'winner': winner, 
@@ -288,20 +286,6 @@ class LearningLogParser:
                 self.stats['wins_per_1000_hands'] = self.stats['wins2']*1000/len(self.hands)
             else:
                 self.stats['wins_per_1000_hands'] = -1
-        self.extract_prop("name_scenario", line, self.stats)
-        if "learning_rate" in line:
-            lr = self.get_prop("learning_rate", line)
-            self.stats["learning_rate"] = float(lr)
-        if "epsilon_decay_linear" in line:
-            eps = self.get_prop("epsilon_decay_linear", line)
-            self.stats["epsilon_decay_linear"] = float(eps)
-        if "layer_sizes" in line:
-            ls = self.get_prop("layer_sizes", line)
-            # print(f"ls={ls}")
-            layers = ls.split(",")
-            self.stats["l1"] = int(layers[0])
-            self.stats["l2"] = int(layers[1])
-            self.stats["l3"] = int(layers[2])
 
     ## ##############################
     def parseLogs(self, filepath:(str), include_partials:(bool)=False): 
@@ -400,7 +384,7 @@ class LearningLogParser:
 
     def print_statsList(statsList):
         for stats in statsList:
-            LearningLogParser.print_stats(stats)
+            TrainingLogParser.print_stats(stats)
 
 ## ##############################
 ## ##############################
@@ -424,14 +408,14 @@ class TrainingAnalyzer:
         return TrainingPlotManager(statsList, cumulative_averages)
 
     def create_LogParser(self):
-        return LearningLogParser()
+        return TrainingLogParser()
 
     def analyze(self, path_to_logfile, include_partials:(bool)=False):
         logParser = self.create_LogParser()
         logParser.parseLogs(path_to_logfile, include_partials)
 
         print("* * * * * * * * * * * * * * * * * * * ")
-        LearningLogParser.print_score_stats(logParser.create_score_stats())
+        TrainingLogParser.print_score_stats(logParser.create_score_stats())
         print("* * * * * * * * * * * * * * * * * * * ")
 
         TrainingPlotter.rank_all_cumulative_wins(logParser.statsList)
