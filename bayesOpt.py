@@ -69,7 +69,8 @@ class TrainingBayesianOptimizer():
 
             # the more we win, the better it came out
             # we are player two
-            score = stats.get('winMap')[self.params['player_two_name']]
+            # score = stats.get('winMap')[self.params['player_two_name']]
+            score = stats.get('total_reward')
             stats.put('score',score)
 
             # report the results
