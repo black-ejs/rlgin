@@ -157,14 +157,17 @@ def run(params):
         # create GinHand, re-using the agent each time
         opponentStrategy = BrandiacGinStrategy(params['brandiac_random_percent'])
         dqnStrategy = ginDQN.ginDQNStrategy(params,agent)
-        if params['train'] and (not pretrain_weights==None):
-            dqnStrategy.pretrain_weights = pretrain_weights
         ginhand = gin.GinHand(gin.Player(params['player_one_name']),
                                 opponentStrategy,
                                 gin.Player(params['player_two_name']),
                                 dqnStrategy)
         ginhand.deal()
-        
+
+        # pass in weights for comparison during learning
+        if params['train'] and (not pretrain_weights==None):
+            dqnStrategy.pretrain_weights = pretrain_weights
+
+        # play the hand
         hand_startTime = time.time()
         winner = ginhand.play(params['max_steps_per_hand'])
         counter_hands += 1
@@ -175,7 +178,11 @@ def run(params):
         # stats and reporting
         durations.append(hand_duration)
         turns_in_hand.append(len(ginhand.turns))
-        total_reward += ginhand.total_reward
+        if hasattr(ginhand,'total_reward'):
+            total_reward += ginhand.total_reward
+        else:
+            print('** WARNING: ginhand has no total_reward attribute, providing zero')
+            ginhand.total_reward = 0
         if not winner == None:
             winMap[winner.player.name] = winMap[winner.player.name]+1
         else:
