@@ -152,6 +152,7 @@ class TrainingPlotManager:
         for st in self.statsList:
             if scenario_string in st['name_scenario']:
                 return st
+        print(f"dang, cannot find these stats: {scenario_string}")
         return "dang!"
 
     ## ##############################
