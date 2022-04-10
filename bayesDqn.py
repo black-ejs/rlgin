@@ -16,7 +16,7 @@ class DQNBayesianOptimizer(TrainingBayesianOptimizer):
     def create_name_scenario(self, inputs):
         lr_string='{:.8f}'.format(float(inputs[0]))[2:]
         layer_sizes = self.params['layer_sizes']
-        name_scenario = 'gin_lr{}_struct{}_{}_{}_eps{}'.format(
+        name_scenario = 'gin_lr{}_struct{}_{}_{}_eps{:2.3f}'.format(
                                 lr_string,
                                 int(inputs[1]),
                                 int(inputs[2]),
@@ -40,9 +40,7 @@ if __name__ == '__main__':
     print(f"bayesDqn.py: Bayesian optimization stsrting at {datetime.datetime.now()}") 
 
     params = ginDQNParameters.define_parameters()
-    params['log_path'] = 'logs/bayesian_log.' + params['timestamp'] +'.txt'
-    params['episodes'] = 3  #######################
-    params['max_steps_per_hand'] = 100 #######################
+    params['log_path'] = 'logs/bayesDqn_log.' + params['timestamp'] +'.txt'
     optim_params = [
         {"name": "learning_rate", "type": "continuous", "domain": (0.001, 0.01)},
         {"name": "first_layer_size", "type": "discrete", "domain": (100,150,200,300)},
@@ -52,7 +50,7 @@ if __name__ == '__main__':
                                                                         float(16/params['episodes']),
                                                                         float(32/params['episodes']),
                                                                         float(64/params['episodes']),
-                                                                        float(128/params['episodes']))}
+                                                                        float(128/params['episodes'])), "fmt": "2.4f"}
         ]
 
     # Define optimizer
@@ -60,4 +58,4 @@ if __name__ == '__main__':
     bayesOpt = DQNBayesianOptimizer(params, optim_params)
     bayesOpt.optimize_RL()
 
-    print(f"bayesOpt.py: Bayesian optimization run took {datetime.datetime.now()-start_time}") 
+    print(f"bayesDqn.py: Bayesian optimization run took {datetime.datetime.now()-start_time}") 

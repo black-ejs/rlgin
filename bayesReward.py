@@ -18,8 +18,6 @@ if __name__ == '__main__':
     ## set up params
     params = ginDQNParameters.define_parameters()
     params['log_path'] = 'logs/bayesReward_log.' + params['timestamp'] +'.txt'
-    params['episodes'] = 3  ##################
-    params['max_steps_per_hand'] = 100 ####################
 
     ## run optimization
     bayesOpt = TrainingBayesianOptimizer(params, optim_params)
