@@ -31,7 +31,8 @@ class BayesPlotter(TrainingPlotter):
 class BayesPlotManager(TrainingPlotManager):
 
     def get_bayes_param_names(self):
-        return ["l1","l2","l3","learning_rate", "epsilon_decay_linear"]
+        return ["win_reward","no_win_reward","loss_reward"]
+        # return ["l1","l2","l3","learning_rate", "epsilon_decay_linear"]
 
     def __init__(self, statsList:(Iterable), cumulative_averages:(Iterable)):
         super().__init__(statsList, cumulative_averages)
@@ -50,11 +51,16 @@ class BayesPlotManager(TrainingPlotManager):
 
 ## ##############################
 class BayesAnalyzer(TrainingAnalyzer):
+    def __init__(self):
+        self.first_figure = "l1"
+
     def get_first_figure(self, statsList):
-        return "l1"
+        return self.first_figure
 
     def create_PlotManager(self,statsList, cumulative_averages):
-        return BayesPlotManager(statsList, cumulative_averages)
+        plotManager = BayesPlotManager(statsList, cumulative_averages)
+        self.first_figure = plotManager.get_bayes_param_names()[0]
+        return plotManager
 
 ## ##############################
 import argparse
