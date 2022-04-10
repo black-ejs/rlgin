@@ -35,9 +35,18 @@ class Stats:
 def display(counter_hands, hand_duration, ginhand, log_decisions):
     winner = ginhand.winner
     if not winner == None:
-        print(f'Game {counter_hands}    Winner: {winner.player}    Hand: {winner.playerHand.prettyStr()}    Turns: {len(ginhand.turns)}    Time: {hand_duration*1000:3.2f}')
+        winner_name = winner.player.name
+        hand = f"Hand: {winner.playerHand.prettyStr()}    "
     else:
-        print(f'Game {counter_hands}    Winner: {NO_WIN_NAME}    Turns: {len(ginhand.turns)}    Time: {hand_duration*1000:3.2f}')
+        winner_name = NO_WIN_NAME
+        hand = ""
+    print(  f"Game {counter_hands}    " + 
+            f"Winner: {winner_name}    " + 
+            f"{hand}" + 
+            f"Turns: {len(ginhand.turns)}    " + 
+            f"Time: {hand_duration*1000:3.2f}   " + 
+            f"Reward:{ginhand.total_reward}"
+            )
 
     if log_decisions:
         i=0
@@ -118,6 +127,7 @@ def run(params):
             pretrain_weights = copy.deepcopy(agent.state_dict())
 
     counter_hands = 0
+    total_reward = 0
     winMap = {}
     winMap[params['player_one_name']] = 0				
     winMap[params['player_two_name']] = 0				
@@ -165,10 +175,12 @@ def run(params):
         # stats and reporting
         durations.append(hand_duration)
         turns_in_hand.append(len(ginhand.turns))
+        total_reward += ginhand.total_reward
         if not winner == None:
             winMap[winner.player.name] = winMap[winner.player.name]+1
         else:
             winMap[NO_WIN_NAME] = winMap[NO_WIN_NAME]+1
+
         if params['display']:
             display(counter_hands, hand_duration, ginhand, 
                 ('log_decisions' in params) and params['log_decisions'])
@@ -196,6 +208,7 @@ def run(params):
     stats.put("count_hands", counter_hands)
     stats.put("total duration", total_duration)
     stats.put("winMap", winMap)
+    stats.put("total_reward", total_reward)
     stats.put("mean_turns", mean_turns)
     stats.put("stdev_turns", stdev_turns)
     stats.put("mean_durations", mean_durations)
@@ -209,23 +222,31 @@ if __name__ == '__main__':
 
     # Set options 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--display", nargs='?', type=distutils.util.strtobool, default=True)
+    parser.add_argument("--episodes", nargs='?', type=int, default=-1)
+    parser.add_argument("--logfile", nargs='?', type=str, default=None)
+    # parser.add_argument("--display", nargs='?', type=distutils.util.strtobool, default=True)
     args = parser.parse_args()
     print("learningGin: args ", args)
 
     try:
 
         params = ginDQNParameters.define_parameters()
-        params['display'] = args.display
+        params['display'] = True
+
+        if args.episodes != -1:
+            params['episodes'] = args.episodes
+        if not (args.logfile == None):
+            params['log_path'] = args.logfile
         
         log = None
         old_stdout = None
         if 'log_path' in params:
             log_path = params['log_path']
-            log = open(log_path, "a")
-            if log.writable:
-                old_stdout = sys.stdout
-                sys.stdout = log
+            if len(log_path)>0:
+                log = open(log_path, "a")
+                if log.writable:
+                    old_stdout = sys.stdout
+                    sys.stdout = log
 
         start_time = time.time()
         print(f"****** learningGin execution at {datetime.datetime.now()} ")

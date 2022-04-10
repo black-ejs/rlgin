@@ -144,8 +144,11 @@ class ginDQNStrategy(playGin.OneDecisionGinStrategy):
             if self.train:
                 # set reward for the new state
                 reward = self.agent.set_reward(ginhand,self.myPlayer)
+                ginhand.total_reward += reward
                 self.learnTurn(self.turn_states, self.turn_scores, reward, new_state, 
                                     is_first_turn=(self.turns==1))
+        else:
+            ginhand.total_reward = 0
         self.turns += 1
         self.turn_scores = []
         self.turn_states = []
@@ -176,6 +179,7 @@ class ginDQNStrategy(playGin.OneDecisionGinStrategy):
             ## deal with our last turn
             new_state = self.agent.get_state(ginhand,self.myPlayer)
             reward = self.agent.set_reward(ginhand,self.myPlayer)
+            ginhand.total_reward += reward
             self.learnTurn(self.turn_states, self.turn_scores, reward, new_state, isDone=True)
         if ginhand.currentlyPlaying.player.name == self.myPlayer.name: 
             ginhand.lastTurn().turn_scores = self.turn_scores
