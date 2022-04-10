@@ -9,11 +9,33 @@ from GPyOpt.methods import BayesianOptimization
 #               Sets the  parameters for Bayesian Optimization  #
 #################################################################
 
-class BayesianOptimizer():
-    def __init__(self, params):
+################################################
+################################################
+################################################
+################################################
+################################################
+class TrainingBayesianOptimizer():
+    def __init__(self, params, optim_params):
         self.params = params
+        self.optim_params = optim_params
 
-    def optimize_RL(self):
+    def customize_optim_params(self, inputs):
+        pass
+
+    def create_name_scenario(self, inputs):
+        name_scenario="gin"
+        i=0
+        for input in inputs:
+            if 'fmt' in self.optim_params[i]:
+                scenario_str = ("{:" + self.optim_params[i]['fmt'] + "}").format(inputs[i])
+            else:
+                scenario_str = str(inputs[i])
+            name_scenario += f"_{self.optim_params[i]['name']}{scenario_str}"
+            i+=1
+        return name_scenario
+
+    ##########################################################
+    def optimize_RL(self, max_iter:(int)=20):
         """
         optimizes the parameter sets used by the learningGin module
         """
@@ -26,27 +48,20 @@ class BayesianOptimizer():
             inputs = inputs[0]
 
             # Variables to optimize
-            self.params["learning_rate"] = inputs[0]
-            lr_string = '{:.8f}'.format(self.params["learning_rate"])[2:]
-            layer_sizes = []
-            layer_sizes.append(int(inputs[1]))
-            layer_sizes.append(int(inputs[2]))
-            layer_sizes.append(int(inputs[3]))
-            self.params['layer_sizes'] = layer_sizes
-            self.params["epsilon_decay_linear"] = float(inputs[4])
+            i=0
+            for input in inputs:
+                self.params[self.optim_params[i]['name']] = inputs[i]
+                i+=1
+            self.customize_optim_params(inputs)
 
-            self.params['name_scenario'] = 'gin_lr{}_struct{}_{}_{}_eps{}'.format(lr_string,
-                                                                               layer_sizes[0],
-                                                                               layer_sizes[1],
-                                                                               layer_sizes[2],
-                                                                               self.params['epsilon_decay_linear'])
-
+            # metadata for scenario
+            self.params['name_scenario'] = self.create_name_scenario(inputs)
             self.params['weights_path'] = 'weights/weights_' + self.params['name_scenario'] + '.h5'
             self.params['load_weights'] = False
             self.params['train'] = True
             print(self.params)
 
-            # run one hand
+            # run one scenario
             startTime = time.time()
             stats = learningGin.run(self.params)
             duration = time.time() - startTime
@@ -62,32 +77,17 @@ class BayesianOptimizer():
 
             return score
 
-        optim_params = [
-            {"name": "learning_rate", "type": "continuous", "domain": (0.001, 0.01)},
-            {"name": "first_layer_size", "type": "discrete", "domain": (100,150,200,300)},
-            {"name": "second_layer_size", "type": "discrete", "domain": (200,300,400,800)},
-            {"name": "third_layer_size", "type": "discrete", "domain": (10,20,30,50)},
-            {"name":'epsilon_decay_linear', "type": "discrete", "domain": (float(8/self.params['episodes']),
-                                                                           float(16/self.params['episodes']),
-                                                                           float(32/self.params['episodes']),
-                                                                           float(64/self.params['episodes']),
-                                                                           float(128/self.params['episodes']))}
-            ]
-
         bayes_optimizer = BayesianOptimization(f=optimize,
-                                               domain=optim_params,
+                                               domain=self.optim_params,
                                                initial_design_numdata=6,
                                                acquisition_type="EI",
                                                exact_feval=True,
                                                # verbosity=True,
                                                maximize=True)
 
-        bayes_optimizer.run_optimization(max_iter=20)
-        print('Optimized learning rate: ', bayes_optimizer.x_opt[0])
-        print('Optimized first layer: ', bayes_optimizer.x_opt[1])
-        print('Optimized second layer: ', bayes_optimizer.x_opt[2])
-        print('Optimized third layer: ', bayes_optimizer.x_opt[3])
-        print('Optimized epsilon linear decay: ', bayes_optimizer.x_opt[4])
+        bayes_optimizer.run_optimization(max_iter=max_iter)
+        for i in range(len(self.optim_params)):
+            print(f"Optimized {self.optim_params[i]['name']}: ", bayes_optimizer.x_opt[i])
         return self.params
     
     def print_stats(self,stats):
@@ -98,15 +98,4 @@ class BayesianOptimizer():
             print(f"=====> optimization run {self.params['name_scenario']} took {stats.get('duration'):10.2f} seconds\n",file=f)
             f.close()
 
-##################
-#      Main      #
-##################
-if __name__ == '__main__':
-    print(f"bayesOpt.py: Bayesian optimization stsrting at {datetime.datetime.now()}") 
-    # Define optimizer
-    params = ginDQNParameters.define_parameters()
-    params['log_path'] = 'logs/bayesian_log.' + params['timestamp'] +'.txt'
-    bayesOpt = BayesianOptimizer(params)
-    startTime = time.time()
-    bayesOpt.optimize_RL()
-    print(f"bayesOpt.py: Bayesian optimization run took {time.time()-startTime} seconds") 
+
