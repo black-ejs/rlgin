@@ -4,8 +4,8 @@ from  bayesOpt import TrainingBayesianOptimizer
 
 optim_params = [
     {"name": "win_reward", "type": "continuous", "domain": (0.75, 0.99), "fmt": "0.3f"},
-    {"name": "loss_reward", "type": "continuous", "domain": (-0.20, -0.009), "fmt": "0.3f"},
-    {"name": "no_winner_reward", "type": "continuous", "domain": (-0.01, -0.001), "fmt": "0.3f"}
+    {"name": "loss_reward", "type": "continuous", "domain": (-0.09, -0.009), "fmt": "0.3f"},
+    {"name": "no_winner_reward", "type": "continuous", "domain": (-0.001, -0.000001), "fmt": "0.3f"}
     ]
 
 ##################
