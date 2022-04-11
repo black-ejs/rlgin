@@ -1,13 +1,13 @@
 from collections.abc import Iterable
 import distutils.util
 
-from trainingAnalyzer import TrainingPlotter, TrainingPlotManager, TrainingAnalyzer
+from decisionProfiler import DecisionPlotter, DecisionPlotManager, DecisionProfiler
 
 MA_SIZE = 50
 DQN_PLAYER_NAME = "Tempo"
 
 ## #############################################
-class BayesPlotter(TrainingPlotter):
+class BayesPlotter(DecisionPlotter):
     def plot_bayes_param(statsList, param_name):
         array_score = []
         array_param = []
@@ -28,11 +28,20 @@ class BayesPlotter(TrainingPlotter):
                     ylabel="slope - moving average of wins, last {} hands".format(MA_SIZE))
 
 ## #############################################
-class BayesPlotManager(TrainingPlotManager):
+class BayesPlotManager(DecisionPlotManager):
 
     def get_bayes_param_names(self):
-        return ["win_reward","no_win_reward","loss_reward"]
-        # return ["l1","l2","l3","learning_rate", "epsilon_decay_linear"]
+        dqn_params = ["l1","l2","l3","learning_rate", "epsilon_decay_linear"]
+        reward_params = ["win_reward","no_win_reward","loss_reward"]
+        rez = dqn_params
+        v = []
+        for st in self.statsList:
+            val = st['params'][reward_params[0]]
+            if len(v) > 0 and (val not in v):
+                rez = reward_params
+                break
+            v.append(val)
+        return rez
 
     def __init__(self, statsList:(Iterable), cumulative_averages:(Iterable)):
         super().__init__(statsList, cumulative_averages)
@@ -50,7 +59,7 @@ class BayesPlotManager(TrainingPlotManager):
             self.lastOpened = fig_label
 
 ## ##############################
-class BayesAnalyzer(TrainingAnalyzer):
+class BayesAnalyzer(DecisionProfiler):
     def __init__(self):
         self.first_figure = "l1"
 

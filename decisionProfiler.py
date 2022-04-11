@@ -107,15 +107,15 @@ class DecisionPlotter(TrainingPlotter):
                         ylabel="% zero in hand",
                         xlabel="hands")
 
-        regplot.scatter(array_wordinals,
-                        array_winners, 
-                        color="#F8283D"
+        regplot.scatter(array_lordinals,                                                       
+                        array_losers, 
+                        color="#F8283D",
                         #ax=plt.gca(),
                         ) 
 
-        regplot.scatter(array_lordinals,
-                        array_losers, 
-                        color="#08B83D"
+        regplot.scatter(array_wordinals,
+                        array_winners, 
+                        color="#08B83D",
                         #ax=plt.gca(),
                         ) 
         plt.draw()
@@ -132,14 +132,22 @@ class DecisionPlotManager(TrainingPlotManager):
 
     def __init__(self, statsList:(Iterable), cumulative_averages:(Iterable)):
         super().__init__(statsList, cumulative_averages)
-        self.figures = []
         for st in statsList:
             ## fig_label = 'Decisions (draw source) - {}'.format(st['name_scenario'])
             fig_label = 'Zeroes by hand (draw source) - {}'.format(st['name_scenario'])
-            self.figures.append(fig_label)
+            i=0
+            insert_point = len(self.figures)
+            for f in self.figures:
+                if st['name_scenario'] in f:
+                    insert_point=i
+                    break
+                i+=1
+            self.figures.insert(insert_point, fig_label)
             for i in range(1,len(statsList[0]['hands'][0]['decisions'][0])):
-                # self.figures.append(f"Decisions (discard {i}) - {st['name_scenario']}")
-                self.figures.append(f"Zeroes by hand (discard {i}) - {st['name_scenario']}")
+                #fig_label = f"Decisions (discard {i}) - {st['name_scenario']}"
+                fig_label = f"Zeroes by hand (discard {i}) - {st['name_scenario']}"
+                self.figures.insert(insert_point, fig_label)
+                insert_point+=1
 
     def activateFigure(self, fig_label:(str)):
         if 'zeroes by hand' in fig_label.lower():
@@ -179,6 +187,7 @@ class DecisionLogParser(TrainingLogParser):
     def init_training_session(self):
         super().init_training_session()
         self.stats['name_scenario'] = self.filepath + '.decide.' + str(self.session_count)
+        self.stats['total_reward'] = 0
         self.decisions = []
 
     ## ##############################
@@ -193,7 +202,11 @@ class DecisionLogParser(TrainingLogParser):
             draw_card = toks[4]
             draw_source = toks[7][:-2]
             discard = toks[10][:-2]
-            decisions = eval(line[line.index('['):line.index(']')+1])
+            #decisions = eval(line[line.index('['):line.index(']')+1])
+            blax = line[line.index('[')+1:line.index(']')]
+            decisions = line[line.index('[')+1:line.index(']')].split(",")
+            for i in range(len(decisions)):
+                decisions[i] = float(decisions[i])
             self.decisions.append(decisions)
         else:
             if ("Winner: " in line) and len(self.decisions)>0:
@@ -232,13 +245,14 @@ class DecisionProfiler(TrainingAnalyzer):
         DecisionPlotter.rank_all_cumulative_wins(logParser.statsList)
         DecisionPlotter.rank_all_moving_averages(logParser.statsList)
 
-        # logParser.statsList.sort(key=lambda x: x['moving_average_last_spline_slope'])
-        print("     -------- name_scenario ----------     \tma_last_slope  ma_full_slope\tcum_last_slope\tcum_ratio\twpk")
+        logParser.statsList.sort(key=lambda x: x['moving_average_last_spline_slope'])
+        print("     -------- name_scenario ----------     \total_reward\ttma_last_slope  ma_full_slope\tcum_last_slope\tcum_ratio\twpk")
         for st in logParser.statsList:
             star = ""
             if not 'wins2' in st:
                 star = "*"  # should only happen if "include_partials==True"
             print(f"{star}{st['name_scenario']}:"
+                    f"\t{st['total_reward']: 1.7f}  "
                     f"\t{st['moving_average_last_spline_slope']: 1.7f}  "
                     f"\t{st['moving_average_overall_slope']: 1.7f}"
                     f"\t{st['cumulative_wins_last_spline_slope']:1.7f}"
