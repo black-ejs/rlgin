@@ -18,6 +18,6 @@ BEGIN{minratio=10000;}
         scenario = substr(scenario,1,index(scenario,",")-1)
 }
 END{
-        print "pp=" pp "   tt=" tt  "   p-avg=" pp/count "   t-avg=" tt/count "  ratio=" pp/tt "  min=" min
+        print "count=" count "   pp=" pp "   tt=" tt  "   p-avg=" pp/count "   t-avg=" tt/count "  ratio=" pp/tt "  min=" min
 ratio
 }
