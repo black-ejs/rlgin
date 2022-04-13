@@ -19,9 +19,11 @@ END {
 	      t " wins\n" \
 	      p " losses\n" \
 	      (t*1000)/f " wins/1000 hands\n" \
-	      p/t " ratio\n" \
 	      f-t-p " nobody\n" \
 	      ((t+p)/f)*100 "% decided \n"\
 	      pp/1000 " s   " pp/60000 " m   " pp/3600000 " h" 
+	if (t>0) {
+		print p/t " ratio"
+	}
 }
 
