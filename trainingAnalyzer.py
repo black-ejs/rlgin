@@ -1,5 +1,7 @@
 from collections.abc import Iterable
+import sys
 import math
+import time
 import distutils.util
 
 import matplotlib.pyplot as plt
@@ -189,6 +191,9 @@ class TrainingLogParser:
     cumulative_averages = []
     score_stats = {}
 
+    def get_default_name_scenario(self):
+        return self.filepath + '.learning.' + str(self.session_count)
+
     def save_training_session(self):
         self.stats['hands'] = self.hands
         if len(self.ma_array) == 0:
@@ -202,7 +207,7 @@ class TrainingLogParser:
 
     def init_training_session(self):
         self.stats = {}
-        self.stats['name_scenario'] = self.filepath + '.validation_test.' + str(self.session_count)
+        self.stats['name_scenario'] = self.get_default_name_scenario()
 
         self.ma_array = []
         self.ma_count = 0
@@ -212,6 +217,7 @@ class TrainingLogParser:
 
         self.hands = []
         self.wins = 0
+        self.stats['total_reward'] = 0
 
     def extract_param(self, key, params):
         if key in params:
@@ -255,10 +261,14 @@ class TrainingLogParser:
             toks = line.split()
             hand_index = int(toks[1])
             winner = toks[3]
+            ginscore = toks[9]
+            total_reward = toks[11]
             if winner == TrainingLogParser.DQN_PLAYER_NAME:
                 self.wins += 1
             self.hands.append({'hand_index': hand_index, 
                             'winner': winner, 
+                            'ginscore': ginscore, 
+                            'total_reward': total_reward, 
                             'wins': self.wins})
             ## moving average wins
             self.ma_count += 1
@@ -271,6 +281,8 @@ class TrainingLogParser:
             if self.ma_count>MA_SIZE:
                 # ma_array.append(float(sum(self.ma_window))/float(len(self.ma_window)))                            
                 self.ma_array.append(sum(self.ma_window))                            
+        if "total_reward: " == line[:14]:
+            self.stats['total_reward'] = float(line[14:])
         if "winMap: " in line:
             cpos = line.find(",")
             x = cpos-1
@@ -291,6 +303,7 @@ class TrainingLogParser:
     ## ##############################
     def parseLogs(self, filepath:(str), include_partials:(bool)=False): 
 
+        start_time = time.time()
         self.filepath = filepath
         self.session_count = 0
         self.init_training_session()
@@ -298,9 +311,14 @@ class TrainingLogParser:
         with open(filepath, 'r') as f:
             lines=f.readlines()
 
+        count_lines = 0
         for line in lines:
             self.processLine(line)
-
+            count_lines += 1
+            if count_lines%10000 == 0:
+                sys.stdout.write(f"\rparsed {count_lines} lines in {time.time()-start_time:3.3f}s")
+        sys.stdout.write("\n")
+        
         # last (or only) stats
         if 'wins2' in self.stats or include_partials:
             self.save_training_session()
@@ -347,6 +365,9 @@ class TrainingLogParser:
                         self.cumulative_averages.append(cumu)
                     else:
                         self.cumulative_averages[ndx] += cumu
+        score_stats['count_scenarios']=count_scenarios
+        if count_scenarios == 0:
+            return score_stats
         mean_losses = tot1/count_scenarios
         mean_wins = tot2/count_scenarios 
         for i in range(len(self.cumulative_averages)):
@@ -361,13 +382,14 @@ class TrainingLogParser:
         score_stats['max_ratio']=maxr
         score_stats['min_ratio']=minr
         score_stats['count_hands']=count_hands
-        score_stats['count_scenarios']=count_scenarios
         for st in self.statsList:
             if 'wins2' in st:
                 tot1 += (st['wins1']-mean_losses)**2
                 tot2 += (st['wins2']-mean_wins)**2
-        score_stats['std_losses']=math.sqrt(tot1/count_scenarios)
         score_stats['std_wins']=math.sqrt(tot2/count_scenarios)
+        score_stats['cv_wins']=math.sqrt(tot2/count_scenarios)/mean_wins
+        score_stats['std_losses']=math.sqrt(tot1/count_scenarios)
+        score_stats['cv_losses']=math.sqrt(tot1/count_scenarios)/mean_losses
         score_stats['cumulative_average_slope']=(
                         self.cumulative_averages[-1] - self.cumulative_averages[0]
                                         )/len(self.cumulative_averages)
@@ -416,19 +438,25 @@ class TrainingAnalyzer:
         logParser.parseLogs(path_to_logfile, include_partials)
 
         print("* * * * * * * * * * * * * * * * * * * ")
-        TrainingLogParser.print_score_stats(logParser.create_score_stats())
+        score_stats = logParser.create_score_stats()
+        TrainingLogParser.print_score_stats(score_stats)
+        if score_stats['count_scenarios'] == 0:
+            print(f"No scenarios to analyze, found {len(logParser.statsList)} stats")
+            print("* * * * * * * * * * * * * * * * * * * ")
+            return
         print("* * * * * * * * * * * * * * * * * * * ")
 
         TrainingPlotter.rank_all_cumulative_wins(logParser.statsList)
         TrainingPlotter.rank_all_moving_averages(logParser.statsList)
 
         logParser.statsList.sort(key=lambda x: x['moving_average_last_spline_slope'])
-        print("     -------- name_scenario ----------     \tma_last_slope  ma_full_slope\tcum_last_slope\tcum_ratio\twpk")
+        print("     -------- name_scenario ----------     \ttotal_reward\tma_last_slope  ma_full_slope\tcum_last_slope\tcum_ratio\twpk")
         for st in logParser.statsList:
             star = ""
             if not 'wins2' in st:
                 star = "*"  # should only happen if "include_partials==True"
             print(f"{star}{st['name_scenario']}:"
+                    f"\t{st['total_reward']: 1.7f}  "
                     f"\t{st['moving_average_last_spline_slope']: 1.7f}  "
                     f"\t{st['moving_average_overall_slope']: 1.7f}"
                     f"\t{st['cumulative_wins_last_spline_slope']:1.7f}"

@@ -1,5 +1,4 @@
 from collections.abc import Iterable
-import time
 import distutils.util
 
 import matplotlib.pyplot as plt
@@ -57,6 +56,10 @@ class DecisionPlotter(TrainingPlotter):
         array_wordinals = []
         array_losers = []
         array_lordinals = []
+        array_epsilon = []
+        noise_epsilon = float(st['params']['noise_epsilon'])
+        if st['params']['train']:
+            epsilon_decay = float(st['params']['epsilon_decay_linear'])
 
         decision_count = DecisionPlotter.get_decision_count(st)
         if decision_count == -1:
@@ -70,9 +73,16 @@ class DecisionPlotter(TrainingPlotter):
                 break
 
         for hand in hands:
+
             if not (('decisions' in hand) 
                     and (len(hand['decisions'])>0)):
                 continue
+
+            if not st['params']['train']:
+                array_epsilon.append(noise_epsilon)
+            else:
+                array_epsilon.append(max(1-(hand['hand_index']*epsilon_decay), noise_epsilon))
+
             count_zeroes = 0
             hand_decisions = hand['decisions']
             for d in hand_decisions:
@@ -89,10 +99,11 @@ class DecisionPlotter(TrainingPlotter):
 
         return [array_zeroes,array_ordinals,
                 array_winners, array_wordinals,
-                array_losers, array_lordinals]
+                array_losers, array_lordinals,
+                array_epsilon]
 
     ####################################
-    def plot_zeroes_by_hand(st, fig_label):
+    def plot_zeroes_by_hand(st, fig_label, crop_epsilon:(bool)=True):
         arrays = DecisionPlotter.get_zeroes_by_hand(st, fig_label)
         array_zeroes = arrays[0]
         array_ordinals = arrays[1]
@@ -100,24 +111,40 @@ class DecisionPlotter(TrainingPlotter):
         array_wordinals = arrays[3]
         array_losers = arrays[4]
         array_lordinals = arrays[5]
+        array_epsilon = arrays[6]
 
-        DecisionPlotter.plot_regression(array_zeroes, 
-                        array_ordinals,
+        start_index = 0
+        if crop_epsilon:
+            for i in range(len(array_epsilon)):
+                if array_epsilon[i] == float(st['params']['noise_epsilon']):
+                    start_index=i
+                    break
+
+        DecisionPlotter.plot_regression(array_zeroes[start_index:], 
+                        array_ordinals[start_index:],
                         fig_label, 
-                        ylabel="% zero in hand",
+                        splines=3,
+                        ylabel=f"% zero in hand",
                         xlabel="hands")
 
-        regplot.scatter(array_lordinals,                                                       
-                        array_losers, 
+        regplot.scatter(array_lordinals[start_index:],                                                       
+                        array_losers[start_index:], 
                         color="#F8283D",
                         #ax=plt.gca(),
                         ) 
 
-        regplot.scatter(array_wordinals,
-                        array_winners, 
+        regplot.scatter(array_wordinals[start_index:],
+                        array_winners[start_index:], 
                         color="#08B83D",
                         #ax=plt.gca(),
                         ) 
+
+        if not crop_epsilon:
+            plt.gca().plot(array_ordinals[start_index:],
+                            array_epsilon[start_index:], 
+                            label='epsilon', 
+                            linestyle='dotted', color="black")
+
         plt.draw()
 
 ## #############################################
@@ -143,27 +170,25 @@ class DecisionPlotManager(TrainingPlotManager):
                     break
                 i+=1
             self.figures.insert(insert_point, fig_label)
-            for i in range(1,len(statsList[0]['hands'][0]['decisions'][0])):
-                #fig_label = f"Decisions (discard {i}) - {st['name_scenario']}"
-                fig_label = f"Zeroes by hand (discard {i}) - {st['name_scenario']}"
-                self.figures.insert(insert_point, fig_label)
-                insert_point+=1
+            #for i in range(1,len(statsList[0]['hands'][0]['decisions'][0])):
+            #    #fig_label = f"Decisions (discard {i}) - {st['name_scenario']}"
+            #    fig_label = f"Zeroes by hand (discard {i}) - {st['name_scenario']}"
+            #    self.figures.insert(insert_point+i, fig_label)
 
     def activateFigure(self, fig_label:(str)):
         if 'zeroes by hand' in fig_label.lower():
             name_scenario = fig_label[fig_label.index(' - ')+3:]
             stats = self.find_stats(name_scenario)
             DecisionPlotter.plot_zeroes_by_hand(stats, fig_label)            
-            self.install_navigation(fig_label)
-            self.lastOpened = fig_label
         elif 'ecisions' in fig_label:
             name_scenario = fig_label[fig_label.index(' - ')+3:]
             stats = self.find_stats(name_scenario)
             DecisionPlotter.plot_decision_histogram(stats, fig_label)            
-            self.install_navigation(fig_label)
-            self.lastOpened = fig_label
         else:
-            super().activateFigure(fig_label)
+            return super().activateFigure(fig_label)
+
+        self.install_navigation(fig_label)
+        self.lastOpened = fig_label
 
 
 ## ###################################################
@@ -179,22 +204,19 @@ class DecisionLogParser(TrainingLogParser):
     def __init__(self):
         super().__init__()
         self.decisions = []
-        self.lines = 0
-        self.start_time = time.time()
         self.count_decisions = 0
+
+    ## ##############################
+    def get_default_name_scenario(self):
+        return self.filepath + '.decide.' + str(self.session_count)
 
     ## ##############################
     def init_training_session(self):
         super().init_training_session()
-        self.stats['name_scenario'] = self.filepath + '.decide.' + str(self.session_count)
-        self.stats['total_reward'] = 0
         self.decisions = []
 
     ## ##############################
     def processLine(self, line:(str), include_partials:(bool)=False):
-        self.lines += 1
-        if self.lines%10000 == 0:
-            print(f"parsed {self.lines} lines in {time.time()-self.start_time:3.3f}s")
         if ("  turn " == line[:7]) and ("[" in line):
             toks = line.split()
             turn_index = toks[1]
@@ -203,7 +225,6 @@ class DecisionLogParser(TrainingLogParser):
             draw_source = toks[7][:-2]
             discard = toks[10][:-2]
             #decisions = eval(line[line.index('['):line.index(']')+1])
-            blax = line[line.index('[')+1:line.index(']')]
             decisions = line[line.index('[')+1:line.index(']')].split(",")
             for i in range(len(decisions)):
                 decisions[i] = float(decisions[i])
@@ -234,61 +255,6 @@ class DecisionProfiler(TrainingAnalyzer):
         # return 'Decisions (draw source) - {}'.format(statsList[0]['name_scenario'])
         return 'Zeroes by hand (draw source) - {}'.format(statsList[0]['name_scenario'])
 
-    def analyze(self, path_to_logfile, include_partials:(bool)=False):
-        logParser = self.create_LogParser()
-        logParser.parseLogs(path_to_logfile, include_partials)
-
-        print("* * * * * * * * * * * * * * * * * * * ")
-        DecisionLogParser.print_score_stats(logParser.create_score_stats())
-        print("* * * * * * * * * * * * * * * * * * * ")
-
-        DecisionPlotter.rank_all_cumulative_wins(logParser.statsList)
-        DecisionPlotter.rank_all_moving_averages(logParser.statsList)
-
-        logParser.statsList.sort(key=lambda x: x['moving_average_last_spline_slope'])
-        print("     -------- name_scenario ----------     \total_reward\ttma_last_slope  ma_full_slope\tcum_last_slope\tcum_ratio\twpk")
-        for st in logParser.statsList:
-            star = ""
-            if not 'wins2' in st:
-                star = "*"  # should only happen if "include_partials==True"
-            print(f"{star}{st['name_scenario']}:"
-                    f"\t{st['total_reward']: 1.7f}  "
-                    f"\t{st['moving_average_last_spline_slope']: 1.7f}  "
-                    f"\t{st['moving_average_overall_slope']: 1.7f}"
-                    f"\t{st['cumulative_wins_last_spline_slope']:1.7f}"
-                    f"\t{st['cumulative_wins_ratio']:1.7f}"
-                    f"\t{st['wins_per_1000_hands']:1.7f}"
-                    )
-        print(f"{len(logParser.statsList)} scenarios")    
-
-        try:
-
-            plotManager = self.create_PlotManager(logParser.statsList, logParser.cumulative_averages)
-            scenario = self.get_first_figure(logParser.statsList)
-            plotManager.activateFigure(scenario)
-
-            #p=0
-            while True:
-                plt.pause(0.1)
-                if len(plt.get_figlabels())==0:
-                    break
-                #if True: # p==0:
-                #    p+=1
-                #    mgr = plt.get_current_fig_manager()
-                #    print(f'{p} current_fig_manager={mgr}')
-                #    print(f'{p}                vals={vars(mgr)}')
-                #    print(f'{p}        vals(canvas)={vars(mgr.canvas)}')
-                    
-        finally:
-            pass
-
-## ##############################
-## ##############################
-## ##############################
-## ##############################
-## ##############################
-## ##############################
-## ##############################
 ## ##############################
 ## ##############################
 ## ##############################
