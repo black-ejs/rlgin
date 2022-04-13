@@ -8,15 +8,17 @@ import distutils.util
 
 class playGin:	
 	def playHand(strategyOne, strategyTwo, 
-					player1_name="player1", player2_name="player2", 
-					maxTurns=1000, logWins=True):
+					player1_name="player1", 
+					player2_name="player2", 
+					max_turns=1000, 
+					logWins=True):
 		ginhand = gin.GinHand(gin.Player(player1_name), strategyOne, 
 				gin.Player(player2_name), strategyTwo)
-		return playGin.playThisHand(ginhand, maxTurns, logWins)
+		return playGin.playThisHand(ginhand, max_turns, logWins)
 	
-	def playThisHand(ginhand, maxTurns, logWins):
+	def playThisHand(ginhand, max_turns, logWins):
 		ginhand.deal()
-		winner = ginhand.play(maxTurns)
+		winner = ginhand.play(max_turns)
 		return ginhand
 	
 # ##############################################	
@@ -172,12 +174,13 @@ class BrandiacGinStrategy(BrainiacGinStrategy):
 ## with reporting 
 ## ##############################
 def play(num_hands_to_play:(int)=500, 
-			strategy1:(str)="b", 
-			strategy2:(str)="r", 
+			strategy1:(gin.GinStrategy)=BrainiacGinStrategy, 
+			strategy2:(gin.GinStrategy)=RandomGinStrategy, 
 			name1:(str)="player1", 
 			name2:(str)="player2",
 			show_card_counts:(bool)=False,
-			show_turns:(bool)=False):
+			show_turns:(bool)=False,
+			max_turns:(int)=1000):
 
 	max_duration = -1
 	min_duration = 10000000
@@ -193,28 +196,26 @@ def play(num_hands_to_play:(int)=500,
 	for i in range(52):
 		card_counts.append(0)
 
-	_strategy1 = get_strategy(strategy1)
-	_strategy2 = get_strategy(strategy2)
-
 	print(f"playGin execution at {datetime.datetime.now().strftime('%Y%m%d.%H%M%S')}")
 	print(f"playGin num_hands_to_play: {name1}")
-	print(f"vars()={vars(_strategy1.__class__)}")
-	print(f"playGin strategy1: {_strategy1.__class__.__name__}")
+	print(f"vars()={vars(strategy1.__class__)}")
+	print(f"playGin strategy1: {strategy1.__class__.__name__}")
 	print(f"playGin player2: {name2}")
-	print(f"playGin strategy2: {_strategy2.__class__.__name__}")
+	print(f"playGin strategy2: {strategy2.__class__.__name__}")
 
 	for i in range(num_hands_to_play):
 
 		handStartTime = time.time()
-		ginhand = playGin.playHand(_strategy1, 
-								_strategy2, 
+		ginhand = playGin.playHand(strategy1, 
+								strategy2, 
 								player1_name=name1, 
-								player2_name=name2)
+								player2_name=name2,
+								max_turns=max_turns)
 		duration = time.time() - handStartTime
 
 		if not ginhand.winner == None:
 			wins+=1
-			print(f'Game {i}    Winner: {ginhand.winner.player}    Hand: {ginhand.winner.playerHand.prettyStr()}    Turns: {len(ginhand.turns)}    Time: {duration*1000:3.3f}')
+			print(f'Game {i}    Winner: {ginhand.winner.player}    Hand: {ginhand.winner.playerHand.prettyStr()}    Turns: {len(ginhand.turns)}    Time: {duration*1000:3.3f}    Score: {ginhand.ginScore()[1]}')
 			winMap[ginhand.winner.player.name]+=1
 			for card in ginhand.winner.playerHand.card:
 				card_counts[card.toInt()]+=1
@@ -314,8 +315,8 @@ if __name__ == '__main__':
 		show_turns = False
 
 	play(num_hands_to_play=args.num_hands_to_play, 
-			strategy1=args.strategy1, 
-			strategy2=args.strategy2, 
+			strategy1=get_strategy(args.strategy1), 
+			strategy2=get_strategy(args.strategy2), 
 			name1=args.name1, 
 			name2=args.name2,
 			show_card_counts=show_card_counts,

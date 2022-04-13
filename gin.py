@@ -29,6 +29,13 @@ class Card:
 	def suitName(self):
 		return Card.suitNames[self.suit]
 
+	def ginScore(self):
+		if self.rank < 9:
+			return self.rank+2
+		if self.rank == 12: 
+			return 1   # ace
+		return 10  # picture card
+
 	def __str__(self):
 		e = self.rankName()
 		f = self.suitName()
@@ -89,7 +96,7 @@ class Hand:
 			return True 
 		return False
 
-	def contains(self, c):
+	def contains(self, c:(Card)):
 		return c in self.card
 
 	def sort(self):
@@ -193,6 +200,13 @@ class Hand:
 			print(f"gin error: analyzed hand contains duplicates: {result}")
 
 		return result
+
+	def ginScore(self):
+		runs, matches, cards = self.analyze()
+		score=0
+		for c in cards:
+			score += c.ginScore()
+		return score
 
 ## //////////////////////////////////////////////////
 class Deck:
@@ -333,6 +347,8 @@ class GinHand:
 	PLAYING = "playing"
 	DONE = "done"
 
+	GIN_BONUS = 25
+
 	def __init__(self,playerOne,strategyOne,playerTwo,strategyTwo):
 		self.lifecycle_stage = GinHand.UNDEALT
 		self.playing = {}
@@ -343,6 +359,7 @@ class GinHand:
 		self.deck = Deck()
 		self.deck.shuffle()		
 		self.turns = []
+		self.extend_hands = True
 		# self.currentlyPlaying = 
 		# self.discard = 
 		# self.winner =
@@ -395,7 +412,7 @@ class GinHand:
 		while (self.winner == None 
 				and turns<maxTurns):
 
-			if self.deck.isEmpty():
+			if self.deck.isEmpty() and self.extend_hands:
 				self.recycleDiscards()
 
 			turns+=1			
@@ -493,6 +510,37 @@ class GinHand:
 			rez += "     PILE: " + self.discard
 		
 		return rez
+
+	def ginScore(self):
+		"""
+		returns a 3-tuple
+		   - the winner (as a Playing), 
+		   - the score to award to the winner 
+		   - a boolean indicating of the hand has completed
+		   if the boolean is False (i.e., the hand has not yet completed), 
+		          - the "winner" is the player with the higher score in their hand, 
+		          - the "score" is the difference
+		          - if the two player's scores are equal at that time, 
+			            - the winner is None
+			            - the score is zero
+		"""
+		winner = self.winner
+		if self.winner == self.playingOne:
+			score = self.playingTwo.playerHand.ginScore() + GinHand.GIN_BONUS
+		elif self.winner == self.playingTwo:
+			score = self.playingOne.playerHand.ginScore() + GinHand.GIN_BONUS
+		else:
+			score = self.playingTwo.playerHand.ginScore() - self.playingOne.playerHand.ginScore()
+			if score>0:
+				winner = self.playingTwo
+			elif score<0:
+				winner = self.playingOne
+				score = 0 - score
+
+		return winner, score, self.lifecycle_stage==GinHand.DONE
+
+
+			
 
 ## #########################################	
 
