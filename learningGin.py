@@ -45,8 +45,9 @@ def display(counter_hands, hand_duration, ginhand, log_decisions):
             f"{hand}" + 
             f"Turns: {len(ginhand.turns)}    " + 
             f"Time: {hand_duration*1000:3.2f}   " + 
-            f"Reward:{ginhand.total_reward}"
-            )
+            f"Score: {ginhand.ginScore()[1]}   " +  
+            f"Reward: {ginhand.total_reward}   " +
+            "")
 
     if log_decisions:
         i=0
@@ -79,10 +80,19 @@ def initalizeDQN(params):
 
 ## #############################################
 def print_stats(stats, file=None):
+    """
+    force winMap to be last for parsing
+    """
     if file == None:
         file = sys.stdout
+    winMap = None
+    if 'winMap' in  stats.stats:
+        winMap = stats.stats['winMap']
     for key, value in stats.stats.items():
-        print(f"{key}: {value}", file=file)
+        if not key == 'winMap':
+            print(f"{key}: {value}", file=file)
+    if not winMap == None:
+        print(f"winMap: {winMap}", file=file)
 
 ## #############################################
 def model_is_crashed(ginhand:gin.Hand):
