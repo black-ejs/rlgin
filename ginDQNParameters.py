@@ -19,20 +19,22 @@ def define_parameters():
     #  the DQN can have any number of layers between the input and output
     #  as specified in the 'layer_sizes' array
     params['episodes'] = 5                  # gin hands
-    params['layer_sizes'] = [100, 800, 20]  # 'hidden'/interior layers
-    params['learning_rate'] = 0.00332519    # snake_ga = 0.00013629
-    params['epsilon_decay_linear'] = 0.01   # while learning, how quickly randomness decreases in each hand
+    ############# these prams for 4-card game, from-scratch learning
     params['gamma'] = 0.99                  # value of future rewards
     params['noise_epsilon'] = 1/200         # randomness in actions when not training
     params['memory_size'] = 25000
     params['batch_size'] = 2500
+    params['layer_sizes'] = [300, 800, 50]  # 'hidden'/interior layers - per bayesDqn.py April 2022
+    params['epsilon_decay_linear'] = 0.1    # while learning, how quickly randomness decreases in each hand - per bayesDqn.py April 2022
+    # this is quite hish             ^^^^   but perhaps for initial training on the simpolified game is it OK
+    params['learning_rate'] = 0.01          # how aggressively to modify weights - per bayesDqn.py April 2022
 
     # ##########################################
     # gin model control
     ############# these prams for 4-card game, from-scratch learning
-    params['win_reward'] = 0.99            # per bayesReward.py 
-    params['loss_reward'] = -0.0045        # per bayesReward.py
-    params['no_winner_reward'] = -0.0001   # per bayesReward.py
+    params['win_reward'] = 0.99            # per bayesReward.py April 2022
+    params['loss_reward'] = -0.0045        # per bayesReward.py April 2022
+    params['no_winner_reward'] = -0.0001   # per bayesReward.py April 2022
     params['extend_hands'] = True          # recycle discards when deck is exhausted, up to max_steps_per_hand
     params['max_steps_per_hand'] = 1000    # max turns before no_winner, if 'extend_hands' == TRUE
     params['brandiac_random_percent'] = 90 # assuming opponent = BrandiacGinStrategy 
