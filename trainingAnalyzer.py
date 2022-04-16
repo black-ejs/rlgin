@@ -106,7 +106,7 @@ class TrainingPlotManager:
         if not fig_label in plt.get_figlabels():
             print(f'wtf: fig_label={fig_label}')
         fig = plt.figure(fig_label)
-        axx = fig.subplots_adjust(bottom=0.2, top=0.99, right=0.99)
+        axx = fig.subplots_adjust(bottom=0.2, top=0.99, right=0.99,left=0.12)
         axprev = plt.axes([0.77, 0.01, 0.1, button_height])
         axnext = plt.axes([0.89, 0.01, 0.1, button_height])
         self.bnext = widgets.Button(axnext, 'Next')
@@ -129,7 +129,7 @@ class TrainingPlotManager:
         for i in range(len(self.figures)):
             fig_label = self.figures[i]
             if fig_label == figure_id:
-                plt.close(figure_id)
+                self.deactivateFigure(figure_id)
                 if direction == 'n':
                     fig_label = self.figures[(i+1)%len(self.figures)]
                 else:
@@ -138,7 +138,12 @@ class TrainingPlotManager:
                     else:
                         fig_label = self.figures[-1]
                 self.activateFigure(fig_label)
+                break
 
+    ## ##############################
+    def deactivateFigure(self, figure_id):
+        plt.close(figure_id)
+        
     ## ##############################
     def activateFigure(self, fig_label:(str)):
         if 'cumu' in fig_label:
@@ -261,8 +266,14 @@ class TrainingLogParser:
             toks = line.split()
             hand_index = int(toks[1])
             winner = toks[3]
-            ginscore = toks[9]
-            total_reward = toks[11]
+            if (len(toks)>9):
+                ginscore = toks[9]
+            else:
+                ginscore = 0
+            if (len(toks)>11):
+                total_reward = toks[11]
+            else:
+                total_reward = 0.0
             if winner == TrainingLogParser.DQN_PLAYER_NAME:
                 self.wins += 1
             self.hands.append({'hand_index': hand_index, 
@@ -433,6 +444,9 @@ class TrainingAnalyzer:
     def create_LogParser(self):
         return TrainingLogParser()
 
+    def get_scenario_sort_key(self):
+        return 'moving_average_last_spline_slope'
+
     def analyze(self, path_to_logfile, include_partials:(bool)=False):
         logParser = self.create_LogParser()
         logParser.parseLogs(path_to_logfile, include_partials)
@@ -449,7 +463,8 @@ class TrainingAnalyzer:
         TrainingPlotter.rank_all_cumulative_wins(logParser.statsList)
         TrainingPlotter.rank_all_moving_averages(logParser.statsList)
 
-        logParser.statsList.sort(key=lambda x: x['moving_average_last_spline_slope'])
+        sortkey = self.get_scenario_sort_key()
+        logParser.statsList.sort(key=lambda x: x[sortkey])
         print("     -------- name_scenario ----------     \ttotal_reward\tma_last_slope  ma_full_slope\tcum_last_slope\tcum_ratio\twpk")
         for st in logParser.statsList:
             star = ""
@@ -463,7 +478,7 @@ class TrainingAnalyzer:
                     f"\t{st['cumulative_wins_ratio']:1.7f}"
                     f"\t{st['wins_per_1000_hands']:1.7f}"
                     )
-        print(f"{len(logParser.statsList)} scenarios")    
+        print(f"{len(logParser.statsList)} scenarios sorted by {sortkey}")    
 
         try:
 

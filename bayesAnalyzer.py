@@ -1,5 +1,7 @@
 from collections.abc import Iterable
 import distutils.util
+import matplotlib.pyplot as plt
+import matplotlib.widgets as widgets
 
 from decisionProfiler import DecisionPlotter, DecisionPlotManager, DecisionProfiler
 
@@ -8,7 +10,7 @@ DQN_PLAYER_NAME = "Tempo"
 
 ## #############################################
 class BayesPlotter(DecisionPlotter):
-    def plot_bayes_param(statsList, param_name):
+    def plot_bayes_param(statsList, param_name, splines=1, order=1):
         array_score = []
         array_param = []
         for st in statsList:
@@ -24,15 +26,19 @@ class BayesPlotter(DecisionPlotter):
                 array_score.append(slopes[-1])
         
         if len(array_param)>0:
-            BayesPlotter.plot_regression(array_score, array_param, param_name, splines=1,
-                    ylabel="slope - moving average of wins, last {} hands".format(MA_SIZE))
+            BayesPlotter.plot_regression(array_score, 
+                                        array_param, 
+                                        param_name, 
+                                        splines=splines,
+                                        order=order,
+                            ylabel="slope - moving average of wins, last {} hands".format(MA_SIZE))
 
 ## #############################################
 class BayesPlotManager(DecisionPlotManager):
 
     def get_bayes_param_names(self):
         dqn_params = ["l1","l2","l3","learning_rate", "epsilon_decay_linear"]
-        reward_params = ["win_reward","no_win_reward","loss_reward"]
+        reward_params = ["win_reward","no_winner_reward","loss_reward"]
         rez = dqn_params
         v = []
         for st in self.statsList:
@@ -45,6 +51,7 @@ class BayesPlotManager(DecisionPlotManager):
 
     def __init__(self, statsList:(Iterable), cumulative_averages:(Iterable)):
         super().__init__(statsList, cumulative_averages)
+        self.regression_mods = [False, False]
         for st in statsList:
             for param_name in self.get_bayes_param_names():
                 self.figures.append(param_name)
@@ -54,9 +61,32 @@ class BayesPlotManager(DecisionPlotManager):
         if not fig_label in self.get_bayes_param_names():
             return super().activateFigure(fig_label)
         else:
-            BayesPlotter.plot_bayes_param(self.statsList, fig_label)            
+            BayesPlotter.plot_bayes_param(self.statsList, fig_label, 
+                                    splines=(3 if self.regression_mods[0] else 1),
+                                    order=(3 if self.regression_mods[1] else 1))            
             self.install_navigation(fig_label)
+            rax = plt.axes([0.01, 0.01, 0.07, 0.15])
+            self.regression_checkbuttons = widgets.CheckButtons(
+                                                rax,
+                                                ["splines", "cubic"],
+                                                actives=self.regression_mods)
+            self.regression_checkbuttons.on_clicked(self.on_checkclick)
             self.lastOpened = fig_label
+
+    def deactivateFigure(self, figure_id):
+        self.regression_checkbuttons = None
+        super().deactivateFigure(figure_id)
+
+    def on_checkclick(self, event):
+        figure_id = self.get_figure_id(event)
+        if self.regression_checkbuttons == None:
+            return super().on_checkclick(event)
+        else:
+            status = self.regression_checkbuttons.get_status()
+            if not status == self.regression_mods:
+                self.regression_mods=status
+                self.deactivateFigure(figure_id)
+                self.activateFigure(figure_id)
 
 ## ##############################
 class BayesAnalyzer(DecisionProfiler):

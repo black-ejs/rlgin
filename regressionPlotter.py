@@ -11,8 +11,8 @@ import matplotlib.widgets as widgets
 
 import regplot
 
-FIGURE_WIDTH = 9
-FIGURE_HEIGHT = 4
+FIGURE_WIDTH = 10
+FIGURE_HEIGHT = 5
 
 ## #############################################
 ## #############################################
@@ -76,6 +76,7 @@ class RegressionPlotter:
                         order:(int)=1, 
                         ax:(axes.Axes)=None, figure_id:(str)=None,
                         xlabel:(str)=None, ylabel:(str)=None,
+                        scatter:(bool)=True,
                         average_array:(Iterable)=None):
         
         if figure_id == None:
@@ -96,6 +97,7 @@ class RegressionPlotter:
             label='Data',
             order=order,
             fit_reg=False,
+            scatter=scatter,
             line_kws={"color": "#F49F05"},
             ax=ax
         )

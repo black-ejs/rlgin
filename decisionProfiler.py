@@ -2,6 +2,7 @@ from collections.abc import Iterable
 import distutils.util
 
 import matplotlib.pyplot as plt
+import matplotlib.widgets as widgets
 
 from trainingAnalyzer import TrainingPlotManager, TrainingLogParser, TrainingAnalyzer, TrainingPlotter
 import regplot
@@ -52,6 +53,8 @@ class DecisionPlotter(TrainingPlotter):
         hands = st['hands']        
         array_zeroes = []
         array_ordinals = []
+        array_no_winners = []
+        array_nordinals = []
         array_winners = []
         array_wordinals = []
         array_losers = []
@@ -96,14 +99,20 @@ class DecisionPlotter(TrainingPlotter):
             elif not (hand['winner'] == 'nobody'):
                 array_losers.append(count_zeroes/len(hand_decisions))
                 array_lordinals.append(hand['hand_index'])
+            else:
+                array_no_winners.append(count_zeroes/len(hand_decisions))
+                array_nordinals.append(hand['hand_index'])
 
         return [array_zeroes,array_ordinals,
                 array_winners, array_wordinals,
                 array_losers, array_lordinals,
+                array_no_winners, array_nordinals,
                 array_epsilon]
 
     ####################################
-    def plot_zeroes_by_hand(st, fig_label, crop_epsilon:(bool)=True):
+    def plot_zeroes_by_hand(st, fig_label, 
+                win_filters:(list)=[True, True, True], 
+                crop_epsilon:(bool)=True):
         arrays = DecisionPlotter.get_zeroes_by_hand(st, fig_label)
         array_zeroes = arrays[0]
         array_ordinals = arrays[1]
@@ -111,37 +120,71 @@ class DecisionPlotter(TrainingPlotter):
         array_wordinals = arrays[3]
         array_losers = arrays[4]
         array_lordinals = arrays[5]
-        array_epsilon = arrays[6]
+        array_no_winners = arrays[6]
+        array_nordinals = arrays[7]
+        array_epsilon = arrays[8]
 
         start_index = 0
+        start_pos = 0
+
+        show_wins      = win_filters[0]
+        show_losses    = win_filters[1]
+        show_no_winner = win_filters[2]
+
         if crop_epsilon:
             for i in range(len(array_epsilon)):
                 if array_epsilon[i] == float(st['params']['noise_epsilon']):
-                    start_index=i
+                    start_pos=i
+                    start_index = array_ordinals[i]
                     break
 
-        DecisionPlotter.plot_regression(array_zeroes[start_index:], 
-                        array_ordinals[start_index:],
-                        fig_label, 
-                        splines=3,
-                        ylabel=f"% zero in hand",
-                        xlabel="hands")
+        DecisionPlotter.plot_regression(array_zeroes[start_pos:], 
+                    array_ordinals[start_pos:],
+                    fig_label, 
+                    splines=3,
+                    scatter=False,
+                    ylabel=f"% zero in hand",
+                    xlabel="hands")
 
-        regplot.scatter(array_lordinals[start_index:],                                                       
-                        array_losers[start_index:], 
-                        color="#F8283D",
-                        #ax=plt.gca(),
-                        ) 
+        if show_no_winner:
+            start_pos = 0
+            for i in range(len(array_nordinals)):
+                if array_nordinals[i]>=start_index:
+                    start_pos=i
+                    break
+            regplot.scatter(array_nordinals[start_pos:],                                                       
+                            array_no_winners[start_pos:], 
+                            color="#36688D",
+                            #ax=plt.gca(),
+                            ) 
 
-        regplot.scatter(array_wordinals[start_index:],
-                        array_winners[start_index:], 
-                        color="#08B83D",
-                        #ax=plt.gca(),
-                        ) 
+        if show_losses:
+            start_pos = 0
+            for i in range(len(array_lordinals)):
+                if array_lordinals[i]>=start_index:
+                    start_pos=i
+                    break
+            regplot.scatter(array_lordinals[start_pos:],                                                       
+                            array_losers[start_pos:], 
+                            color="#F8283D",
+                            #ax=plt.gca(),
+                            ) 
+
+        if show_wins:
+            start_pos = 0
+            for i in range(len(array_wordinals)):
+                if array_wordinals[i]>=start_index:
+                    start_pos=i
+                    break
+            regplot.scatter(array_wordinals[start_pos:],
+                            array_winners[start_pos:], 
+                            color="#08B83D",
+                            #ax=plt.gca(),
+                            ) 
 
         if not crop_epsilon:
-            plt.gca().plot(array_ordinals[start_index:],
-                            array_epsilon[start_index:], 
+            plt.gca().plot(array_ordinals,
+                            array_epsilon, 
                             label='epsilon', 
                             linestyle='dotted', color="black")
 
@@ -159,6 +202,7 @@ class DecisionPlotManager(TrainingPlotManager):
 
     def __init__(self, statsList:(Iterable), cumulative_averages:(Iterable)):
         super().__init__(statsList, cumulative_averages)
+        self.win_filters = [True, True, True, True]
         for st in statsList:
             ## fig_label = 'Decisions (draw source) - {}'.format(st['name_scenario'])
             fig_label = 'Zeroes by hand (draw source) - {}'.format(st['name_scenario'])
@@ -170,26 +214,52 @@ class DecisionPlotManager(TrainingPlotManager):
                     break
                 i+=1
             self.figures.insert(insert_point, fig_label)
-            #for i in range(1,len(statsList[0]['hands'][0]['decisions'][0])):
-            #    #fig_label = f"Decisions (discard {i}) - {st['name_scenario']}"
-            #    fig_label = f"Zeroes by hand (discard {i}) - {st['name_scenario']}"
-            #    self.figures.insert(insert_point+i, fig_label)
+
+
 
     def activateFigure(self, fig_label:(str)):
         if 'zeroes by hand' in fig_label.lower():
             name_scenario = fig_label[fig_label.index(' - ')+3:]
             stats = self.find_stats(name_scenario)
-            DecisionPlotter.plot_zeroes_by_hand(stats, fig_label)            
+            DecisionPlotter.plot_zeroes_by_hand(stats, fig_label, self.win_filters, crop_epsilon=self.win_filters[3])            
+            self.install_navigation(fig_label)
+            rax = plt.axes([0.01, 0.01, 0.14, 0.12])
+            self.win_filter_checkbuttonsa = widgets.CheckButtons(
+                                                rax,
+                                                ["wins", "losses"],
+                                                actives=self.win_filters[0:2])
+            rax = plt.axes([0.18, 0.01, 0.14, 0.12])
+            self.win_filter_checkbuttonsb = widgets.CheckButtons(
+                                                rax,
+                                                ["no winner", "crop epsilon"],
+                                                actives=self.win_filters[2:4])
+            self.win_filter_checkbuttonsa.on_clicked(self.on_checkclick)
+            self.win_filter_checkbuttonsb.on_clicked(self.on_checkclick)
         elif 'ecisions' in fig_label:
             name_scenario = fig_label[fig_label.index(' - ')+3:]
             stats = self.find_stats(name_scenario)
             DecisionPlotter.plot_decision_histogram(stats, fig_label)            
+            self.install_navigation(fig_label)
         else:
             return super().activateFigure(fig_label)
 
-        self.install_navigation(fig_label)
         self.lastOpened = fig_label
 
+    def deactivateFigure(self, figure_id):
+        self.win_filter_checkbuttonsa = None
+        self.win_filter_checkbuttonsb = None
+        super().deactivateFigure(figure_id)
+
+    ## #############################################
+    def on_checkclick(self, event):
+        figure_id = self.get_figure_id(event)
+        status = []
+        status.extend(self.win_filter_checkbuttonsa.get_status())
+        status.extend(self.win_filter_checkbuttonsb.get_status())
+        if not status == self.win_filters:
+            self.win_filters=status
+            self.deactivateFigure(figure_id)
+            self.activateFigure(figure_id)
 
 ## ###################################################
 ## ###################################################
@@ -263,7 +333,7 @@ import argparse
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser()
     argparser.add_argument('path_to_logfile',
-                    default='logs/bayesModel_reward-bayes_2022-04-08_214231', # 'logs/histo',  #'logs/mega2', 
+                    default='logs/erw', # 'logs/histo',  #'logs/mega2', 
                     nargs='?', help='path to the logfile to be plotted')
     argparser.add_argument('include_partials',
                     default='False', 
