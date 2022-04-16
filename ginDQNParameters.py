@@ -29,9 +29,10 @@ def define_parameters():
 
     # ##########################################
     # gin model control
-    params['win_reward'] = 0.9          
-    params['loss_reward'] = -0.045        
-    params['no_winner_reward'] = -0.009
+    ############# these prams for 4-card game, from-scratch learning
+    params['win_reward'] = 0.99            # per bayesReward.py 
+    params['loss_reward'] = -0.0045        # per bayesReward.py
+    params['no_winner_reward'] = -0.0001   # per bayesReward.py
     params['extend_hands'] = True          # recycle discards when deck is exhausted, up to max_steps_per_hand
     params['max_steps_per_hand'] = 1000    # max turns before no_winner, if 'extend_hands' == TRUE
     params['brandiac_random_percent'] = 90 # assuming opponent = BrandiacGinStrategy 
