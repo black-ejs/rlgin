@@ -58,6 +58,7 @@ class BayesPlotManager(DecisionPlotManager):
             break
 
     def activateFigure(self, fig_label:(str)):
+        #  print(f"bayesAnalyzer: activating figure {fig_label}")
         if not fig_label in self.get_bayes_param_names():
             return super().activateFigure(fig_label)
         else:
@@ -106,7 +107,7 @@ import argparse
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser()
     argparser.add_argument('path_to_logfile',
-                    default='logs/mega2', 
+                    default='logs/rega2', 
                     nargs='?', help='path to the logfile to be plotted')
     argparser.add_argument('include_partials',
                     default='False', 

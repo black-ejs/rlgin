@@ -218,6 +218,7 @@ class DecisionPlotManager(TrainingPlotManager):
 
 
     def activateFigure(self, fig_label:(str)):
+        # print(f"decisionProfiler: activating figure {fig_label}")
         if 'zeroes by hand' in fig_label.lower():
             name_scenario = fig_label[fig_label.index(' - ')+3:]
             stats = self.find_stats(name_scenario)

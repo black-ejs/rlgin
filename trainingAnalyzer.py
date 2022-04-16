@@ -122,13 +122,14 @@ class TrainingPlotManager:
     def onclick(self, event, direction):
         # print(f"onclick: direction={direction} event={vars(event)}")
         figure_id = self.get_figure_id(event)
-        #print(f'click: figure_id={figure_id}')
+        # print(f'click: figure_id={figure_id}')
         if figure_id == None:
             return
 
         for i in range(len(self.figures)):
             fig_label = self.figures[i]
             if fig_label == figure_id:
+                # print(f'click: i={i}, direction={direction}, fig_label={fig_label}')  #########
                 self.deactivateFigure(figure_id)
                 if direction == 'n':
                     fig_label = self.figures[(i+1)%len(self.figures)]
@@ -141,11 +142,13 @@ class TrainingPlotManager:
                 break
 
     ## ##############################
-    def deactivateFigure(self, figure_id):
-        plt.close(figure_id)
+    def deactivateFigure(self, fig_label:(str)):
+        # print(f"deactivating figure {fig_label}")
+        plt.close(fig_label)
         
     ## ##############################
     def activateFigure(self, fig_label:(str)):
+        # print(f"trainingAnalyszer: activating figure {fig_label}")
         if 'cumu' in fig_label:
             TrainingPlotter.plot_cumulative_wins(self.find_stats(fig_label[7:]), self.cumulative_averages)
         else:
@@ -207,6 +210,11 @@ class TrainingLogParser:
             for hand in self.hands:
                 self.ma_array.append(1)
         self.stats['ma_array'] = self.ma_array
+        i=1
+        l = len(self.stats['name_scenario'])
+        for st in self.statsList:
+            while self.stats['name_scenario'] == st['name_scenario']:
+                self.stats['name_scenario'] = st['name_scenario'] + f"_{i}"
         self.statsList.append(self.stats)
         self.session_count += 1
 
