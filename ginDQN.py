@@ -141,10 +141,9 @@ class ginDQNStrategy(playGin.OneDecisionGinStrategy):
         ## deal with previous term
         if not self.turns==0:
             ginhand.turns[-3].turn_scores = self.turn_scores # my previous turn
+            reward = self.agent.set_reward(ginhand,self.myPlayer)
+            ginhand.total_reward += reward
             if self.train:
-                # set reward for the new state
-                reward = self.agent.set_reward(ginhand,self.myPlayer)
-                ginhand.total_reward += reward
                 self.learnTurn(self.turn_states, self.turn_scores, reward, new_state, 
                                     is_first_turn=(self.turns==1))
         else:
