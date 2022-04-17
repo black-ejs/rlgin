@@ -99,20 +99,121 @@ class TrainingPlotManager:
              self.figures.append('cumu - ' + st['name_scenario'])
         self.lastOpened = ""
         self.cumulative_averages = cumulative_averages
+        self.last_button = 0
 
     def install_navigation(self, fig_label):
-        button_height=0.075
-        rrr = plt.get_figlabels()
+        # prev_fig = plt.gcf()
+        self.last_button = 0
+
         if not fig_label in plt.get_figlabels():
             print(f'wtf: fig_label={fig_label}')
         fig = plt.figure(fig_label)
         axx = fig.subplots_adjust(bottom=0.2, top=0.99, right=0.99,left=0.12)
-        axprev = plt.axes([0.77, 0.01, 0.1, button_height])
-        axnext = plt.axes([0.89, 0.01, 0.1, button_height])
-        self.bnext = widgets.Button(axnext, 'Next')
-        self.bnext.on_clicked(self.onclickn)
-        self.bprev = widgets.Button(axprev, 'Previous')
-        self.bprev.on_clicked(self.onclickp)
+
+        self.bnext = self.add_button('Next', self.onclickn)
+        self.bprev = self.add_button('Previous', self.onclickp)
+        self.bparams = self.add_button("params", self.onclickparams)
+
+        # plt.figure(prev_fig)
+
+
+    ## #######################################
+    BUTTON_Y=0.01
+    BUTTON_HEIGHT=0.075
+    BUTTON_WIDTH=0.1
+    BUTTON_X_SPACE=0.02
+    BUTTON_X_INC=BUTTON_WIDTH+BUTTON_X_SPACE
+    def add_button(self, label:(str)="?", onclick=None):
+        # prev_fig = plt.gcf()
+        ax = plt.axes([
+                    1-((self.last_button+1)*TrainingPlotManager.BUTTON_X_INC), 
+                    TrainingPlotManager.BUTTON_Y, 
+                    TrainingPlotManager.BUTTON_WIDTH, 
+                    TrainingPlotManager.BUTTON_WIDTH])
+        button = widgets.Button(ax, label)
+        if not onclick==None:
+            button.on_clicked(onclick)
+        self.last_button += 1
+        # plt.figure(prev_fig)
+        return button
+
+    ## ##############################
+    PARAMS_FIG_ID = "parameters"
+    PARAMS_FIG_W = 7
+    PARAMS_FIG_H = 5.5
+    def onclickparams(self, event):
+        if not self.params_window_is_open():
+            figure_id = self.get_figure_id(event)
+            if figure_id == None:
+                return
+            st = self.find_stats(figure_id)
+            if not st == None:
+                self.show_params(st)
+
+    ## ##############################
+    def show_params(self,st):
+        if not 'params' in st:
+            print(f"no params available for scenario {st['name_scenario']}")
+            return
+        fig = plt.figure(TrainingPlotManager.PARAMS_FIG_ID, 
+                    figsize=(TrainingPlotManager.PARAMS_FIG_W,TrainingPlotManager.PARAMS_FIG_H))
+        
+        params = st['params']
+        s = ""
+        for key in params.keys():
+            s += f"{key}: {params[key]}\n"
+
+        s += f"   ---   ---   ---\n"
+
+        for key in st.keys():
+            if key in ['hands', 'params', "ma_array"] or key in params:
+                continue
+            s += f"{key}: {st[key]}\n"
+
+        fig.text(0.01, 0.01, s,
+                backgroundcolor='#FFFFAA',
+                fontsize=8)
+
+        plt.show()            
+        self.jdjdj = 943049
+        return
+
+    def dummy(self,st):
+        fig = plt.figure()
+        ax = fig.add_subplot()
+        fig.subplots_adjust(top=0.85)
+
+        # Set titles for the figure and the subplot respectively
+        fig.suptitle('bold figure suptitle', fontsize=14, fontweight='bold')
+        ax.set_title('axes title')
+
+        ax.set_xlabel('xlabel')
+        ax.set_ylabel('ylabel')
+
+        # Set both x- and y-axis limits to [0, 10] instead of default [0, 1]
+        ax.axis([0, 10, 0, 10])
+
+        ax.text(3, 8, 'boxed italics text in data coords', style='italic',
+                bbox={'facecolor': 'red', 'alpha': 0.5, 'pad': 10})
+
+        ax.text(2, 6, r'an equation: $E=mc^2$', fontsize=15)
+
+        ax.text(3, 2, 'unicode: Institut für Festkörperphysik')
+
+        ax.text(0.95, 0.01, 'colored text in axes coords',
+        verticalalignment='bottom', horizontalalignment='right',
+        transform=ax.transAxes,
+        color='green', fontsize=15)
+
+        ax.plot([2], [1], 'o')
+        ax.annotate('annotate', xy=(2, 1), xytext=(3, 4),
+                    arrowprops=dict(facecolor='black', shrink=0.05))
+
+        plt.show()            
+
+    ## ##############################
+    def params_window_is_open(self):
+        return TrainingPlotManager.PARAMS_FIG_ID in plt.get_figlabels()
 
     ## ##############################
     def onclickp(self, event):
@@ -145,6 +246,8 @@ class TrainingPlotManager:
     def deactivateFigure(self, fig_label:(str)):
         # print(f"deactivating figure {fig_label}")
         plt.close(fig_label)
+        if self.params_window_is_open():
+            plt.close(TrainingPlotManager.PARAMS_FIG_ID)
         
     ## ##############################
     def activateFigure(self, fig_label:(str)):
@@ -155,15 +258,19 @@ class TrainingPlotManager:
             TrainingPlotter.plot_moving_average(self.find_stats(fig_label))
 
         self.install_navigation(fig_label)
+        # self.install_view_support()
         self.lastOpened = fig_label
 
     ## ##############################
     def find_stats(self,scenario_string):
+        chop = scenario_string.find(" - ")
+        if not chop == -1:
+            scenario_string = scenario_string[chop+3]
         for st in self.statsList:
             if scenario_string in st['name_scenario']:
                 return st
         print(f"dang, cannot find these stats: {scenario_string}")
-        return "dang!"
+        return None
 
     ## ##############################
     def get_figure_id(self,event):
@@ -415,18 +522,18 @@ class TrainingLogParser:
                         
         return score_stats
 
-    def print_stats(stats):
+    def format_stats(stats):
+        rez=""
         for key in stats.keys():
             if not key == "hands":
-                print(f"{key}={stats[key]}")
+                rez+= f"{key}={stats[key]}\n"
+        return rez
 
-    def print_score_stats(score_stats):
+    def format_score_stats(score_stats):
+        rez=""
         for key in score_stats.keys():
-            print(f"{key}={score_stats[key]}")
-
-    def print_statsList(statsList):
-        for stats in statsList:
-            TrainingLogParser.print_stats(stats)
+            rez += f"{key}={score_stats[key]}\n"
+        return rez
 
 ## ##############################
 ## ##############################
@@ -455,26 +562,15 @@ class TrainingAnalyzer:
     def get_scenario_sort_key(self):
         return 'moving_average_last_spline_slope'
 
-    def analyze(self, path_to_logfile, include_partials:(bool)=False):
-        logParser = self.create_LogParser()
-        logParser.parseLogs(path_to_logfile, include_partials)
-
-        print("* * * * * * * * * * * * * * * * * * * ")
-        score_stats = logParser.create_score_stats()
-        TrainingLogParser.print_score_stats(score_stats)
-        if score_stats['count_scenarios'] == 0:
-            print(f"No scenarios to analyze, found {len(logParser.statsList)} stats")
-            print("* * * * * * * * * * * * * * * * * * * ")
-            return
-        print("* * * * * * * * * * * * * * * * * * * ")
-
-        TrainingPlotter.rank_all_cumulative_wins(logParser.statsList)
-        TrainingPlotter.rank_all_moving_averages(logParser.statsList)
-
-        sortkey = self.get_scenario_sort_key()
-        logParser.statsList.sort(key=lambda x: x[sortkey])
-        print("     -------- name_scenario ----------     \ttotal_reward\tma_last_slope  ma_full_slope\tcum_last_slope\tcum_ratio\twpk")
-        for st in logParser.statsList:
+    def display_scenarios(self,statsList):
+        maxlen = -100000
+        for st in statsList:
+            maxlen = max(maxlen,len(st['name_scenario']))
+        name_title = " name_scenario "
+        while len(name_title) < maxlen-2:
+            name_title = "-" + name_title + "-"
+        print(f"{name_title}\ttotal_reward\tma_last_slope  ma_full_slope\tcum_last_slope\tcum_ratio\twpk")
+        for st in statsList:
             star = ""
             if not 'wins2' in st:
                 star = "*"  # should only happen if "include_partials==True"
@@ -486,7 +582,27 @@ class TrainingAnalyzer:
                     f"\t{st['cumulative_wins_ratio']:1.7f}"
                     f"\t{st['wins_per_1000_hands']:1.7f}"
                     )
-        print(f"{len(logParser.statsList)} scenarios sorted by {sortkey}")    
+        print(f"{len(statsList)} scenarios sorted by {self.get_scenario_sort_key()}")    
+
+    def analyze(self, path_to_logfile, include_partials:(bool)=False):
+        logParser = self.create_LogParser()
+        logParser.parseLogs(path_to_logfile, include_partials)
+
+        print("* * * * * * * * * * * * * * * * * * * ")
+        score_stats = logParser.create_score_stats()
+        print(TrainingLogParser.format_score_stats(score_stats))
+        if score_stats['count_scenarios'] == 0:
+            print(f"No scenarios to analyze, found {len(logParser.statsList)} stats")
+            print("* * * * * * * * * * * * * * * * * * * ")
+            return
+        print("* * * * * * * * * * * * * * * * * * * ")
+
+        TrainingPlotter.rank_all_cumulative_wins(logParser.statsList)
+        TrainingPlotter.rank_all_moving_averages(logParser.statsList)
+
+        sortkey = self.get_scenario_sort_key()
+        logParser.statsList.sort(key=lambda x: x[sortkey])
+        self.display_scenarios(logParser.statsList)
 
         try:
 
