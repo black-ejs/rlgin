@@ -17,7 +17,7 @@ INPUT_GENERATION_NUMBER=`ls weights/weights.h5.* | grep "[0-9]$" | cut -d. -f3 |
 INPUT_WEIGHTS="weights/weights.h5.${INPUT_GENERATION_NUMBER}"
 OUTPUT_GENERATION_NUMBER=$((INPUT_GENERATION_NUMBER+1))
 OUTPUT_WEIGHTS="weights/weights.h5.${OUTPUT_GENERATION_NUMBER}"
-LOGFILE="logs/learning_${MODEL_NICKNAME}_${TIMESTAMP}"
+LOGFILE="logs/learningGin_${MODEL_NICKNAME}.${OUTPUT_GENERATION_NUMBER}.${TIMESTAMP}.log"
 
 echo "-----------------------------"
 echo MODEL_NICKNAME=${MODEL_NICKNAME}
