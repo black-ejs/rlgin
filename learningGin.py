@@ -202,10 +202,10 @@ def run(params):
             display(counter_hands, hand_duration, ginhand, 
                 ('log_decisions' in params) and params['log_decisions'])
 
-        if model_is_crashed(ginhand):
-            print(f"** possible model crash at hand {counter_hands} **")
-            state_dict = agent.state_dict()
-            # print(state_dict)
+        #if model_is_crashed(ginhand):
+        #    print(f"** possible model crash at hand {counter_hands} **")
+        #    # state_dict = agent.state_dict()
+        #    # print(state_dict)
 
     total_duration = time.time() - startTime
     
