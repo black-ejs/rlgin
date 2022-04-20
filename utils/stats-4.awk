@@ -15,15 +15,15 @@
 END {
 	print      \
 	      f " hands\n"  \
-	      pp/f " ms/hand avg\n" \
-	      t " wins\n" \
-	      p " losses\n" \
-	      (t*1000)/f " wins/1000 hands\n" \
-	      f-t-p " nobody\n" \
-	      ((t+p)/f)*100 "% decided \n"\
-	      pp/1000 " s   " pp/60000 " m   " pp/3600000 " h" 
+	      (t*1000)/f " wins/1000 hands" 
 	if (t>0) {
 		print p/t " ratio"
 	}
+	print ((t+p)/f)*100 "% decided \n"\
+	      pp/f " ms/hand avg\n" \
+	      t " wins\n" \
+	      p " losses\n" \
+	      f-t-p " nobody\n" \
+	      pp/1000 " s   " pp/60000 " m   " pp/3600000 " h" 
 }
 
