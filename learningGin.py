@@ -260,7 +260,7 @@ if __name__ == '__main__':
         if 'log_path' in params:
             log_path = params['log_path']
             if len(log_path)>0:
-                log = open(log_path, "a")
+                log = open(log_path, "w")
                 if log.writable:
                     old_stdout = sys.stdout
                     sys.stdout = log
