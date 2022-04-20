@@ -14,7 +14,7 @@ echo "current working directory = {$PWD}"
 
 echo setting up logging and weights management....
 LOGPATH="logs"
-LOGROOT="scratchGin_${MODEL_NICKNAME}"
+LOGROOT="scratchGin_${MODEL_NICKNAME}.0"
 LOGFILE="${LOGPATH}/${LOGROOT}.${TIMESTAMP}.log"
 CONSOLE_OUTPUT="${LOGPATH}/${LOGROOT}.${TIMESTAMP}.sysout"
 WEIGHTSPATH="weights"
