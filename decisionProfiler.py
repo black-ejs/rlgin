@@ -223,6 +223,7 @@ class DecisionPlotManager(TrainingPlotManager):
             name_scenario = fig_label[fig_label.index(' - ')+3:]
             stats = self.find_stats(name_scenario)
             DecisionPlotter.plot_zeroes_by_hand(stats, fig_label, self.win_filters, crop_epsilon=self.win_filters[3])            
+            self.lastOpened = fig_label
             self.install_navigation(fig_label)
             rax = plt.axes([0.01, 0.01, 0.14, 0.12])
             self.win_filter_checkbuttonsa = widgets.CheckButtons(
@@ -240,11 +241,11 @@ class DecisionPlotManager(TrainingPlotManager):
             name_scenario = fig_label[fig_label.index(' - ')+3:]
             stats = self.find_stats(name_scenario)
             DecisionPlotter.plot_decision_histogram(stats, fig_label)            
+            self.lastOpened = fig_label
             self.install_navigation(fig_label)
         else:
             return super().activateFigure(fig_label)
 
-        self.lastOpened = fig_label
 
     def deactivateFigure(self, figure_id):
         self.win_filter_checkbuttonsa = None
@@ -331,10 +332,11 @@ class DecisionProfiler(TrainingAnalyzer):
 ## ##############################
 ## ##############################
 import argparse
+
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser()
     argparser.add_argument('path_to_logfile',
-                    default='logs/erw', # 'logs/histo',  #'logs/mega2', 
+                    default='logs/zero.megalog', # 'logs/erw',  
                     nargs='?', help='path to the logfile to be plotted')
     argparser.add_argument('include_partials',
                     default='False', 

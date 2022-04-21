@@ -222,15 +222,15 @@ class TrainingPlotManager:
         else:
             TrainingPlotter.plot_moving_average(self.find_stats(fig_label))
 
+        self.lastOpened = fig_label
         self.install_navigation(fig_label)
         # self.install_view_support()
-        self.lastOpened = fig_label
 
     ## ##############################
     def find_stats(self,scenario_string):
         chop = scenario_string.find(" - ")
         if not chop == -1:
-            scenario_string = scenario_string[chop+3]
+            scenario_string = scenario_string[chop+3:]
         for st in self.statsList:
             if scenario_string in st['name_scenario']:
                 return st
@@ -315,6 +315,7 @@ class TrainingLogParser:
     ## ##############################
     def parse_params(self, line:(str)):
         params = eval(line[line.find('{'):])
+        
         self.extract_param("name_scenario", params)
         self.extract_param("learning_rate", params)
         self.extract_param("epsilon_decay_linear", params)
