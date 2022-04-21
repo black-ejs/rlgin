@@ -17,10 +17,12 @@ INPUT_GENERATION_NUMBER=`ls weights/weights.h5.* | grep "[0-9]$" | cut -d. -f3 |
 INPUT_WEIGHTS="weights/weights.h5.${INPUT_GENERATION_NUMBER}"
 OUTPUT_GENERATION_NUMBER=$((INPUT_GENERATION_NUMBER+1))
 OUTPUT_WEIGHTS="weights/weights.h5.${OUTPUT_GENERATION_NUMBER}"
-LOGFILE="logs/learningGin_${MODEL_NICKNAME}.${OUTPUT_GENERATION_NUMBER}.${TIMESTAMP}.log"
+NAME_SCENARIO="learningGin_${MODEL_NICKNAME}.${OUTPUT_GENERATION_NUMBER}"
+LOGFILE="logs/${NAME_SCENARIO}.${TIMESTAMP}.log"
 
 echo "-----------------------------"
 echo MODEL_NICKNAME=${MODEL_NICKNAME}
+echo NAME_SCENARIO=${NAME_SCENARIO}
 echo INPUT_WEIGHTS=${INPUT_WEIGHTS}
 echo INPUT_GENERATION_NUMBER=${INPUT_GENERATION_NUMBER}
 echo OUTPUT_GENERATION_NUMBER=${OUTPUT_GENERATION_NUMBER}
@@ -34,11 +36,11 @@ cp "${INPUT_WEIGHTS}" weights/weights.h5
 echo updating code base....
 git pull
 echo getting "${MODEL_NICKNAME}"-specific params....
-cp ../ginDQNParameters.py.${MODEL_NICKNAME} ginDQNParameters.py
+cp ../ginDQNParameters.py."${MODEL_NICKNAME}" ginDQNParameters.py
 echo cleaning up fram any previous runs...
 [ -e "weights/weights.h5.post_training" ] && rm weights/weights.h5.post_training
 echo launching learning process...
-python learningGin.py --logfile "${LOGFILE}"
+python learningGin.py --name_scenario "${NAME_SCENARIO}" --logfile "${LOGFILE}" 
 echo learning process completed
 
 echo capturing post-training weights...
