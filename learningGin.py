@@ -241,6 +241,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--episodes", nargs='?', type=int, default=-1)
     parser.add_argument("--logfile", nargs='?', type=str, default=None)
+    parser.add_argument("--name_scenario", nargs='?', type=str, default=None)
     # parser.add_argument("--display", nargs='?', type=distutils.util.strtobool, default=True)
     args = parser.parse_args()
     print("learningGin: args ", args)
@@ -252,9 +253,11 @@ if __name__ == '__main__':
 
         if args.episodes != -1:
             params['episodes'] = args.episodes
+        if args.name_scenario != None:
+            params['name_scenario'] = args.name_scenario
+
         if not (args.logfile == None):
-            params['log_path'] = args.logfile
-        
+            params['log_path'] = args.logfile        
         log = None
         old_stdout = None
         if 'log_path' in params:
