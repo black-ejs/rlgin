@@ -1,7 +1,7 @@
 ##!/usr/bin/bash
 ## run a test cycle, this script is usually invoked with "nohup" or the equivalent
 
-TIMESTAMP=`date -u +%Y-%m-%d_%H:%M:%S`
+TIMESTAMP=`date -u +%Y-%m-%d_%H-%M-%S`
 echo '#####################################################'
 echo RLGIN TRAINING session started at "${TIMESTAMP}"
 
