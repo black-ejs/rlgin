@@ -197,8 +197,8 @@ def play(num_hands_to_play:(int)=500,
 		card_counts.append(0)
 
 	print(f"playGin execution at {datetime.datetime.now().strftime('%Y%m%d.%H%M%S')}")
-	print(f"playGin num_hands_to_play: {name1}")
-	print(f"vars()={vars(strategy1.__class__)}")
+	print(f"playGin num_hands_to_play: {num_hands_to_play}")
+	print(f"playGin player1: {name1}")
 	print(f"playGin strategy1: {strategy1.__class__.__name__}")
 	print(f"playGin player2: {name2}")
 	print(f"playGin strategy2: {strategy2.__class__.__name__}")
