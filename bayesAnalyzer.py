@@ -10,7 +10,10 @@ DQN_PLAYER_NAME = "Tempo"
 
 ## #############################################
 class BayesPlotter(DecisionPlotter):
-    def plot_bayes_param(statsList, param_name, splines=1, order=1):
+    def plot_bayes_param(statsList, param_name, 
+                        y_param_name:(str)='moving_average_spline_slopes',
+                        ylabel:(str)="slope - moving average of wins, last {} hands".format(MA_SIZE),
+                        splines=1, order=1):
         array_score = []
         array_param = []
         for st in statsList:
@@ -19,11 +22,13 @@ class BayesPlotter(DecisionPlotter):
                 param_val = st[param_name]
             elif 'params' in st and param_name in st['params']:
                 param_val = st['params'][param_name]
-            if (not (param_val==None)) and ('moving_average_spline_slopes' in st):
-                slopes = st['moving_average_spline_slopes']
+            if (not (param_val==None)) and (y_param_name in st):
+                y_param = st[y_param_name]
                 array_param.append(param_val)
-                ## array_score.append(st['wins2'])
-                array_score.append(slopes[-1])
+                if isinstance(y_param,Iterable):
+                    array_score.append(y_param[-1])
+                else:
+                    array_score.append(y_param)
         
         if len(array_param)>0:
             BayesPlotter.plot_regression(array_score, 
@@ -31,7 +36,7 @@ class BayesPlotter(DecisionPlotter):
                                         param_name, 
                                         splines=splines,
                                         order=order,
-                            ylabel="slope - moving average of wins, last {} hands".format(MA_SIZE))
+                                        ylabel=ylabel)
 
 ## #############################################
 class BayesPlotManager(DecisionPlotManager):
@@ -39,15 +44,21 @@ class BayesPlotManager(DecisionPlotManager):
     def get_bayes_param_names(self):
         dqn_params = ["l1","l2","l3","learning_rate", "epsilon_decay_linear"]
         reward_params = ["win_reward","no_winner_reward","loss_reward"]
-        rez = dqn_params
+        generation_params = ["generation"]
+        rez = generation_params
         v = []
         for st in self.statsList:
             val = st['params'][reward_params[0]]
             if len(v) > 0 and (val not in v):
-                rez = reward_params
-                break
+                return reward_params
             v.append(val)
-        return rez
+        v = []
+        for st in self.statsList:
+            val = st['params'][dqn_params[-1]]
+            if len(v) > 0 and (val not in v):
+                return dqn_params
+            v.append(val)
+        return generation_params
 
     def __init__(self, statsList:(Iterable), cumulative_averages:(Iterable)):
         super().__init__(statsList, cumulative_averages)
@@ -62,7 +73,14 @@ class BayesPlotManager(DecisionPlotManager):
         if not fig_label in self.get_bayes_param_names():
             return super().activateFigure(fig_label)
         else:
+            y_param_name = 'moving_average_spline_slopes'
+            ylabel="slope - moving average of wins, last {} hands".format(MA_SIZE)
+            if fig_label == 'generation':
+                y_param_name = 'wins_per_1000_hands'
+                ylabel="wins per 1000 hands"
             BayesPlotter.plot_bayes_param(self.statsList, fig_label, 
+                                    y_param_name=y_param_name,
+                                    ylabel=ylabel,
                                     splines=(3 if self.regression_mods[0] else 1),
                                     order=(3 if self.regression_mods[1] else 1))            
             self.install_navigation(fig_label)
@@ -107,7 +125,7 @@ import argparse
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser()
     argparser.add_argument('path_to_logfile',
-                    default='logs/rega2', 
+                    default='logs/new-params-a.megalog', 
                     nargs='?', help='path to the logfile to be plotted')
     argparser.add_argument('include_partials',
                     default='False', 
