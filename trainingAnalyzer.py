@@ -2,6 +2,7 @@ from collections.abc import Iterable
 import sys
 import math
 import time
+import re
 import distutils.util
 
 import matplotlib.pyplot as plt
@@ -42,12 +43,12 @@ class TrainingPlotter(regressionPlotter.RegressionPlotter):
         else:                        
             slopes = TrainingPlotter.plot_regression(array_cumu_wins, 
                             array_ordinals, 'cumu - ' + st['name_scenario'], 
-                            splines=3,
+                            splines=[1,3], #=3,
                             ylabel="cumulative wins   total=" + str(st['wins2']),
                             average_array=cumulative_averages)
         st['cumulative_wins_slopes'] = slopes
         st['cumulative_wins_last_spline_slope'] = slopes[-1]
-        st['cumulative_wins_ratio'] = slopes[-1]/slopes[0]
+        st['cumulative_wins_ratio'] = slopes[-1]/slopes[1] # [0]
 
     ## ##############################
     def rank_all_moving_averages(statsList):
@@ -287,6 +288,9 @@ class TrainingLogParser:
         for st in self.statsList:
             while self.stats['name_scenario'] == st['name_scenario']:
                 self.stats['name_scenario'] = st['name_scenario'] + f"_{i}"
+
+        self.extract_generation()
+
         self.statsList.append(self.stats)
         self.session_count += 1
 
@@ -303,22 +307,41 @@ class TrainingLogParser:
         self.hands = []
         self.wins = 0
         self.stats['total_reward'] = 0
+        self.stats['generation'] = 0
 
+    ## ##############################
+    def extract_generation(self):
+        generation_match = re.search("[.][0-9]*[.]", self.stats['name_scenario'])
+        if generation_match:
+            self.stats['generation'] = int(
+                self.stats['name_scenario'][generation_match.start()+1:generation_match.end()-1]
+                )
+            return
+        generation_match = re.search("[.][0-9]*[.]", self.stats['params']['log_path'])
+        if generation_match:
+            self.stats['generation'] = int(
+                self.stats['params']['log_path'][generation_match.start()+1:generation_match.end()-1]
+                )
+            return
+
+
+    ## ##############################
     def extract_param(self, key, params):
         if key in params:
             self.stats[key] = params[key]
 
     ## ##############################
     def is_session_start(line):
-        return (("INPUT" in line) or ("Testing." in line) or ("Training." in line))
+        return (("INPUT" in line) or ("learningGin execution at" in line) or ("Testing." in line))
 
     ## ##############################
     def parse_params(self, line:(str)):
         params = eval(line[line.find('{'):])
         
-        self.extract_param("name_scenario", params)
-        self.extract_param("learning_rate", params)
-        self.extract_param("epsilon_decay_linear", params)
+        self.extract_param('name_scenario', params)
+        self.extract_param('learning_rate', params)
+        self.extract_param('epsilon_decay_linear', params)
+        self.extract_param('timestamp', params)
         if "layer_sizes" in params:
             ls = params["layer_sizes"]
             self.stats["l1"] = int(ls[0])
@@ -526,7 +549,8 @@ class TrainingAnalyzer:
         return TrainingLogParser()
 
     def get_scenario_sort_key(self):
-        return 'moving_average_last_spline_slope'
+        # return 'moving_average_last_spline_slope'
+        return 'timestamp'
 
     def display_scenarios(self,statsList):
         maxlen = -100000
@@ -606,7 +630,7 @@ import argparse
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser()
     argparser.add_argument('path_to_logfile',
-                    default='logs/learning_lr00332519_struct100_800_20_eps0.0256.log.0',  #'logs/mega2', 
+                    default='logs/new-params-a.megalog',  #'logs/mega2', 
                     nargs='?', help='path to the logfile to be plotted')
     argparser.add_argument('include_partials',
                     default='False', 
