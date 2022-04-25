@@ -13,7 +13,7 @@ BEGIN{minratio=10000;}
         }
 }
 /name_scenario/{
-        namex = index($0,"name_scenario")+20;
+        namex = index($0,"name_scenario")+16;
         scenario = substr($0, namex)
         scenario = substr(scenario,1,index(scenario,",")-1)
 }
