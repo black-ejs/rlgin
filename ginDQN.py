@@ -112,6 +112,7 @@ class ginDQNStrategy(playGin.OneDecisionGinStrategy):
         self.batch_size = params['batch_size']
         self.train = params['train']
         self.pretrain_weights = None
+        self.benchmark_scorer = None
 
     def learnTurn(self, turn_states, turn_actions, reward, new_state, isDone = False, is_first_turn=False):
         if is_first_turn:
@@ -141,6 +142,7 @@ class ginDQNStrategy(playGin.OneDecisionGinStrategy):
         ## deal with previous turn
         if not self.turns==0:
             ginhand.turns[-3].turn_scores = self.turn_scores # my previous turn
+            ginhand.turns[-3].turn_benchmarks = self.turn_benchmarks
             reward = self.agent.set_reward(ginhand,self.myPlayer)
             ginhand.total_reward += reward
             if self.train:
@@ -151,6 +153,7 @@ class ginDQNStrategy(playGin.OneDecisionGinStrategy):
         self.turns += 1
         self.turn_scores = []
         self.turn_states = []
+        self.turn_benchmarks = []
         
     def scoreCandidate(self, sevenCardHand, candidate, ginhand):
         # perform random actions based on agent.epsilon, or choose the action
@@ -167,6 +170,10 @@ class ginDQNStrategy(playGin.OneDecisionGinStrategy):
                 score = DQNAgent.translatePrediction(prediction)
         self.turn_scores.append(score)
         self.turn_states.append(current_state)
+        if not self.benchmark_scorer == None:
+            benchmark = self.benchmark_scorer.scoreCandidate(
+                                sevenCardHand, candidate, ginhand)
+            self.turn_benchmarks.append(benchmark)
         return score
         
     def endOfHand(self, ginhand):
@@ -183,8 +190,10 @@ class ginDQNStrategy(playGin.OneDecisionGinStrategy):
             self.learnTurn(self.turn_states, self.turn_scores, reward, new_state, isDone=True)
         if ginhand.currentlyPlaying.player.name == self.myPlayer.name: 
             ginhand.lastTurn().turn_scores = self.turn_scores
+            ginhand.lastTurn().turn_benchmarks = self.turn_benchmarks
         else:
             ginhand.turns[-2].turn_scores = self.turn_scores
+            ginhand.turns[-2].turn_benchmarks = self.turn_benchmarks
         
     ## #############################################
     def compare_weights(pretrain_weights, posttrain_weights):

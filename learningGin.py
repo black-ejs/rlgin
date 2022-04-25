@@ -12,7 +12,7 @@ DEVICE = 'cpu' # 'cuda' if torch.cuda.is_available() else 'cpu'
 
 from DQN import DQNAgent
 import gin
-from playGin import BrandiacGinStrategy
+from playGin import BrainiacGinStrategy, BrandiacGinStrategy
 import ginDQN
 import ginDQNParameters
 NO_WIN_NAME = 'nobody'
@@ -51,10 +51,23 @@ def display(counter_hands, hand_duration, ginhand, log_decisions):
 
     if log_decisions:
         i=0
+        correlation_array_dqn = []
+        correlation_array_benchmark = []
         for t in ginhand.turns:
             if hasattr(t, 'turn_scores'):
                 print(f"  turn {i} {t} > {t.turn_scores}")
+            if hasattr(t, 'turn_benchmarks'):
+                print(f"  bench {i} {t} > {t.turn_benchmarks}")
+                correlation_array_dqn.append(t.turn_scores)
+                correlation_array_benchmark.append(t.turn_benchmarks)
             i+=1
+        if len(correlation_array_benchmark)>0:
+            try:
+                cc = np.corrcoef(np.array(correlation_array_dqn),
+                                  np.array(correlation_array_benchmark))                
+                print(f"benchmark-correlation: {cc[0,1]}")
+            except RuntimeWarning:
+                print(f"benchmark-correlation: 0")
 
 ## #############################################
 def get_mean_stdev(array):
@@ -129,27 +142,24 @@ def run(params):
     Use the DQN to play gin, via a ginDQNStrategy            
     """
     pretrain_weights = None
+    counter_hands = 0
+    total_reward = 0
+    durations = []
+    turns_in_hand = []
+    winMap = {params['player_one_name']:0, params['player_two_name']:0, NO_WIN_NAME:0}
+
+    stats = Stats()
+    stats.put('run_timestamp', datetime.datetime.now())
+    stats.put('params', params)
+    stats.put('winMap', winMap)
+
+    print(f"--- SCENARIO START at {stats.get('run_timestamp')} ---")
 
     agent = initalizeDQN(params)
     if agent.load_weights_success:
         print(f"weights loaded from {agent.weights_path}")
         if params['train']:
             pretrain_weights = copy.deepcopy(agent.state_dict())
-
-    counter_hands = 0
-    total_reward = 0
-    winMap = {}
-    winMap[params['player_one_name']] = 0				
-    winMap[params['player_two_name']] = 0				
-    winMap[NO_WIN_NAME] = 0				
-
-    stats = Stats()
-    stats.put("run_timestamp", datetime.datetime.now())
-    stats.put("params", params)
-    stats.put("winMap", winMap)
-
-    durations = []
-    turns_in_hand = []
 
     startTime = time.time()
     while counter_hands < params['episodes']:
@@ -167,6 +177,7 @@ def run(params):
         # create GinHand, re-using the agent each time
         opponentStrategy = BrandiacGinStrategy(params['brandiac_random_percent'])
         dqnStrategy = ginDQN.ginDQNStrategy(params,agent)
+        dqnStrategy.benchmark_scorer = BrainiacGinStrategy()
         ginhand = gin.GinHand(gin.Player(params['player_one_name']),
                                 opponentStrategy,
                                 gin.Player(params['player_two_name']),
