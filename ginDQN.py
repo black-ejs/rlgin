@@ -130,11 +130,11 @@ class ginDQNStrategy(playGin.OneDecisionGinStrategy):
                 self.agent.train_short_memory(old_state, action, reward, new_state, isDone)
                 # store the new data into a long term memory
                 self.agent.remember(old_state, action, reward, new_state, isDone)
-        if not self.pretrain_weights==None:
-            count_diffs = ginDQNStrategy.compare_weights(self.pretrain_weights, 
-                                                    self.agent.state_dict())
-            if count_diffs == 0:
-                    print(f"** WARNING: weights appear unchanged at turn {self.turns}")
+        #if not self.pretrain_weights==None:
+        #    count_diffs = ginDQNStrategy.compare_weights(self.pretrain_weights, 
+        #                                            self.agent.state_dict())
+        #    if count_diffs == 0:
+        #            print(f"** WARNING: weights appear unchanged at turn {self.turns}")
 
     def startOfTurn(self, ginhand):
         self.myPlayer = ginhand.currentlyPlaying.player
