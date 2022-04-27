@@ -1,5 +1,5 @@
 ##!/bin/bash
-HANDS_TO_PLAY=100
+HANDS_TO_PLAY=10000
 for PLAYER1 in br90 r d b br br50 br10 
 do 
     for PLAYER2 in br90 r d b br br50 br10 
