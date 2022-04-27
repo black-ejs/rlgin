@@ -283,8 +283,9 @@ class TrainingLogParser:
             for hand in self.hands:
                 self.ma_array.append(1)
         self.stats['ma_array'] = self.ma_array
+        if len(self.stats['name_scenario']) == 0: # some kind of error in the input
+            self.stats['name_scenario'] = "unknown"
         i=1
-        l = len(self.stats['name_scenario'])
         for st in self.statsList:
             while self.stats['name_scenario'] == st['name_scenario']:
                 self.stats['name_scenario'] = st['name_scenario'] + f"_{i}"
