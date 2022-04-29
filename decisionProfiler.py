@@ -137,11 +137,32 @@ class DecisionPlotter(TrainingPlotter):
                     start_pos=i
                     start_index = array_ordinals[i]
                     break
+    
+        if show_no_winner:
+            plot_y = array_zeroes[start_pos:]
+            plot_x = array_ordinals[start_pos:]
+        else:
+            plot_y = []
+            plot_x = []
+            if show_losses:
+                for i in range(len(array_lordinals)):
+                    if array_lordinals[i]>=start_index:
+                        start_pos=i
+                        break
+                plot_y.extend(array_losers[start_pos:])
+                plot_x.extend(array_lordinals[start_pos:])
+            if show_wins:
+                for i in range(len(array_wordinals)):
+                    if array_wordinals[i]>=start_index:
+                        start_pos=i
+                        break
+                plot_y.extend(array_winners[start_pos:])
+                plot_x.extend(array_wordinals[start_pos:])
 
-        DecisionPlotter.plot_regression(array_zeroes[start_pos:], 
-                    array_ordinals[start_pos:],
+        DecisionPlotter.plot_regression(plot_y, 
+                    plot_x,
                     fig_label, 
-                    splines=3,
+                    splines=[1,3],
                     scatter=False,
                     ylabel=f"% zero in hand",
                     xlabel="hands")
