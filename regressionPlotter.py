@@ -77,7 +77,8 @@ class RegressionPlotter:
                         ax:(axes.Axes)=None, figure_id:(str)=None,
                         xlabel:(str)=None, ylabel:(str)=None,
                         scatter:(bool)=True,
-                        average_array:(Iterable)=None):
+                        average_array:(Iterable)=None,
+                        benchmark_arrays:(Iterable)=None):
         
         if figure_id == None:
             figure_id = title
@@ -131,6 +132,10 @@ class RegressionPlotter:
             y_mean = average_array
         ax.plot(array_x,y_mean, label='Mean', linestyle='--', color="#0F0F00")
         ## ax.legend(loc='lower right')
+
+        if not benchmark_arrays == None:
+            ax.plot(benchmark_arrays[1],benchmark_arrays[0], 
+                                 label='Benchmark', linestyle='dotted', color="#002F08")
 
         if xlabel == None:
             xlabel = "{} (last spline slope={:1.7f})".format(title,slopes[-1])

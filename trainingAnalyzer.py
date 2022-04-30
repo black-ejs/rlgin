@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import matplotlib.widgets as widgets
 
 import regressionPlotter
+import benchmarks
 
 MA_SIZE = 50
 
@@ -40,12 +41,15 @@ class TrainingPlotter(regressionPlotter.RegressionPlotter):
             slopes = TrainingPlotter.do_poly_regression(array_cumu_wins,
                             array_ordinals, 
                             splines=3)
-        else:                        
+        else:       
+            benchmark_player, benchmark_opponent = TrainingPlotter.get_benchmark_players(st)
+            benchmark_arrays=benchmarks.get_cumulative_wins(benchmark_player,benchmark_opponent,len(hands))
             slopes = TrainingPlotter.plot_regression(array_cumu_wins, 
                             array_ordinals, 'cumu - ' + st['name_scenario'], 
                             splines=[1,3], #=3,
                             ylabel="cumulative wins   total=" + str(st['wins2']),
-                            average_array=cumulative_averages)
+                            average_array=cumulative_averages,
+                            benchmark_arrays=benchmark_arrays)
         st['cumulative_wins_slopes'] = slopes
         st['cumulative_wins_last_spline_slope'] = slopes[-1]
         st['cumulative_wins_ratio'] = slopes[-1]/slopes[1] # [0]
@@ -71,9 +75,15 @@ class TrainingPlotter(regressionPlotter.RegressionPlotter):
             
         if len(array_count)>0:
             if which == 'plot':
+                benchmark_player, benchmark_opponent = TrainingPlotter.get_benchmark_players(st)
+                benchmark_ma=benchmarks.get_moving_average(benchmark_player,benchmark_opponent,MA_SIZE)
+                benchmark_array=[]
+                for i in range(len(array_count)):
+                    benchmark_array.append(benchmark_ma)
                 slopes = TrainingPlotter.plot_regression(array_ma, array_count, 
                                 st['name_scenario'], splines=[1,3],
-                                ylabel="wins last {} hands".format(MA_SIZE))
+                                ylabel="wins last {} hands".format(MA_SIZE),
+                                benchmark_arrays=(benchmark_array,array_count))
             else:
                 slopes = TrainingPlotter.do_poly_regression(array_ma, array_count, splines=[1,3])
             array_count = []
@@ -81,6 +91,15 @@ class TrainingPlotter(regressionPlotter.RegressionPlotter):
             st['moving_average_overall_slope'] = slopes[0]
             st['moving_average_spline_slopes'] = slopes[1:]
             st['moving_average_last_spline_slope'] = slopes[-1]
+
+    def get_benchmark_players(st:(dict)):
+        benchmark_player = 'r'  #random
+        if 'brandiac_random_percent' in st['params']:               
+            benchmark_opponent = 'br' + str(st['params']['brandiac_random_percent'])
+        else:
+            benchmark_opponent = 'b'
+        return (benchmark_player, benchmark_opponent)
+
 
 ## ##############################
 ## #############################################
@@ -509,7 +528,6 @@ class TrainingLogParser:
         score_stats['cumulative_average_slope']=(
                         self.cumulative_averages[-1] - self.cumulative_averages[0]
                                         )/len(self.cumulative_averages)
-                        
         return score_stats
 
     def format_stats(stats):
@@ -631,11 +649,11 @@ import argparse
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser()
     argparser.add_argument('path_to_logfile',
-                    default='logs/new-params-a.megalog',  #'logs/mega2', 
+                    default='logs/qqq',  #'logs/mega2', 
                     nargs='?', help='path to the logfile to be plotted')
     argparser.add_argument('include_partials',
                     default='False', 
-                    nargs='?', help='include results eve without bayesian end-tags')
+                    nargs='?', help='include results even without bayesian end-tags')
     args = argparser.parse_args()
 
     TrainingAnalyzer().analyze(args.path_to_logfile, 
