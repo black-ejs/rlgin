@@ -567,9 +567,9 @@ class TrainingAnalyzer:
         return TrainingLogParser()
 
     def get_scenario_sort_key(self):
-        # return 'moving_average_last_spline_slope'
+        return 'moving_average_last_spline_slope'
         # return 'timestamp'
-        return 'generation'
+        # return 'generation'
 
     def display_scenarios(self,statsList):
         maxlen = -100000
