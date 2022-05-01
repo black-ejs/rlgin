@@ -47,7 +47,7 @@ echo capturing post-training weights...
 cp weights/weights.h5.post_training "${OUTPUT_WEIGHTS}"
 
 echo comparing output and input weights
-[ cmp "${INPUT_WEIGHTS}" "${OUTPUT_WEIGHTS}" ] || echo "*** WARNING: NO DIFFERENCE BETWEEN ${INPUT_WEIGHTS} and ${OUTPUT_WEIGHTS}"
+if cmp "${INPUT_WEIGHTS}" "${OUTPUT_WEIGHTS}"; then echo "*** WARNING: NO DIFFERENCE BETWEEN ${INPUT_WEIGHTS} and ${OUTPUT_WEIGHTS}"; fi
 
 cd ..
 echo '#####################################################'
