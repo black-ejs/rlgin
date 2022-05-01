@@ -292,7 +292,7 @@ class TrainingLogParser:
     score_stats = {}
 
     def get_default_name_scenario(self):
-        return self.filepath + '.learning.' + str(self.session_count)
+        return self.filepath + '.learning_' + str(self.session_count)
 
     def save_training_session(self):
         self.stats['hands'] = self.hands
@@ -327,7 +327,7 @@ class TrainingLogParser:
         self.hands = []
         self.wins = 0
         self.stats['total_reward'] = 0
-        self.stats['generation'] = 0
+        # self.stats['generation'] = 0
 
     ## ##############################
     def extract_generation(self):
@@ -336,14 +336,15 @@ class TrainingLogParser:
             self.stats['generation'] = int(
                 self.stats['name_scenario'][generation_match.start()+1:generation_match.end()-1]
                 )
-            return
-        generation_match = re.search("[.][0-9]*[.]", self.stats['params']['log_path'])
-        if generation_match:
-            self.stats['generation'] = int(
-                self.stats['params']['log_path'][generation_match.start()+1:generation_match.end()-1]
-                )
-            return
-
+        else:
+            generation_match = re.search("[.][0-9]*[.]", self.stats['params']['log_path'])
+            if generation_match:
+                self.stats['generation'] = int(
+                    self.stats['params']['log_path'][generation_match.start()+1:generation_match.end()-1]
+                    )
+        if ('generation' in self.stats) and (self.stats['generation'] > 999):  # old, pre-convention name
+            print(f"generation={self.stats['generation']}   name_scenario={self.stats['name_scenario']}    log_path={self.stats['params']['log_path']}")
+            self.stats.pop('generation')
 
     ## ##############################
     def extract_param(self, key, params):
@@ -444,15 +445,13 @@ class TrainingLogParser:
         self.init_training_session()
 
         with open(filepath, 'r') as f:
-            lines=f.readlines()
-
-        count_lines = 0
-        for line in lines:
-            self.processLine(line)
-            count_lines += 1
-            if count_lines%10000 == 0:
-                sys.stdout.write(f"\rparsed {count_lines} lines in {time.time()-start_time:3.3f}s")
-        sys.stdout.write("\n")
+            count_lines = 0
+            for line in f:
+                self.processLine(line)
+                count_lines += 1
+                if count_lines%10000 == 0:
+                    sys.stdout.write(f"\rparsed {count_lines} lines in {time.time()-start_time:3.3f}s")
+            sys.stdout.write("\n")
         
         # last (or only) stats
         if 'wins2' in self.stats or include_partials:
@@ -569,7 +568,8 @@ class TrainingAnalyzer:
 
     def get_scenario_sort_key(self):
         # return 'moving_average_last_spline_slope'
-        return 'timestamp'
+        # return 'timestamp'
+        return 'generation'
 
     def display_scenarios(self,statsList):
         maxlen = -100000
@@ -578,21 +578,27 @@ class TrainingAnalyzer:
         name_title = " name_scenario "
         while len(name_title) < maxlen-2:
             name_title = "-" + name_title + "-"
-        print(f"{name_title}\ttotal_reward\tma_last_slope  ma_full_slope\tcum_last_slope\tcum_ratio\twpk")
+        print(f"{name_title}\ttotal_reward\tma_last_slope  ma_full_slope\tcum_last_slope\tcum_ratio\twpk\tgen")
         for st in statsList:
             star = ""
             if not 'wins2' in st:
                 star = "*"  # should only happen if "include_partials==True"
+            if 'generation' in st:
+                gen=st['generation']
+            else:
+                gen='-'
             print(f"{star}{st['name_scenario']}:"
-                    f"\t{st['total_reward']: 1.7f}  "
+                    f"\t{st['total_reward']: 2.4f}  "
                     f"\t{st['moving_average_last_spline_slope']: 1.7f}  "
                     f"\t{st['moving_average_overall_slope']: 1.7f}"
                     f"\t{st['cumulative_wins_last_spline_slope']:1.7f}"
-                    f"\t{st['cumulative_wins_ratio']:1.7f}"
-                    f"\t{st['wins_per_1000_hands']:1.7f}"
+                    f"\t{st['cumulative_wins_ratio']:1.3f}"
+                    f"\t{st['wins_per_1000_hands']:2.3f}"
+                    f"\t{gen}"
                     )
         print(f"{len(statsList)} scenarios sorted by {self.get_scenario_sort_key()}")    
 
+    ## ##############################
     def analyze(self, path_to_logfile, include_partials:(bool)=False):
         logParser = self.create_LogParser()
         logParser.parseLogs(path_to_logfile, include_partials)

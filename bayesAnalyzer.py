@@ -45,20 +45,20 @@ class BayesPlotManager(DecisionPlotManager):
         dqn_params = ["l1","l2","l3","learning_rate", "epsilon_decay_linear"]
         reward_params = ["win_reward","no_winner_reward","loss_reward"]
         generation_params = ["generation"]
-        rez = generation_params
         v = []
+        rez = generation_params
         for st in self.statsList:
             val = st['params'][reward_params[0]]
             if len(v) > 0 and (val not in v):
-                return reward_params
+                rez.extend(reward_params)
             v.append(val)
         v = []
         for st in self.statsList:
             val = st['params'][dqn_params[-1]]
             if len(v) > 0 and (val not in v):
-                return dqn_params
+                rez.extend(dqn_params)
             v.append(val)
-        return generation_params
+        return rez
 
     def __init__(self, statsList:(Iterable), cumulative_averages:(Iterable)):
         super().__init__(statsList, cumulative_averages)
