@@ -157,10 +157,11 @@ class ginDQNStrategy(playGin.OneDecisionGinStrategy):
         
     def scoreCandidate(self, sevenCardHand, candidate, ginhand):
         # perform random actions based on agent.epsilon, or choose the action
-        
         current_state = self.agent.get_state(ginhand,self.myPlayer,candidate)
+        random = False
         if random.uniform(0, 1) < self.agent.epsilon:
             score = random.random()
+            random = True
         else:
             # predict action based on the old state
             with torch.no_grad():
@@ -168,7 +169,7 @@ class ginDQNStrategy(playGin.OneDecisionGinStrategy):
                                                 dtype=torch.float32).to(DEVICE)
                 prediction = self.agent(state_old_tensor)
                 score = DQNAgent.translatePrediction(prediction)
-        self.turn_scores.append(score)
+        self.turn_scores.append(score + (1 if random else 0))
         self.turn_states.append(current_state)
         if not self.benchmark_scorer == None:
             benchmark = self.benchmark_scorer.scoreCandidate(
