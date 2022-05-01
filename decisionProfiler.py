@@ -301,7 +301,7 @@ class DecisionLogParser(TrainingLogParser):
 
     ## ##############################
     def get_default_name_scenario(self):
-        return self.filepath + '.decide.' + str(self.session_count)
+        return self.filepath + '.decide_' + str(self.session_count)
 
     ## ##############################
     def init_training_session(self):
