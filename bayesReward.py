@@ -25,5 +25,5 @@ if __name__ == '__main__':
 
     ## report
     end_time = datetime.datetime.now() - start_time
-    print(f"bayesModel.py: Bayesian optimization run took {end_time}") 
+    print(f"bayesReward.py: Bayesian optimization run took {end_time}") 
 
