@@ -58,13 +58,19 @@ def display(counter_hands, hand_duration, ginhand, log_decisions):
                 print(f"  turn {i} {t} > {t.turn_scores}")
             if hasattr(t, 'turn_benchmarks'):
                 print(f"  bench {i} {t} > {t.turn_benchmarks}")
-                correlation_array_dqn.append(t.turn_scores)
-                correlation_array_benchmark.append(t.turn_benchmarks)
+                correlation_array_dqn.extend(t.turn_scores)
+                correlation_array_benchmark.extend(t.turn_benchmarks)
             i+=1
         if len(correlation_array_benchmark)>0:
             try:
-                cc = np.corrcoef(np.array(correlation_array_dqn),
-                                  np.array(correlation_array_benchmark))                
+                p1=len(correlation_array_dqn)
+                p2=len(correlation_array_benchmark)
+                if not p1==p2:
+                    print("** warning correlations arrays different lengths :-(")
+                cc = np.corrcoef(
+                    np.array(
+                        [correlation_array_dqn,
+                         correlation_array_benchmark]))                
                 print(f"benchmark-correlation: {cc[0,1]}")
             except RuntimeWarning:
                 print(f"benchmark-correlation: 0")
