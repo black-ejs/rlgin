@@ -7,6 +7,16 @@ import gin
 import playGin
 
 class ginDQNAgent(DQNAgent):
+
+    default_state_values = {'IN_OTHER_HAND': -0.500,
+                'OUT_OF_PLAY': -0.100,
+                'UNKNOWN': 0.0,
+                'JUST_DISCARDED': 0.100,
+                'IN_MY_HAND': 0.500,
+                'DECIDE_DRAW_SOURCE': 0.000,
+                'DECIDE_DISCARD_CARD': 1.000
+    }
+
     def __init__(self, params):
         super().__init__(params)
 
@@ -14,6 +24,11 @@ class ginDQNAgent(DQNAgent):
         self.win_reward = params['win_reward']
         self.loss_reward = params['loss_reward']
         self.no_winner_reward = params['no_winner_reward']
+
+        if 'state_values' in params:
+            self.state_values=params['state_values']
+        else:
+            self.state_values=ginDQNAgent.default_state_values
           
     def get_state(self, ginhand, player, pile_substitute = None):
         """
@@ -22,31 +37,23 @@ class ginDQNAgent(DQNAgent):
             - tbe 52 cards in the deck, in 2-to-Ace order within suit, suits are Clubs, Diamonds, Hearts then Spades
                   these 52 values represent the location in the of the card 
                   in the Gin Hand (from the POV of the Player):
-                       -.500 = IN THE OTHER HAND, i.e. the other player 
+                        IN THE OTHER HAND, i.e. the other player 
                                picked it up from the discard pile, 
                                but has not discarded it
-                       -.100 = OUT OF PLAY, i.e. in the DISCARD PILE, 
+                        OUT OF PLAY, i.e. in the DISCARD PILE, 
                                but not the top card available for draw
-                           0 = unknown, i.e. in the DECK or 
+                        UNKNOWN, i.e. in the DECK or 
                                the other Player's hand
-                        .100 = the JUST-DISCARDED card, i.e. the one at 
+                        the JUST-DISCARDED card, i.e. the one at 
                                the top of the PILE, available for draw
-                        .500 = in the PLAYER'S HAND
+                        IN MY HAND
             - the stage in the players turn, either 
                            0 = deciding the DRAW SOURCE  
                            1 = deciding the DISCARD CARD  
         """
-        IN_OTHER_HAND = -0.500
-        OUT_OF_PLAY = -0.100
-        UNKNOWN = 0.0
-        JUST_DISCARDED = 0.100
-        IN_MY_HAND = 0.500
-        DECIDE_DRAW_SOURCE = 0.000
-        DECIDE_DISCARD_CARD = 1.000
-
         state = []
         for i in range(self.state_size):
-            state.append(UNKNOWN)
+            state.append(self.state_values['UNKNOWN'])
 
         me = player
         my_hand = ginhand.playing[me].playerHand
@@ -56,26 +63,26 @@ class ginDQNAgent(DQNAgent):
             if turn.draw == None:
                 break  # current turn, not yet drawn
             if not turn.draw.source == gin.Draw.PILE:
-                state[top_of_pile.toInt()] = OUT_OF_PLAY
+                state[top_of_pile.toInt()] = self.state_values['OUT_OF_PLAY']
             elif not turn.player == me:
-                state[top_of_pile.toInt()] = IN_OTHER_HAND
+                state[top_of_pile.toInt()] = self.state_values['IN_OTHER_HAND']
 
             if turn.discard == None:
                 break  # current turn, no discard yet
-            state[turn.discard.toInt()] = JUST_DISCARDED
+            state[turn.discard.toInt()] = self.state_values['JUST_DISCARDED']
             top_of_pile = turn.discard
 
         for c in my_hand.card:
             if not c == pile_substitute:
-                state[c.toInt()] = IN_MY_HAND
+                state[c.toInt()] = self.state_values['IN_MY_HAND']
             else:
-                state[top_of_pile.toInt()] = OUT_OF_PLAY
-                state[c.toInt()] = JUST_DISCARDED        
+                state[top_of_pile.toInt()] = self.state_values['OUT_OF_PLAY']
+                state[c.toInt()] = self.state_values['JUST_DISCARDED']
 
         if pile_substitute == None:
-            state[-1] = DECIDE_DRAW_SOURCE
+            state[-1] = self.state_values['DECIDE_DRAW_SOURCE']
         else:
-            state[-1] = DECIDE_DISCARD_CARD
+            state[-1] = self.state_values['DECIDE_DISCARD_CARD']
 
         return DQNAgent.as_numpy_array(state)
 
@@ -114,35 +121,37 @@ class ginDQNStrategy(playGin.OneDecisionGinStrategy):
         self.pretrain_weights = None
         self.benchmark_scorer = None
 
-    def learnTurn(self, turn_states, turn_actions, reward, new_state, isDone = False, is_first_turn=False):
-        if is_first_turn:
-            i=0 
-            for action in turn_actions:
-                old_state = turn_states[i]
-                self.agent.remember(old_state, action, reward, new_state, isDone)
-                i+=1
-            self.agent.replay_new(self.agent.memory, self.batch_size)
+    def learnTurn(self, turn_states, turn_scores, reward, new_state, isDone = False, is_first_turn=False):
+        if (len(turn_scores)>1):
+            discard_reward = float(reward/(len(turn_scores)-1))
         else:
-            i=0 
-            for action in turn_actions:
-                old_state = turn_states[i]
+            discard_reward = 0
+        i=0
+        for score in turn_scores:
+            old_state = turn_states[i]
+            if i==0:
+                sub_reward = reward
+            else:
+                sub_reward = discard_reward
+            # store the new data into a long term memory
+            if not is_first_turn:
                 # train short memory base on the new action and state
-                self.agent.train_short_memory(old_state, action, reward, new_state, isDone)
-                # store the new data into a long term memory
-                self.agent.remember(old_state, action, reward, new_state, isDone)
+                self.agent.train_short_memory(old_state, score, sub_reward, new_state, isDone)
+            self.agent.remember(old_state, score, sub_reward, new_state, isDone)
+            i+=1
+        if is_first_turn:
+            self.agent.replay_new(self.agent.memory, self.batch_size)
         #if not self.pretrain_weights==None:
         #    count_diffs = ginDQNStrategy.compare_weights(self.pretrain_weights, 
         #                                            self.agent.state_dict())
         #    if count_diffs == 0:
         #            print(f"** WARNING: weights appear unchanged at turn {self.turns}")
 
-    def startOfTurn(self, ginhand):
+    def startOfTurn(self, ginhand:(gin.GinHand)):
         self.myPlayer = ginhand.currentlyPlaying.player
         new_state = self.agent.get_state(ginhand,self.myPlayer)
         ## deal with previous turn
         if not self.turns==0:
-            ginhand.turns[-3].turn_scores = self.turn_scores # my previous turn
-            ginhand.turns[-3].turn_benchmarks = self.turn_benchmarks
             reward = self.agent.set_reward(ginhand,self.myPlayer)
             ginhand.total_reward += reward
             if self.train:
@@ -154,6 +163,8 @@ class ginDQNStrategy(playGin.OneDecisionGinStrategy):
         self.turn_scores = []
         self.turn_states = []
         self.turn_benchmarks = []
+        ginhand.lastTurn().turn_scores = self.turn_scores 
+        ginhand.lastTurn().turn_benchmarks = self.turn_benchmarks
         
     def scoreCandidate(self, sevenCardHand, candidate, ginhand):
         # perform random actions based on agent.epsilon, or choose the action
