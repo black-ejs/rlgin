@@ -57,6 +57,7 @@ class OneDecisionGinStrategy(gin.GinStrategy):
 	"""
 	def __init__(self):
 		gin.GinStrategy.__init__(self)
+		self.pickup = None
 
 	## how much do we want this card? 
 	## return a value from 0 to 1
@@ -69,6 +70,7 @@ class OneDecisionGinStrategy(gin.GinStrategy):
 											ginhand.discard, ginhand)
 		if howYaLikeMe>0.5:
 			# print(f"{ginhand.currentlyPlaying.playerHand} accepted {ginhand.discard}")
+			self.pickup = ginhand.discard
 			return gin.Draw.PILE
 		else:
 			return gin.Draw.DECK
@@ -80,6 +82,8 @@ class OneDecisionGinStrategy(gin.GinStrategy):
 		worstCard = hand.card[0]
 
 		for c in hand.card:
+			if c==self.pickup:
+				continue
 			cards = []
 			for d in hand.card:
 				if not d==c:
