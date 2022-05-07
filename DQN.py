@@ -32,15 +32,41 @@ class DQNAgent(torch.nn.Module):
         self.posttrain_weights = None
         self.network()
           
-    def network(self):
+    def create_layers_conv(self):
         # Layers
         llayers = []
-        prev_layer_size = int(self.input_size)
+        llayers.append(self.create_conv_layer())
+        # prev_layer_size = self.calc_conv_output_size(1,2,[4,4], self.input_size)
+        prev_layer_size = 22
         for layer_size in self.layer_sizes:
             llayers.append(nn.Linear(prev_layer_size, layer_size))
             prev_layer_size = layer_size
         llayers.append(nn.Linear(prev_layer_size, self.output_size))
         self.layers = nn.ModuleList(llayers)
+
+    def create_conv_layer(self):
+        # one-channel input, two filters, 4x4 kernel
+        # no stride, no padding, no groups, no dilation
+        return nn.Conv2d(1,2,4)
+
+    def calc_conv_output_image_size(self, kernel_size, conv_input_size,
+                         padding=[0,0], stride=[1,1], dilation=[1,1]):
+        H_out = conv_input_size[0] + (2*padding[0]) + (dilation[0]*(kernel_size[0]-1))
+        H_out = H_out/stride[0] + 1
+        W_out = conv_input_size[1] + (2*padding[1]) + (dilation[1]*(kernel_size[1]-1))
+        W_out = W_out/stride[1] + 1
+        return (H_out, W_out)
+        
+
+    def calc_conv_output_size(self, input_channels, output_channels, 
+                        kernel_size, conv_input_size,
+                        padding=[0,0], stride=[1,1], dilation=[1,1]):
+        conv_image_size = self.calc_conv_output_image_size(kernel_size, conv_input_size,
+                                                        padding, stride, dilation)
+        return int(conv_image_size[0]*conv_image_size[1]*output_channels)                          
+
+    def network(self):
+        self.create_layers_conv()
 
         # weights
         if self.load_weights:
@@ -54,10 +80,19 @@ class DQNAgent(torch.nn.Module):
             self.load_weights_success = True
 
     def forward(self, x):
-        num_layers = len(self.layers)
-        for layer in self.layers[:num_layers-1]:
+        # Conv2D layer
+        x = self.layers[0](x)
+        # x = x.reshape([22])
+        # x = x.reshape(1,22)
+        x = x.reshape(22)
+
+        # Linear Layers
+        for layer in self.layers[1:-1]:
             x = F.relu(layer(x))
-        x = F.softmax(self.layers[num_layers-1](x), dim=-1) # last one
+        x = self.layers[-1](x) # last layer
+        # coco = x.clone()
+        # x = F.softmax(x, dim=-1) 
+        # x = F.relu(x) 
         return x
     
     def get_state(self, state_package):
@@ -103,7 +138,10 @@ class DQNAgent(torch.nn.Module):
                 target = reward + self.gamma * torch.max(self.forward(next_state_tensor)[0])
             output = self.forward(state_tensor)
             target_f = output.clone()
-            target_f[0][np.argmax(action)] = target
+            if len(target_f.size()) > 1:
+                target_f[0][np.argmax(action)] = target
+            else:
+                target_f[0] = target
             target_f.detach()
             self.optimizer.zero_grad()
             loss = F.mse_loss(output, target_f)
@@ -122,13 +160,20 @@ class DQNAgent(torch.nn.Module):
         self.train()
         torch.set_grad_enabled(True)
         target = reward
-        next_state_tensor = torch.tensor(next_state.reshape((1, self.input_size)), dtype=torch.float32).to(DEVICE)
-        state_tensor = torch.tensor(state.reshape((1, self.input_size)), dtype=torch.float32, requires_grad=True).to(DEVICE)
+        next_state_tensor = torch.tensor(
+                            next_state.reshape(1,1,self.input_size[0],self.input_size[1]), 
+                            dtype=torch.float32).to(DEVICE)
+        state_tensor = torch.tensor(
+                            state.reshape(1,1,self.input_size[0],self.input_size[1]), 
+                            dtype=torch.float32, requires_grad=True).to(DEVICE)
         if not done:
-            target = reward + self.gamma * torch.max(self.forward(next_state_tensor[0]))
+            target = reward + self.gamma * torch.max(self.forward(next_state_tensor))
         output = self.forward(state_tensor)
         target_f = output.clone()
-        target_f[0][np.argmax(action)] = target
+        if len(target_f.size()) > 1:
+            target_f[0][np.argmax(action)] = target
+        else:
+            target_f[0] = target
         target_f.detach()
         self.optimizer.zero_grad()
         loss = F.mse_loss(output, target_f)

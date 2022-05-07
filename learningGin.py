@@ -88,8 +88,8 @@ def test(params):
 
 ## #############################################
 def initalizeDQN(params):
-    params['input_size'] = 53 # size of state, length of list of numpys 
-    params['output_size'] = 1 # size of desired response, length of list of numpys 
+    params['input_size'] = [gin.NUM_RANKS+1, gin.NUM_SUITS]  # size of state, length of list of numpys 
+    params['output_size'] = 1      # size of desired response, length of list of numpys 
     agent = ginDQN.ginDQNAgent(params)
     agent = agent.to(DEVICE)
     if params['train']:

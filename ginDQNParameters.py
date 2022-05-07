@@ -24,9 +24,9 @@ def define_parameters():
     params['noise_epsilon'] = 1/200         # randomness in actions when not training
     params['memory_size'] = 25000
     params['batch_size'] = 2500
-    params['layer_sizes'] = [300, 800, 50]  # 'hidden'/interior layers - per bayesDqn.py April 2022
+    params['layer_sizes'] = [22, 50, 800, 50]  # 'hidden'/interior layers - per bayesDqn.py April 2022
     params['epsilon_decay_linear'] = 0.1    # while learning, how quickly randomness decreases in each hand - per bayesDqn.py April 2022
-    # this is quite hish             ^^^^   but perhaps for initial training on the simpolified game is it OK
+    # this is quite high             ^^^^   but perhaps for initial training on the simpolified game is it OK
     params['learning_rate'] = 0.01          # how aggressively to modify weights - per bayesDqn.py April 2022
 
     # ##########################################
@@ -52,7 +52,7 @@ def define_parameters():
     # logging 
     timestamp = str(datetime.datetime.now().strftime("%Y%m%d%H%M%S"))
     params['timestamp'] = timestamp
-    params['log_path'] = 'logs/learningGin_log.' + timestamp +'.txt'
+    params['log_path'] = "logs/learningGin_log." + timestamp + ".txt"
     params["display"] = True
     params["log_decisions"] = True
 
