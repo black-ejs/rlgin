@@ -51,7 +51,7 @@ class ginDQNAgent(DQNAgent):
                         the JUST-DISCARDED card, i.e. the one at 
                                the top of the PILE, available for draw
                         IN MY HAND
-            - the stage in the players turn, as the 14th 
+            - the stage in the players turn, as the 14th "column"
                 DECIDE_DRAW_SOURCE = deciding the DRAW SOURCE  
                 DECIDE_DISCARD_CARD = deciding the DISCARD CARD  
         """
@@ -80,7 +80,7 @@ class ginDQNAgent(DQNAgent):
         if ginhand.discard == None:
             if pile_substitute == None:
                 print("nothing to select here!")
-                return DQNAgent.as_numpy_array(state)
+                return DQNAgent.as_numpy_array([state])
             if not (pile_substitute in my_hand.card):
                 print("** DISCARD DECISION WITH CARD NOT IN MY HAND")
 

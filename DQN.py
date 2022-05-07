@@ -57,7 +57,6 @@ class DQNAgent(torch.nn.Module):
         W_out = W_out/stride[1] + 1
         return (H_out, W_out)
         
-
     def calc_conv_output_size(self, input_channels, output_channels, 
                         kernel_size, conv_input_size,
                         padding=[0,0], stride=[1,1], dilation=[1,1]):
