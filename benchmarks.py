@@ -1,4 +1,5 @@
 NUM_HANDS=10000
+BENCHMARK_MAX_TURNS=1000
 benchmarks={}
 
 t=('b', 5189, 'b', 4811, 'nobody', 0)
@@ -189,11 +190,13 @@ def get_wpk_average(player1:(str), player2:(str)):
 def get_moving_average(player1:(str), player2:(str), window:(int)):
     return get_wpk_average(player1, player2)['wpk1']/(1000/window)
 
-def get_cumulative_wins(player1:(str), player2:(str), hands:(int)):
+def get_cumulative_wins(player1:(str), player2:(str), hands:(int), max_turns:(int)=1000):
     array_wins=[]
     array_ordinals=[]
     wpk = get_wpk_average(player1, player2)['wpk1']
+    hand_length_factor = float(max_turns/BENCHMARK_MAX_TURNS)
+    wpk2 = float(wpk/hand_length_factor)
     for i in range(hands):
-        array_wins.append(int(i*(wpk/1000)))
+        array_wins.append(int(i*(wpk2/1000)))
         array_ordinals.append(i)
     return array_wins, array_ordinals
