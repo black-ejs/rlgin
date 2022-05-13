@@ -125,6 +125,7 @@ class TrainingPlotManager:
         # prev_fig = plt.gcf()
         self.last_button = 0
 
+        ppp = plt.get_figlabels()
         if not fig_label in plt.get_figlabels():
             print(f'wtf: fig_label={fig_label}')
         fig = plt.figure(fig_label)
@@ -252,7 +253,8 @@ class TrainingPlotManager:
         if not chop == -1:
             scenario_string = scenario_string[chop+3:]
         for st in self.statsList:
-            if scenario_string in st['name_scenario']:
+            # if scenario_string in st['name_scenario']:
+            if scenario_string == st['name_scenario']:
                 return st
         print(f"dang, cannot find these stats: {scenario_string}")
         return None
@@ -305,9 +307,16 @@ class TrainingLogParser:
         if len(self.stats['name_scenario']) == 0: # some kind of error in the input
             self.stats['name_scenario'] = "unknown"
         i=1
-        for st in self.statsList:
-            while self.stats['name_scenario'] == st['name_scenario']:
-                self.stats['name_scenario'] = st['name_scenario'] + f"_{i}"
+        root = self.stats['name_scenario']
+        dupe = True
+        while dupe:
+            dupe = False
+            for st in self.statsList:
+                if self.stats['name_scenario'] == st['name_scenario']:
+                    self.stats['name_scenario'] = root + f"_{i}"
+                    i+=1
+                    dupe=True
+                    break
 
         self.extract_generation()
 

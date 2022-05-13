@@ -225,18 +225,18 @@ class DecisionPlotManager(TrainingPlotManager):
         super().__init__(statsList, cumulative_averages)
         self.win_filters = [True, True, True, True]
         for st in statsList:
+            name_scenario=st['name_scenario']
+            nl = len(name_scenario)
             ## fig_label = 'Decisions (draw source) - {}'.format(st['name_scenario'])
-            fig_label = 'Zeroes by hand (draw source) - {}'.format(st['name_scenario'])
+            fig_label = 'Zeroes by hand (draw source) - {}'.format(name_scenario)
             i=0
             insert_point = len(self.figures)
             for f in self.figures:
-                if st['name_scenario'] in f:
+                if (len(f)>=nl) and (f[-nl:]==name_scenario):
                     insert_point=i
                     break
                 i+=1
             self.figures.insert(insert_point, fig_label)
-
-
 
     def activateFigure(self, fig_label:(str)):
         # print(f"decisionProfiler: activating figure {fig_label}")
@@ -357,7 +357,7 @@ import argparse
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser()
     argparser.add_argument('path_to_logfile',
-                    default='logs/zero.megalog', # 'logs/erw',  
+                    default='logs/convo.megalog', # 'logs/erw',  
                     nargs='?', help='path to the logfile to be plotted')
     argparser.add_argument('include_partials',
                     default='False', 
