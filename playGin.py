@@ -79,7 +79,7 @@ class OneDecisionGinStrategy(gin.GinStrategy):
 		## the hand will have 8 cards
 		hand = ginhand.currentlyPlaying.playerHand
 		worstScore = 500
-		worstCard = hand.card[0]
+		worst_cards = []
 
 		for c in hand.card:
 			if c==self.pickup:
@@ -91,10 +91,18 @@ class OneDecisionGinStrategy(gin.GinStrategy):
 			score = self.scoreCandidate(gin.Hand(cards),c,ginhand)
 			if score < worstScore:
 				worstScore = score
-				worstCard = c
+				worst_cards = []
+				worst_cards.append(c)
+			elif score == worstScore:
+				worst_cards.append(c)
 		 
-		# print(f"{ginhand.currentlyPlaying.playerHand} discarded {worstCard}")
-		return worstCard
+		if len(worst_cards)==1:
+			worst_card=worst_cards[0]
+		else: 
+			l = len(worst_cards)
+			worst_card=worst_cards[int(random.random()*l)%l]
+		# print(f"{ginhand.currentlyPlaying.playerHand} discarded {worst_card}")
+		return worst_card
 	
 ## ##############################
 class BrainiacGinStrategy(OneDecisionGinStrategy): 
