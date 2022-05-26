@@ -244,9 +244,16 @@ def testDeals1():
 			for c in hand.playing[pp].playerHand.card:
 				counts[c.__str__()] += 1
 	
-	print("counts:")
+	print("counts by card:")
+	ss = []
 	for c in counts.keys():
 		print(f"{c} : {counts[c]}")
+		ss.append((c,counts[c]))
+
+	ss.sort(key=lambda x: x[1])
+	print("counts by freq:")
+	for i in ss:
+		print(f"{i[0]} : {i[1]}")
 
 ## //////////////////////////////////////////////////
 if __name__ == '__main__':	
