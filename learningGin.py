@@ -100,7 +100,7 @@ class learningPlayer:
                     print(f"** WARNING: {self.name}'s weights appear unchanged after training **")
 
 ## #############################################
-def display(counter_hands, hand_duration, ginhand, log_decisions):
+def display(counter_hands, hand_duration, ginhand:(gin.GinHand), log_decisions):
     winner = ginhand.winner
     if not winner == None:
         winner_name = winner.player.name
@@ -108,14 +108,20 @@ def display(counter_hands, hand_duration, ginhand, log_decisions):
     else:
         winner_name = NO_WIN_NAME
         hand = ""
-    print(  f"Game {counter_hands}    " + 
+    display_line = (  
+            f"Game {counter_hands}    " + 
             f"Winner: {winner_name}    " + 
             f"{hand}" + 
             f"Turns: {len(ginhand.turns)}    " + 
             f"Time: {hand_duration*1000:3.2f}   " + 
-            f"Score: {ginhand.ginScore()[1]}   " +  
-            f"Reward: {ginhand.total_reward}   " +
+            f"Score: {ginhand.playingOne.player.name} {ginhand.ginScore()[0]}  {ginhand.playingOne.player.name} {ginhand.ginScore()[1]}   " +  
             "")
+    if len(ginhand.nn_players)>0:
+        reward_str = "Reward: "
+        for p in ginhand.nn_players:
+            reward_str += f"{p}  {ginhand.nn_players[p]['total_reward']}   " 
+        display_line += reward_str
+    print(display_line)
 
     if log_decisions:
         i=0
@@ -210,6 +216,11 @@ def run(params):
     player1 = learningPlayer(params['player1'])
     player2 = learningPlayer(params['player2'])
     players = [player1, player2]
+    nn_players = []
+    for p in players:
+        if p.is_nn_player():
+            nn_players.append(p)
+            p.total_reward = 0
 
     winMap = {player1.name:0, player2.name:0, NO_WIN_NAME:0}
     stats.put('winMap', winMap)
@@ -225,19 +236,24 @@ def run(params):
                                 player1.get_strategy(),
                                 gin.Player(player2.name),
                                 player2.get_strategy())
+        ginhand.nn_players = {}
+        for p in nn_players:
+            ginhand.nn_players[p.name] = {}
+            ginhand.nn_players[p.name]['name'] = p.name
+            ginhand.nn_players[p.name]['total_reward'] = 0
+
         ginhand.deal()
 
         # agent.epsilon is set to give randomness to actions
         # during training, it starts high and reduces a bit each hand
         # noise eplsilon is the basic level that remains even when not treaining
-        for p in players:
-            if p.is_nn_player():
-                if not p.ginDQN.params['train']:
-                    p.ginDQN.epsilon = float(p.ginDQN.params['noise_epsilon'])
-                else:
-                    p.ginDQN.epsilon = max(
-                                    1 - (counter_hands * p.ginDQN.params['epsilon_decay_linear']),
-                                    float(p.ginDQN.params['noise_epsilon']))
+        for p in nn_players:
+            if not p.ginDQN.params['train']:
+                p.ginDQN.epsilon = float(p.ginDQN.params['noise_epsilon'])
+            else:
+                p.ginDQN.epsilon = max(
+                                1 - (counter_hands * p.ginDQN.params['epsilon_decay_linear']),
+                                float(p.ginDQN.params['noise_epsilon']))
 
         # pass in weights for comparison during learning
         ##if params['train'] and (not pretrain_weights==None):
@@ -247,23 +263,20 @@ def run(params):
         hand_startTime = time.time()
         winner = ginhand.play(params['max_steps_per_hand'])
         counter_hands += 1
-        for p in players:
-            if p.is_nn_player() and p.ginDQN.params['train']:
+        for p in nn_players:
+            if p.ginDQN.params['train']:
                 p.replay_new()
         hand_duration = time.time() - hand_startTime
 
         # stats and reporting
         durations.append(hand_duration)
         turns_in_hand.append(len(ginhand.turns))
-        if hasattr(ginhand,'total_reward'):
-            total_reward += ginhand.total_reward
-        else:
-            print('** WARNING: ginhand has no total_reward attribute, providing zero')
-            ginhand.total_reward = 0
         if not winner == None:
             winMap[winner.player.name] = winMap[winner.player.name]+1
         else:
             winMap[NO_WIN_NAME] = winMap[NO_WIN_NAME]+1
+        for p in nn_players:
+            p.total_reward += ginhand.nn_players[p.name]['total_reward']
 
         if params['display']:
             display(counter_hands, hand_duration, ginhand, 
@@ -276,8 +289,8 @@ def run(params):
 
     total_duration = time.time() - startTime
     
-    for p in players:
-        if p.is_nn_player() and p.ginDQN.params['train']:
+    for p in nn_players:
+        if p.ginDQN.params['train']:
                 p.save_weights()
 
     mean_durations, stdev_durations = get_mean_stdev(durations)
@@ -286,7 +299,6 @@ def run(params):
     stats.put("count_hands", counter_hands)
     stats.put("total duration", total_duration)
     stats.put("winMap", winMap)
-    stats.put("total_reward", total_reward)
     stats.put("mean_turns", mean_turns)
     stats.put("stdev_turns", stdev_turns)
     stats.put("mean_durations", mean_durations)

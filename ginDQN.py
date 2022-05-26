@@ -114,12 +114,12 @@ class ginDQNStrategy(playGin.OneDecisionGinStrategy):
         ## deal with previous turn
         if not self.turns==0:
             reward = self.agent.set_reward(ginhand,self.myPlayer)
-            ginhand.total_reward += reward
+            ginhand.nn_players[self.myPlayer.name]['total_reward'] += reward
             if self.train:
                 self.learnTurn(self.turn_states, self.turn_scores, reward, new_state, 
                                     is_first_turn=(self.turns==1))
         else:
-            ginhand.total_reward = 0
+            ginhand.nn_players[self.myPlayer.name]['total_reward'] = 0
         self.turns += 1
         self.turn_scores = []
         self.turn_states = []
@@ -153,10 +153,9 @@ class ginDQNStrategy(playGin.OneDecisionGinStrategy):
         if self.myPlayer == None:
             # the other player was dealt a winning hand
             # nothing to learn here, except perhaps philosophically
-            ginhand.total_reward = 0
             return
         reward = self.agent.set_reward(ginhand,self.myPlayer)
-        ginhand.total_reward += reward
+        ginhand.nn_players[self.myPlayer.name]['total_reward'] += reward
         if self.train:
             ## deal with our last turn
             new_state = self.agent.get_state(ginhand,self.myPlayer)
