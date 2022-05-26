@@ -248,7 +248,7 @@ def testDeals1():
 	ss = []
 	for c in counts.keys():
 		print(f"{c} : {counts[c]}")
-		ss.append((c,counts[c]))
+		ss.append((c,counts[c])) 
 
 	ss.sort(key=lambda x: x[1])
 	print("counts by freq:")
