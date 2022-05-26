@@ -1,6 +1,7 @@
 import copy
 import random
 import gin
+from playGin import RandomGinStrategy
 
 def testInts():
 	d = gin.Deck()
@@ -230,12 +231,30 @@ def winnersString():
 		
 	return winnersStr
 
+def testDeals1():
+
+	counts = {}
+	for i in range(52):
+		counts[gin.Card.fromInt(i).__str__()] = 0
+
+	for i in range(10000):
+		hand = gin.GinHand("a",RandomGinStrategy(),"b",RandomGinStrategy())
+		hand.deal()
+		for pp in ("a","b"):
+			for c in hand.playing[pp].playerHand.card:
+				counts[c.__str__()] += 1
+	
+	print("counts:")
+	for c in counts.keys():
+		print(f"{c} : {counts[c]}")
+
 ## //////////////////////////////////////////////////
 if __name__ == '__main__':	
-	testInts()
-	testWins()
-	testWins2()
-	testWins3()
-	testWins4()
+	#testInts()
+	#testWins()
+	#testWins2()
+	#$testWins3()
+	#testWins4()
+	testDeals1()
 
 
