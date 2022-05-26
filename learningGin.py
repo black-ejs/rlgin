@@ -13,8 +13,12 @@ DEVICE = 'cpu' # 'cuda' if torch.cuda.is_available() else 'cpu'
 from DQN import DQNAgent
 import gin
 from playGin import BrainiacGinStrategy, BrandiacGinStrategy
+import playGin 
 import ginDQN
 import ginDQNParameters
+from ginDQNConvoBitPlanes import ginDQNConvoBitPlanes
+from ginDQNConvoFloatPlane import ginDQNConvoFloatPlane
+from ginDQNLinear import ginDQNLinear
 NO_WIN_NAME = 'nobody'
 
 ## #############################################
@@ -30,6 +34,70 @@ class Stats:
         if key in self.stats:
             return self.stats[key]
         return "unknown statistic"
+
+## #############################################
+class learningPlayer:
+    def __init__(self, params):
+        self.params = params
+        self.name = params['name']
+        self.strategy = params['strategy']
+        self.ginDQN = None
+        self.pretrain_weights = None
+
+    def is_nn_player(self):
+        return "nn-" in self.strategy
+    
+    def get_strategy(self):
+        if self.is_nn_player():
+            return self.get_nn_strategy()
+        else:
+            return playGin.get_strategy(self.strategy)
+
+    def get_nn_strategy(self):
+        dqn_params = self.params['nn']
+        if self.ginDQN == None:
+            self.ginDQN = self.initalizeDQN(dqn_params)
+        nn_strategy = ginDQN.ginDQNStrategy(dqn_params, self.ginDQN)
+        nn_strategy.benchmark_scorer = BrainiacGinStrategy()
+        return nn_strategy
+
+    def initalizeDQN(self,params):
+        params['output_size'] = 1      # size of desired response, length of list of numpys 
+
+        if self.strategy == "nn-linear":
+            ginDQN = ginDQNLinear(params)
+        elif self.strategy == "nn-convf":
+            ginDQN = ginDQNConvoFloatPlane(params)
+        elif self.strategy == "nn-convb":
+            ginDQN = ginDQNConvoBitPlanes(params)    
+
+        ginDQN = ginDQN.to(DEVICE)
+
+        if params['train']:
+            ginDQN.optimizer = optim.Adam(ginDQN.parameters(), 
+                                weight_decay=0, lr=params['learning_rate'])
+
+        if ginDQN.load_weights_success:
+            print(f"weights loaded from {ginDQN.weights_path}")
+            if params['train']:
+                self.pretrain_weights = copy.deepcopy(ginDQN.state_dict())
+
+        return ginDQN
+
+    def replay_new(self):
+        if self.is_nn_player():
+            self.ginDQN.replay_new(self.ginDQN.memory, self.params['nn']['batch_size'])
+
+    def save_weights(self):
+        if self.is_nn_player():
+            posttrain_weights = self.ginDQN.state_dict()
+            self.params['nn']['weights_path'] += ".post_training"
+            torch.save(posttrain_weights, self.params['nn']['weights_path'])
+            print(f"weights saved to {self.params['nn']['weights_path']}")
+            if not self.pretrain_weights==None:
+                count_diffs = ginDQN.ginDQNStrategy.compare_weights(self.pretrain_weights, posttrain_weights)
+                if count_diffs == 0:
+                    print(f"** WARNING: {self.name}'s weights appear unchanged after training **")
 
 ## #############################################
 def display(counter_hands, hand_duration, ginhand, log_decisions):
@@ -78,24 +146,6 @@ def display(counter_hands, hand_duration, ginhand, log_decisions):
 ## #############################################
 def get_mean_stdev(array):
     return statistics.mean(array), statistics.stdev(array)    
-
-## #############################################
-def test(params):
-    params['load_weights'] = True
-    params['train'] = False
-    params["test"] = False 
-    return run(params)
-
-## #############################################
-def initalizeDQN(params):
-    params['input_size'] = [gin.NUM_RANKS+1, gin.NUM_SUITS]  # size of state, length of list of numpys 
-    params['output_size'] = 1      # size of desired response, length of list of numpys 
-    agent = ginDQN.ginDQNAgent(params)
-    agent = agent.to(DEVICE)
-    if params['train']:
-        agent.optimizer = optim.Adam(agent.parameters(), 
-                                weight_decay=0, lr=params['learning_rate'])
-    return agent
 
 ## #############################################
 def print_stats(stats, file=None):
@@ -152,54 +202,54 @@ def run(params):
     total_reward = 0
     durations = []
     turns_in_hand = []
-    winMap = {params['player_one_name']:0, params['player_two_name']:0, NO_WIN_NAME:0}
 
     stats = Stats()
     stats.put('run_timestamp', datetime.datetime.now())
     stats.put('params', params)
+
+    player1 = learningPlayer(params['player1'])
+    player2 = learningPlayer(params['player2'])
+    players = [player1, player2]
+
+    winMap = {player1.name:0, player2.name:0, NO_WIN_NAME:0}
     stats.put('winMap', winMap)
 
     print(f"--- SCENARIO START at {stats.get('run_timestamp')} ---")
-
-    agent = initalizeDQN(params)
-    if agent.load_weights_success:
-        print(f"weights loaded from {agent.weights_path}")
-        if params['train']:
-            pretrain_weights = copy.deepcopy(agent.state_dict())
 
     startTime = time.time()
     while counter_hands < params['episodes']:
         ## TODO: check for abort
         
+        # create GinHand, re-using the agent each time
+        ginhand = gin.GinHand(gin.Player(player1.name),
+                                player1.get_strategy(),
+                                gin.Player(player2.name),
+                                player2.get_strategy())
+        ginhand.deal()
+
         # agent.epsilon is set to give randomness to actions
         # during training, it starts high and reduces a bit each hand
         # noise eplsilon is the basic level that remains even when not treaining
-        if not params['train']:
-            agent.epsilon = float(params['noise_epsilon'])
-        else:
-            agent.epsilon = max(1 - (counter_hands * params['epsilon_decay_linear']),
-                                float(params['noise_epsilon']))
-
-        # create GinHand, re-using the agent each time
-        opponentStrategy = BrandiacGinStrategy(params['brandiac_random_percent'])
-        dqnStrategy = ginDQN.ginDQNStrategy(params,agent)
-        dqnStrategy.benchmark_scorer = BrainiacGinStrategy()
-        ginhand = gin.GinHand(gin.Player(params['player_one_name']),
-                                opponentStrategy,
-                                gin.Player(params['player_two_name']),
-                                dqnStrategy)
-        ginhand.deal()
+        for p in players:
+            if p.is_nn_player():
+                if not p.ginDQN.params['train']:
+                    p.ginDQN.epsilon = float(p.ginDQN.params['noise_epsilon'])
+                else:
+                    p.ginDQN.epsilon = max(
+                                    1 - (counter_hands * p.ginDQN.params['epsilon_decay_linear']),
+                                    float(p.ginDQN.params['noise_epsilon']))
 
         # pass in weights for comparison during learning
-        if params['train'] and (not pretrain_weights==None):
-            dqnStrategy.pretrain_weights = pretrain_weights
+        ##if params['train'] and (not pretrain_weights==None):
+        ##    dqnStrategy.pretrain_weights = pretrain_weights
 
         # play the hand
         hand_startTime = time.time()
         winner = ginhand.play(params['max_steps_per_hand'])
         counter_hands += 1
-        if params['train']:
-            agent.replay_new(agent.memory, params['batch_size'])
+        for p in players:
+            if p.is_nn_player() and p.ginDQN.params['train']:
+                p.replay_new()
         hand_duration = time.time() - hand_startTime
 
         # stats and reporting
@@ -226,15 +276,9 @@ def run(params):
 
     total_duration = time.time() - startTime
     
-    if params['train']:
-        posttrain_weights = agent.state_dict()
-        params["weights_path"] += ".post_training"
-        torch.save(posttrain_weights, params["weights_path"])
-        print(f"weights saved to {params['weights_path']}")
-        if not pretrain_weights==None:
-            count_diffs = ginDQN.ginDQNStrategy.compare_weights(pretrain_weights, posttrain_weights)
-            if count_diffs == 0:
-                print(f"** WARNING: weights appear unchanged after training **")
+    for p in players:
+        if p.is_nn_player() and p.ginDQN.params['train']:
+                p.save_weights()
 
     mean_durations, stdev_durations = get_mean_stdev(durations)
     mean_turns, stdev_turns = get_mean_stdev(turns_in_hand)
@@ -289,15 +333,25 @@ if __name__ == '__main__':
         print(f"****** learningGin execution at {datetime.datetime.now()} ")
         print(f"params: {params}")
 
-        if params['train']:
+        do_train = False
+        for p in ('player1', 'player2'):
+            if ('nn' in params[p]) and ('train' in params[p]['nn']):
+                do_train = (do_train or params[p]['nn']['train'])
+        if do_train:
             print("Training...")
             stats = run(params) 
             print_stats(stats)
 
-        if params['test']:
+        do_test = False
+        for p in ('player1', 'player2'):
+            if ('nn' in params[p]) and ('test' in params[p]['nn']):
+                test_param = params[p]['nn']['test']
+                if test_param:
+                    params[p]['nn']['train'] = False
+                    params[p]['nn']['load_weights'] = True 
+                    do_test = True
+        if do_test:
             print("Testing...")
-            params['train'] = False
-            params['load_weights'] = True 
             stats = run(params)  
             print_stats(stats)
 

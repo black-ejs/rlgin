@@ -12,16 +12,17 @@ DEVICE = 'cpu' # 'cuda' if torch.cuda.is_available() else 'cpu'
 class DQNAgent(torch.nn.Module):
     def __init__(self, params):
         super().__init__()
+        self.params = params
         self.reward = 0
-        self.gamma = 0.99
         self.dataframe = pd.DataFrame()
         self.short_memory = np.array([])
         self.agent_target = 1
         self.agent_predict = 0
         self.learning_rate = params['learning_rate']        
-        self.epsilon = 1
+        self.epsilon = params['noise_epsilon']
+        self.gamma = 0.99
         self.actual = []
-        self.input_size = params['input_size']
+        self.init_input_size(params)
         self.output_size = params['output_size']
         self.layer_sizes = params['layer_sizes'] # 'hidden'/interior layers
         self.memory = collections.deque(maxlen=params['memory_size'])
@@ -31,41 +32,15 @@ class DQNAgent(torch.nn.Module):
         self.optimizer = None
         self.posttrain_weights = None
         self.network()
-          
-    def create_layers_conv(self):
-        # Layers
-        llayers = []
-        llayers.append(self.create_conv_layer())
-        # prev_layer_size = self.calc_conv_output_size(1,2,[4,4], self.input_size)
-        prev_layer_size = 22
-        for layer_size in self.layer_sizes:
-            llayers.append(nn.Linear(prev_layer_size, layer_size))
-            prev_layer_size = layer_size
-        llayers.append(nn.Linear(prev_layer_size, self.output_size))
-        self.layers = nn.ModuleList(llayers)
 
-    def create_conv_layer(self):
-        # one-channel input, two filters, 4x4 kernel
-        # no stride, no padding, no groups, no dilation
-        return nn.Conv2d(1,2,4)
+    def init_input_size(self,params):
+        self.input_size = params['input_size']
 
-    def calc_conv_output_image_size(self, kernel_size, conv_input_size,
-                         padding=[0,0], stride=[1,1], dilation=[1,1]):
-        H_out = conv_input_size[0] + (2*padding[0]) + (dilation[0]*(kernel_size[0]-1))
-        H_out = H_out/stride[0] + 1
-        W_out = conv_input_size[1] + (2*padding[1]) + (dilation[1]*(kernel_size[1]-1))
-        W_out = W_out/stride[1] + 1
-        return (H_out, W_out)
-        
-    def calc_conv_output_size(self, input_channels, output_channels, 
-                        kernel_size, conv_input_size,
-                        padding=[0,0], stride=[1,1], dilation=[1,1]):
-        conv_image_size = self.calc_conv_output_image_size(kernel_size, conv_input_size,
-                                                        padding, stride, dilation)
-        return int(conv_image_size[0]*conv_image_size[1]*output_channels)                          
+    def create_layers(self):
+        pass
 
     def network(self):
-        self.create_layers_conv()
+        self.create_layers()
 
         # weights
         if self.load_weights:
@@ -81,20 +56,15 @@ class DQNAgent(torch.nn.Module):
     def forward(self, x):
         # Conv2D layer
         x = self.layers[0](x)
-        # x = x.reshape([22])
-        # x = x.reshape(1,22)
-        x = x.reshape(22)
+        x = x.reshape(self.convo_output_size)  ####### YEECH #####
 
         # Linear Layers
         for layer in self.layers[1:-1]:
             x = F.relu(layer(x))
         x = self.layers[-1](x) # last layer
-        # coco = x.clone()
-        # x = F.softmax(x, dim=-1) 
-        # x = F.relu(x) 
         return x
     
-    def get_state(self, state_package):
+    def get_state(self, context_a=None, context_b=None, context_c=None):
         """
         Return the state.
         The state is a numpy array of [self.input_size] values
@@ -106,7 +76,7 @@ class DQNAgent(torch.nn.Module):
     def as_numpy_array(array):
         return np.asarray(array)
 
-    def set_reward(self, state_package):
+    def set_reward(self, context_a, context_b):
         """
         Return the reward.
         """
@@ -148,7 +118,8 @@ class DQNAgent(torch.nn.Module):
             self.optimizer.step()            
 
     def translatePrediction(prediction):
-        translation = np.argmax(prediction.detach().cpu().numpy()[0])
+        ##  translation = np.argmax(prediction.detach().cpu().numpy()[0])
+        translation = float(prediction.detach().cpu().numpy()[0])
         return translation
 
     def train_short_memory(self, state, action, reward, next_state, done):
@@ -160,10 +131,10 @@ class DQNAgent(torch.nn.Module):
         torch.set_grad_enabled(True)
         target = reward
         next_state_tensor = torch.tensor(
-                            next_state.reshape(1,1,self.input_size[0],self.input_size[1]), 
+                            next_state.reshape(self.input_size), 
                             dtype=torch.float32).to(DEVICE)
         state_tensor = torch.tensor(
-                            state.reshape(1,1,self.input_size[0],self.input_size[1]), 
+                            state.reshape(self.input_size), 
                             dtype=torch.float32, requires_grad=True).to(DEVICE)
         if not done:
             target = reward + self.gamma * torch.max(self.forward(next_state_tensor))
