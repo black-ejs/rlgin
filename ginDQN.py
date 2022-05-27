@@ -1,6 +1,7 @@
 import random
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 DEVICE = 'cpu' # 'cuda' if torch.cuda.is_available() else 'cpu'
 
 from DQN import DQNAgent
@@ -65,6 +66,13 @@ class ginDQN(DQNAgent):
         llayers.append(nn.Linear(prev_layer_size, self.output_size))
         self.layers = nn.ModuleList(llayers)
 
+    def forward(self, x):
+        # Linear Layers
+        for layer in self.layers[:-1]:
+            x = F.relu(layer(x))
+        x = self.layers[-1](x) # last layer
+        return x
+    
 
 ## ###############################################
 ## ###############################################

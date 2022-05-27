@@ -30,7 +30,7 @@ def define_parameters():
     # PLAYER 2
     params['player2'] = {}
     params['player2']['name'] = 'Tempo'
-    params['player2']['strategy'] = 'nn-convf'
+    params['player2']['strategy'] = 'nn-linear'
     params['player2']['nn'] = {}
     params['player2']['nn']['gamma'] = 0.99                  # value of future rewards
     params['player2']['nn']['layer_sizes'] = [100, 50, 20]  # 'hidden'/interior layers - per bayesDqn.py April 2022
@@ -45,7 +45,7 @@ def define_parameters():
     params['player2']['nn']['train'] = True
     params['player2']['nn']['test'] = True
     params['player2']['nn']["load_weights"] = False   # False if starting from scratch, True if re-training 
-    params['player2']['nn']['weights_path'] = 'weights/weights.nn-convf.h5'
+    params['player2']['nn']['weights_path'] = 'weights/weights.nn-linear.h5'
 
 
     # game structure

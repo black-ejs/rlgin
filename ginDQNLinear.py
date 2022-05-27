@@ -7,7 +7,7 @@ import gin
 import ginDQN
 import playGin
 
-class ginDQNLinear(ginDQN.DQNAgent):
+class ginDQNLinear(ginDQN.ginDQN):
 
     def __init__(self, params):
         super().__init__(params)
@@ -70,4 +70,7 @@ class ginDQNLinear(ginDQN.DQNAgent):
 
     def init_input_size(self,params):
         self.input_size = 53
+
+    
+
 

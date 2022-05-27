@@ -149,3 +149,15 @@ class ginDQNConvoFloatPlane(ginDQN.ginDQN):
 
     ## ###############################################
 
+    def forward(self, x):
+        # Conv2D layer
+        x = self.layers[0](x)
+        x = x.reshape(self.convo_output_size)  ####### YEECH #####
+
+        # Linear Layers
+        for layer in self.layers[1:-1]:
+            x = F.relu(layer(x))
+        x = self.layers[-1](x) # last layer
+        return x
+
+

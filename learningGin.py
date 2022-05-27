@@ -56,12 +56,12 @@ class learningPlayer:
     def get_nn_strategy(self):
         dqn_params = self.params['nn']
         if self.ginDQN == None:
-            self.ginDQN = self.initalizeDQN(dqn_params)
+            self.ginDQN = self.initializeDQN(dqn_params)
         nn_strategy = ginDQN.ginDQNStrategy(dqn_params, self.ginDQN)
         nn_strategy.benchmark_scorer = BrainiacGinStrategy()
         return nn_strategy
 
-    def initalizeDQN(self,params):
+    def initializeDQN(self,params):
         params['output_size'] = 1      # size of desired response, length of list of numpys 
 
         if self.strategy == "nn-linear":
@@ -72,6 +72,10 @@ class learningPlayer:
             ginDQN = ginDQNConvoBitPlanes(params)    
 
         ginDQN = ginDQN.to(DEVICE)
+
+        ffff = ginDQN.parameters()
+        for f in ffff:
+            print(f"{type(f)} {f.size()}")
 
         if params['train']:
             ginDQN.optimizer = optim.Adam(ginDQN.parameters(), 
@@ -108,13 +112,16 @@ def display(counter_hands, hand_duration, ginhand:(gin.GinHand), log_decisions):
     else:
         winner_name = NO_WIN_NAME
         hand = ""
+    gs_winner, gin_score, is_done = ginhand.ginScore()
     display_line = (  
             f"Game {counter_hands}    " + 
             f"Winner: {winner_name}    " + 
             f"{hand}" + 
             f"Turns: {len(ginhand.turns)}    " + 
             f"Time: {hand_duration*1000:3.2f}   " + 
-            f"Score: {ginhand.playingOne.player.name} {ginhand.ginScore()[0]}  {ginhand.playingOne.player.name} {ginhand.ginScore()[1]}   " +  
+            f"Score: {ginhand.playingOne.player.name} {ginhand.playingOne.playerHand.ginScore()}  " +
+                   f"{ginhand.playingTwo.player.name} {ginhand.playingTwo.playerHand.ginScore()}  " +  
+                   f"net {ginhand.ginScore()[1]}   " +  
             "")
     if len(ginhand.nn_players)>0:
         reward_str = "Reward: "

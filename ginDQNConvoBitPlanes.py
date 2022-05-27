@@ -1,6 +1,7 @@
 import random
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 DEVICE = 'cpu' # 'cuda' if torch.cuda.is_available() else 'cpu'
 
 from DQN import DQNAgent
@@ -153,4 +154,15 @@ class ginDQNConvoBitPlanes(ginDQN.ginDQN):
         self.input_size.append(ginDQNConvoBitPlanes.CONVO_BATCHSIZE)
         self.input_size.append(ginDQNConvoBitPlanes.CONVO_INPUT_CHANNELS)
         self.input_size.extend(ginDQNConvoBitPlanes.CONVO_INPUT_CHANNEL_SIZE)
+
+    def forward(self, x):
+        # Conv2D layer
+        x = self.layers[0](x)
+        x = x.reshape(self.convo_output_size)  ####### YEECH #####
+
+        # Linear Layers
+        for layer in self.layers[1:-1]:
+            x = F.relu(layer(x))
+        x = self.layers[-1](x) # last layer
+        return x
 
