@@ -68,3 +68,6 @@ class ginDQNLinear(ginDQN.DQNAgent):
 
         return DQNAgent.as_numpy_array(state)
 
+    def init_input_size(self,params):
+        self.input_size = 53
+
