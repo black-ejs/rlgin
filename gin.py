@@ -516,7 +516,7 @@ class GinHand:
 		returns a 3-tuple
 		   - the winner (as a Playing), 
 		   - the score to award to the winner 
-		   - a boolean indicating of the hand has completed
+		   - a boolean indicating if the hand has completed
 		   if the boolean is False (i.e., the hand has not yet completed), 
 		          - the "winner" is the player with the higher score in their hand, 
 		          - the "score" is the difference
