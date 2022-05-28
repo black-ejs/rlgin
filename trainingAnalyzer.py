@@ -7,9 +7,11 @@ import distutils.util
 
 import matplotlib.pyplot as plt
 import matplotlib.widgets as widgets
+from learningGin import NO_WIN_NAME
 
 import regressionPlotter
 import benchmarks
+import gin
 
 MA_SIZE = 50
 
@@ -35,7 +37,7 @@ class TrainingPlotter(regressionPlotter.RegressionPlotter):
         array_cumu_wins = []
         for hand in hands:
             array_ordinals.append(int(hand['hand_index']))
-            array_cumu_wins.append(int(hand['wins']))
+            array_cumu_wins.append(int(hand['wins'][0]))
 
         if rank_only:
             slopes = TrainingPlotter.do_poly_regression(array_cumu_wins,
@@ -66,31 +68,37 @@ class TrainingPlotter(regressionPlotter.RegressionPlotter):
         return TrainingPlotter._rank_or_plot_ma('plot', st) 
 
     def _rank_or_plot_ma(which, st):
-        array_ma = []
-        array_count = []
-        ma = st['ma_array']
-        for ma_val in ma:
-            array_ma.append(ma_val)
-            array_count.append(len(array_ma))
-            
-        if len(array_count)>0:
-            if which == 'plot':
-                benchmark_player, benchmark_opponent = TrainingPlotter.get_benchmark_players(st)
-                benchmark_ma=benchmarks.get_moving_average(benchmark_player,benchmark_opponent,MA_SIZE)
-                benchmark_array=[]
-                for i in range(len(array_count)):
-                    benchmark_array.append(benchmark_ma)
-                slopes = TrainingPlotter.plot_regression(array_ma, array_count, 
-                                st['name_scenario'], splines=[1,3],
-                                ylabel="wins last {} hands".format(MA_SIZE),
-                                benchmark_arrays=(benchmark_array,array_count))
-            else:
-                slopes = TrainingPlotter.do_poly_regression(array_ma, array_count, splines=[1,3])
-            array_count = []
+        nn_players = st['nn_players']
+        if len(nn_players) == 0:
+            return
+
+        for nnp in nn_players.values():
+            nnp_name = nnp['name']
             array_ma = []
-            st['moving_average_overall_slope'] = slopes[0]
-            st['moving_average_spline_slopes'] = slopes[1:]
-            st['moving_average_last_spline_slope'] = slopes[-1]
+            array_count = []
+            ma = nnp['ma_array']
+            for ma_val in ma:
+                array_ma.append(ma_val)
+                array_count.append(len(array_ma))
+            
+            if len(array_count)>0:
+                if which == 'plot':
+                    benchmark_player, benchmark_opponent = TrainingPlotter.get_benchmark_players(st)
+                    benchmark_ma=benchmarks.get_moving_average(benchmark_player,benchmark_opponent,MA_SIZE)
+                    benchmark_array=[]
+                    for i in range(len(array_count)):
+                        benchmark_array.append(benchmark_ma)
+                    slopes = TrainingPlotter.plot_regression(array_ma, array_count, 
+                                    st['name_scenario'], splines=[1,3],
+                                    ylabel="wins last {} hands".format(MA_SIZE),
+                                    benchmark_arrays=(benchmark_array,array_count))
+                else:
+                    slopes = TrainingPlotter.do_poly_regression(array_ma, array_count, splines=[1,3])
+                array_count = []
+                array_ma = []
+                nnp['moving_average_overall_slope'] = slopes[0]
+                nnp['moving_average_spline_slopes'] = slopes[1:]
+                nnp['moving_average_last_spline_slope'] = slopes[-1]
 
     def get_benchmark_players(st:(dict)):
         benchmark_player = 'r'  #random
@@ -288,22 +296,30 @@ class TrainingPlotManager:
 ## ###################################################
 ## ###################################################
 class TrainingLogParser:
-    DQN_PLAYER_NAME = "Tempo"
-    statsList = []
-    cumulative_averages = []
-    score_stats = {}
+    def __init__(self):
+
+        self.scenario_players = {}
+        self.nn_players = {}
+        self.statsList = []
+        self.cumulative_averages = []
+        self.score_stats = {}
 
     def get_default_name_scenario(self):
         return self.filepath + '.learning_' + str(self.session_count)
 
     def save_training_session(self):
         self.stats['hands'] = self.hands
-        if len(self.ma_array) == 0:
-            # we never made it to the window
-            # dummy something up to avoid problems
-            for hand in self.hands:
-                self.ma_array.append(1)
-        self.stats['ma_array'] = self.ma_array
+        self.stats['scenario_players'] = self.scenario_players
+        self.stats['nn_players'] = self.nn_players
+        ma_arrays = {}
+        for p in self.nn_players.values():
+            if len(p['ma_array']) == 0:
+                # we never made it to the window
+                # dummy something up to avoid problems
+                for hand in self.hands:
+                    p['ma_array'].append(1)
+            ma_arrays[p['name']] = p['ma_array']
+        self.stats['ma_arrays'] = ma_arrays
         if len(self.stats['name_scenario']) == 0: # some kind of error in the input
             self.stats['name_scenario'] = "unknown"
         i=1
@@ -324,18 +340,13 @@ class TrainingLogParser:
         self.session_count += 1
 
     def init_training_session(self):
+        #self.scenario_players = {}
+        #self.nn_players = {}
+        self.hands = []
+
         self.stats = {}
         self.stats['name_scenario'] = self.get_default_name_scenario()
-
-        self.ma_array = []
         self.ma_count = 0
-        self.ma_window = []
-        for i in range(MA_SIZE):
-            self.ma_window.append(0)   
-
-        self.hands = []
-        self.wins = 0
-        self.stats['total_reward'] = 0
         # self.stats['generation'] = 0
 
     ## ##############################
@@ -365,24 +376,111 @@ class TrainingLogParser:
         return (("INPUT" in line) or ("learningGin execution at" in line) or ("Testing." in line))
 
     ## ##############################
+    def parse_player_params(self, params):
+        player_params = []
+        for pid in (1,2):
+            key = 'player' + str(pid)
+            if key in params:
+                pparams = params[key]
+                pparams['pid'] = pid
+                pparams['params_key'] = key
+                player_params.append(pparams)
+
+        if len(self.scenario_players) == 0:
+            for pparams in player_params:
+                if pparams['name'] in self.scenario_players:
+                    print(f" ** WARNING: duplicate player name '{pparams['name']}'")
+                else:
+                    self.scenario_players[pparams['name']] = pparams
+                self.scenario_players[pparams['name']]['wins'] = 0
+
+        if len(self.nn_players) == 0:
+            for pparams in self.scenario_players.values():
+                if 'nn' in pparams:
+                    dqn_params = pparams['nn']
+                    for ppk in pparams.keys():
+                        if ppk != 'nn':
+                            dqn_params[ppk] = pparams[ppk]
+                    if "layer_sizes" in dqn_params:
+                        ls = dqn_params["layer_sizes"]
+                        for lndx in range(len(ls)):
+                            key = 'l' + str(lndx+1)
+                            dqn_params[key] = int(ls[lndx])
+                    dqn_params['total_reward'] = 0
+                    dqn_params['ma_array'] = []
+                    dqn_params['ma_window'] = []
+                    for i in range(MA_SIZE):
+                        dqn_params['ma_window'].append(0)   
+                    self.nn_players[pparams['name']] = dqn_params
+
+    ## ##############################
     def parse_params(self, line:(str)):
         params = eval(line[line.find('{'):])
-        
+
+        self.parse_player_params(params)
+
         self.extract_param('name_scenario', params)
-        self.extract_param('learning_rate', params)
-        self.extract_param('epsilon_decay_linear', params)
         self.extract_param('timestamp', params)
-        if "layer_sizes" in params:
-            ls = params["layer_sizes"]
-            self.stats["l1"] = int(ls[0])
-            self.stats["l2"] = int(ls[1])
-            self.stats["l3"] = int(ls[2])
         self.stats['params'] = params
 
     ## ##############################
-    def processLine(self, line:(str), include_partials:(bool)=False):
-        ma_name = TrainingLogParser.DQN_PLAYER_NAME
+    def parse_win_line(self, line):
+            ## end of hand
+            toks = line.split()
+            hand_index = int(toks[1])
+            winner = toks[3]
+            tok_pad = 0
+            if not winner == NO_WIN_NAME:
+                self.scenario_players[winner]['wins'] += 1
+                tok_pad = gin.HAND_SIZE+1  # Hand: + cards
+            if (len(toks)>9+tok_pad):
+                ginscore1_owner = toks[9+tok_pad]
+                ginscore1 = toks[10+tok_pad]
+            else:
+                ginscore1 = 0
+            if (len(toks)>11+tok_pad):
+                ginscore2_owner = toks[11+tok_pad]
+                ginscore2 = toks[12+tok_pad]
+            else:
+                ginscore2 = 0
+            total_reward1_owner = ""
+            if (len(toks)>14+tok_pad):
+                total_reward1_owner = toks[14+tok_pad]
+                total_reward1   = toks[15+tok_pad]
+            total_reward2_owner = ""
+            if (len(toks)>16+tok_pad):
+                total_reward2_owner = toks[16+tok_pad]
+                total_reward2   = toks[17+tok_pad]
+            tot_rew = []
+            if len(total_reward1_owner)>0:
+                tot_rew.append((total_reward1_owner,total_reward1))
+            if len(total_reward2_owner)>0:
+                tot_rew.append((total_reward2_owner,total_reward2))
+            if not winner == NO_WIN_NAME:
+                self.scenario_players[winner]['wins'] += 1
+            hand_summary = {'hand_index': hand_index, 
+                            'winner': winner, 
+                            'ginscores': (ginscore1, ginscore2),
+                            'total_reward': tot_rew,
+                            'wins': (self.scenario_players[ginscore1_owner]['wins'],
+                                     self.scenario_players[ginscore2_owner]['wins'])
+                            }
+            self.hands.append(hand_summary) 
+                            
+            ## moving average wins
+            self.ma_count += 1
+            for p in self.nn_players.values():
+                if p['name'] == winner:
+                    w = 1
+                else:   
+                    w = 0
+                p['ma_window'][self.ma_count%MA_SIZE] = w
+            if self.ma_count>MA_SIZE:
+                p['ma_array'].append(sum(p['ma_window']))                            
 
+    ## ##############################
+    def processLine(self, line:(str), include_partials:(bool)=False):
+        
         if TrainingLogParser.is_session_start(line) and len(self.stats)>0:
             if 'wins2' in self.stats or include_partials:
                 self.save_training_session()
@@ -396,36 +494,8 @@ class TrainingLogParser:
         if "{'episodes':" in line:
             self.parse_params(line)
         if "Winner: " in line:
-            ## cumulative wins
-            toks = line.split()
-            hand_index = int(toks[1])
-            winner = toks[3]
-            if (len(toks)>9):
-                ginscore = toks[9]
-            else:
-                ginscore = 0
-            if (len(toks)>11):
-                total_reward = toks[11]
-            else:
-                total_reward = 0.0
-            if winner == TrainingLogParser.DQN_PLAYER_NAME:
-                self.wins += 1
-            self.hands.append({'hand_index': hand_index, 
-                            'winner': winner, 
-                            'ginscore': ginscore, 
-                            'total_reward': total_reward, 
-                            'wins': self.wins})
-            ## moving average wins
-            self.ma_count += 1
-            name=line.split()[3]
-            if ma_name in name:
-                w = 1
-            else:   
-                w = 0
-            self.ma_window[self.ma_count%MA_SIZE] = w
-            if self.ma_count>MA_SIZE:
-                # ma_array.append(float(sum(self.ma_window))/float(len(self.ma_window)))                            
-                self.ma_array.append(sum(self.ma_window))                            
+            ## end of hand
+            self.parse_win_line(line)
         if "total_reward: " == line[:14]:
             self.stats['total_reward'] = float(line[14:])
         if "winMap: " in line:
@@ -441,9 +511,13 @@ class TrainingLogParser:
                 x-=1        
             self.stats['wins2'] = int(line[x:cpos])
             if len(self.hands)>0:
-                self.stats['wins_per_1000_hands'] = self.stats['wins2']*1000/len(self.hands)
+                for p in self.nn_players.values():
+                    p['wins_per_1000_hands'] = self.scenario_players[p['name']]['wins']*1000/len(self.hands)
+                self.stats['wins_per_1000_hands_1'] = self.stats['wins1']*1000/len(self.hands)
+                self.stats['wins_per_1000_hands_2'] = self.stats['wins2']*1000/len(self.hands)
             else:
-                self.stats['wins_per_1000_hands'] = -1
+                self.stats['wins_per_1000_hands_1'] = -1
+                self.stats['wins_per_1000_hands_2'] = -1
 
     ## ##############################
     def parseLogs(self, filepath:(str), include_partials:(bool)=False): 
@@ -466,7 +540,7 @@ class TrainingLogParser:
         if 'wins2' in self.stats or include_partials:
             self.save_training_session()
 
-        self.score_stats = self.create_score_stats
+        self.score_stats = self.create_score_stats()
 
     ## ##############################
     def create_score_stats(self):
@@ -475,7 +549,8 @@ class TrainingLogParser:
         count_hands = 0
         tot1 = 0
         tot2 = 0
-        totwpk = 0
+        totwpk1 = 0
+        totwpk2 = 0
         min1 = 100000
         min2 = 100000
         max1 = -1
@@ -490,53 +565,84 @@ class TrainingLogParser:
                 w2 = st['wins2']
                 tot1+= w1
                 tot2+= w2
-                totwpk += st['wins_per_1000_hands']
+                totwpk1 += st['wins_per_1000_hands_1']
+                totwpk2 += st['wins_per_1000_hands_2']
                 max1=max(max1,w1)
                 max2=max(max2,w2)
                 min1=min(min1,w1)
                 min2=min(min2,w2)
                 if w2 > 0:
                     ratio = w1/w2
-                else:
+                else: 
                     ratio = w1
                 maxr = max(ratio, maxr)
                 minr = min(ratio, minr)
-                for hand in st['hands']:
-                    ndx = int(hand['hand_index'])
-                    cumu = int(hand['wins'])
-                    if ndx>=len(self.cumulative_averages):
-                        self.cumulative_averages.append(cumu)
-                    else:
-                        self.cumulative_averages[ndx] += cumu
+
+                self.capture_cumulative_averages(st)
+
         score_stats['count_scenarios']=count_scenarios
         if count_scenarios == 0:
             return score_stats
-        mean_losses = tot1/count_scenarios
-        mean_wins = tot2/count_scenarios 
+        mean_wins_1 = tot1/count_scenarios
+        mean_wins_2 = tot2/count_scenarios 
         for i in range(len(self.cumulative_averages)):
-            self.cumulative_averages[i]/=count_scenarios             
-        score_stats['mean_wins_per_1000_hands']=totwpk/count_scenarios
-        score_stats['mean_losses']=mean_losses
-        score_stats['mean_wins']=mean_wins
-        score_stats['max_losses']=max1
-        score_stats['max_wins']=max2
-        score_stats['min_losses']=min1
-        score_stats['min_wins']=min2
+            cumu_nn = self.cumulative_averages[i]
+            for j in range(len(cumu_nn)):
+                cumu_nn[j] /= count_scenarios             
+        score_stats['mean_wins_per_1000_hands_1']=totwpk1/count_scenarios
+        score_stats['mean_wins_per_1000_hands_2']=totwpk2/count_scenarios
+        score_stats['mean_wins_1']=mean_wins_1
+        score_stats['mean_wins_2']=mean_wins_2
+        score_stats['max_wins_1']=max1
+        score_stats['max_wins_2']=max2
+        score_stats['min_wins_1']=min1
+        score_stats['min_wins_2']=min2
         score_stats['max_ratio']=maxr
         score_stats['min_ratio']=minr
         score_stats['count_hands']=count_hands
         for st in self.statsList:
             if 'wins2' in st:
-                tot1 += (st['wins1']-mean_losses)**2
-                tot2 += (st['wins2']-mean_wins)**2
-        score_stats['std_wins']=math.sqrt(tot2/count_scenarios)
-        score_stats['cv_wins']=math.sqrt(tot2/count_scenarios)/mean_wins
-        score_stats['std_losses']=math.sqrt(tot1/count_scenarios)
-        score_stats['cv_losses']=math.sqrt(tot1/count_scenarios)/mean_losses
-        score_stats['cumulative_average_slope']=(
-                        self.cumulative_averages[-1] - self.cumulative_averages[0]
+                tot1 += (st['wins1']-mean_wins_1)**2
+                tot2 += (st['wins2']-mean_wins_2)**2
+        score_stats['std_wins_1']=math.sqrt(tot1/count_scenarios)
+        score_stats['cv_wins_1']=math.sqrt(tot1/count_scenarios)/mean_wins_1
+        score_stats['std_wins_2']=math.sqrt(tot2/count_scenarios)
+        score_stats['cv_wins_2']=math.sqrt(tot2/count_scenarios)/mean_wins_2
+        for ca in self.cumulative_averages:
+            for i in range(len(ca)):
+                cumu_nn = ca[i]
+                key = 'cumulative_average_slope_' + str(i+1)
+                score_stats[key]=(
+                        self.cumulative_averages[-1][i] - self.cumulative_averages[0][i]
                                         )/len(self.cumulative_averages)
         return score_stats
+
+    def capture_cumulative_averages(self,st):
+        player1_name = st['params']['player1']['name']
+        player2_name = st['params']['player2']['name']
+        for hand in st['hands']:
+            cumu_nn_dict = {}
+            for nnp in self.nn_players:
+                cumu_nn_dict[nnp] = 0
+            ndx = int(hand['hand_index'])
+            if hand['winner'] in cumu_nn_dict:
+                cumu_nn_dict[hand['winner']]+=1
+            
+            cumu_nn = []
+            if len(cumu_nn_dict) > 1:
+                cumu_nn = [cumu_nn_dict[player1_name],cumu_nn_dict[player2_name]]
+            else: 
+                cumu_nn = cumu_nn_dict.values()
+
+            if len(cumu_nn) > 0:    
+                target = ndx - 1                
+                if target>=len(self.cumulative_averages):
+                    self.cumulative_averages.append(cumu_nn.copy())
+                else:
+                    # self.cumulative_averages[ndx] += cumu_nn
+                    for i in range(len(self.cumulative_averages[target])):
+                        self.cumulative_averages[target][i] += cumu_nn[i]
+                    
 
     def format_stats(stats):
         rez=""
@@ -576,8 +682,8 @@ class TrainingAnalyzer:
         return TrainingLogParser()
 
     def get_scenario_sort_key(self):
-        return 'moving_average_last_spline_slope'
-        # return 'timestamp'
+        # return 'moving_average_last_spline_slope'
+        return 'timestamp'
         # return 'generation'
 
     def display_scenarios(self,statsList):
@@ -597,6 +703,7 @@ class TrainingAnalyzer:
             else:
                 gen='-'
             print(f"{star}{st['name_scenario']}:"
+            """
                     f"\t{st['total_reward']: 2.4f}  "
                     f"\t{st['moving_average_last_spline_slope']: 1.7f}  "
                     f"\t{st['moving_average_overall_slope']: 1.7f}"
@@ -604,6 +711,7 @@ class TrainingAnalyzer:
                     f"\t{st['cumulative_wins_ratio']:1.3f}"
                     f"\t{st['wins_per_1000_hands']:2.3f}"
                     f"\t{gen}"
+                    """
                     )
         print(f"{len(statsList)} scenarios sorted by {self.get_scenario_sort_key()}")    
 
@@ -613,9 +721,8 @@ class TrainingAnalyzer:
         logParser.parseLogs(path_to_logfile, include_partials)
 
         print("* * * * * * * * * * * * * * * * * * * ")
-        score_stats = logParser.create_score_stats()
-        print(TrainingLogParser.format_score_stats(score_stats))
-        if score_stats['count_scenarios'] == 0:
+        print(TrainingLogParser.format_score_stats(logParser.score_stats))
+        if logParser.score_stats['count_scenarios'] == 0:
             print(f"No scenarios to analyze, found {len(logParser.statsList)} stats")
             print("* * * * * * * * * * * * * * * * * * * ")
             return
@@ -664,13 +771,14 @@ import argparse
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser()
     argparser.add_argument('path_to_logfile',
-                    default='logs/qqq',  #'logs/mega2', 
+                    default='logs/dueling.scratch.log',  #'logs/mega2', 
                     nargs='?', help='path to the logfile to be plotted')
     argparser.add_argument('include_partials',
                     default='False', 
                     nargs='?', help='include results even without bayesian end-tags')
     args = argparser.parse_args()
 
+    print(f"analyzing {args.path_to_logfile}")
     TrainingAnalyzer().analyze(args.path_to_logfile, 
                         distutils.util.strtobool(args.include_partials))
 
