@@ -13,24 +13,32 @@ class DQNAgent(torch.nn.Module):
     def __init__(self, params):
         super().__init__()
         self.params = params
-        self.reward = 0
-        self.dataframe = pd.DataFrame()
-        self.short_memory = np.array([])
+
+        # left from snake-ga
+        self.actual = [] 
         self.agent_target = 1
         self.agent_predict = 0
+        self.dataframe = pd.DataFrame()
+        self.short_memory = np.array([])
+        self.memory = collections.deque(maxlen=params['memory_size'])
+        
+        # nn params
         self.learning_rate = params['learning_rate']        
         self.epsilon = params['noise_epsilon']
-        self.gamma = 0.99
-        self.actual = []
+        self.gamma = params['gamma']
+
         self.init_input_size(params)
         self.output_size = params['output_size']
-        self.layer_sizes = params['layer_sizes'] # 'hidden'/interior layers
-        self.memory = collections.deque(maxlen=params['memory_size'])
+
+        # persistence
         self.weights_path = params['weights_path']
         self.load_weights = params['load_weights']
         self.load_weights_success = False
+
+        self.reward = 0
         self.optimizer = None
         self.posttrain_weights = None
+
         self.network()
 
     def init_input_size(self,params):
