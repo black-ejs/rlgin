@@ -34,6 +34,12 @@ class TrainingBayesianOptimizer():
             i+=1
         return name_scenario
 
+    def copy_inputs_to_params(self, inputs:(list),target_params:(dict)):
+        i=0
+        for input in inputs:
+            target_params[self.optim_params[i]['name']] = inputs[i]
+            i+=1
+
     ##########################################################
     def optimize_RL(self, max_iter:(int)=20):
         """
@@ -48,10 +54,7 @@ class TrainingBayesianOptimizer():
             inputs = inputs[0]
 
             # Variables to optimize
-            i=0
-            for input in inputs:
-                self.params[self.optim_params[i]['name']] = inputs[i]
-                i+=1
+            self.copy_inputs_to_params(inputs,self.params)
             self.customize_optim_params(inputs)
 
             # metadata for scenario
