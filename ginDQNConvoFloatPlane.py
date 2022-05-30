@@ -43,7 +43,10 @@ class ginDQNConvoFloatPlane(ginDQN.ginDQN):
 
         # Linear Layers
         for layer in self.layers[1:-1]:
-            x = F.relu(layer(x))
+            if 'no_relu' in self.params and self.params['no_relu']:
+                x = layer(x)
+            else:
+                x = F.relu(layer(x))
         x = self.layers[-1](x) # last layer
         return x
 
@@ -148,16 +151,4 @@ class ginDQNConvoFloatPlane(ginDQN.ginDQN):
         return int(conv_image_size[0]*conv_image_size[1]*output_channels*groups)                          
 
     ## ###############################################
-
-    def forward(self, x):
-        # Conv2D layer
-        x = self.layers[0](x)
-        x = x.reshape(self.convo_output_size)  ####### YEECH #####
-
-        # Linear Layers
-        for layer in self.layers[1:-1]:
-            x = F.relu(layer(x))
-        x = self.layers[-1](x) # last layer
-        return x
-
 
