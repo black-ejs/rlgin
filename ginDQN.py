@@ -69,7 +69,10 @@ class ginDQN(DQNAgent):
     def forward(self, x):
         # Linear Layers
         for layer in self.layers[:-1]:
-            x = F.relu(layer(x))
+            if 'no_relu' in self.params and self.params['no_relu']:
+                x = layer(x)
+            else:
+                x = F.relu(layer(x))
         x = self.layers[-1](x) # last layer
         return x
     
