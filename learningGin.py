@@ -371,6 +371,8 @@ if __name__ == '__main__':
                     do_test = True
         if do_test:
             print("Testing...")
+            if 'test_epsiodes' in params
+                params['episodes'] = params['test_episodes']
             stats = run(params)  
             print_stats(stats)
 
