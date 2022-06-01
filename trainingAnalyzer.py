@@ -496,8 +496,8 @@ class TrainingLogParser:
         if "Winner: " in line:
             ## end of hand
             self.parse_win_line(line)
-        if "total_reward: " == line[:14]:
-            self.stats['total_reward'] = float(line[14:])
+        if "total_reward: [(" in line:
+            self.stats['total_reward'] = line[14:]
         if "winMap: " in line:
             cpos = line.find(",")
             x = cpos-1
