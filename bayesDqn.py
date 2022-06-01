@@ -1,11 +1,10 @@
 import copy
 import datetime
 import ginDQNParameters
-from GPyOpt.methods import BayesianOptimization
 from bayesOpt import TrainingBayesianOptimizer
 
-TRAIN_EPISODES = 5
-MAX_ITER=5
+TRAIN_EPISODES = 5000
+MAX_ITER = 25
 #################################################################
 #   optimizes the parameter sets used by the learningGin module #
 #               Sets the  parameters for Bayesian Optimization  #
