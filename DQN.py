@@ -26,6 +26,7 @@ class DQNAgent(torch.nn.Module):
         self.learning_rate = params['learning_rate']        
         self.epsilon = params['noise_epsilon']
         self.gamma = params['gamma']
+        self.layer_sizes = params['layer_sizes'] # 'hidden'/interior layers
 
         self.init_input_size(params)
         self.output_size = params['output_size']
