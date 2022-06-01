@@ -1,7 +1,6 @@
-import learningGin
+import sys
 import time
-import datetime
-import ginDQNParameters
+import learningGin
 from GPyOpt.methods import BayesianOptimization
 
 #################################################################
@@ -18,6 +17,7 @@ class TrainingBayesianOptimizer():
     def __init__(self, params, optim_params):
         self.params = params
         self.optim_params = optim_params
+        self.scenario_count = 0
 
     def customize_optim_params(self, inputs):
         pass
@@ -62,18 +62,20 @@ class TrainingBayesianOptimizer():
             self.params['weights_path'] = 'weights/weights_' + self.params['name_scenario'] + '.h5'
             self.params['load_weights'] = False
             self.params['train'] = True
-            print(self.params)
+            print(f"bayesian_parameters: {self.params}")
 
             # run one scenario
             startTime = time.time()
             stats = learningGin.run(self.params)
+            self.scenario_count += 1
             duration = time.time() - startTime
             stats.put('duration',duration)
+            stats.put('bayesian_scenario_counter',self.scenario_count)
 
             # the more we win, the better it came out
             # we are player two
             # score = stats.get('winMap')[self.params['player_two_name']]
-            score = stats.get('total_reward')
+            score = stats.get('total_reward')[0][1] # player1's total_reward
             stats.put('score',score)
 
             # report the results
@@ -95,11 +97,15 @@ class TrainingBayesianOptimizer():
         return self.params
     
     def print_stats(self,stats):
-        learningGin.print_stats(stats)
         with open(self.params['log_path'], 'a') as f: 
-            print(f"\n********* {str(self.params['name_scenario'])}",file=f) 
-            learningGin.print_stats(stats, f)
-            print(f"=====> optimization run {self.params['name_scenario']} took {stats.get('duration'):10.2f} seconds\n",file=f)
+            self._print_stats(stats,f)
             f.close()
+        self._print_stats(stats, sys.stdout)
+        
+    def _print_stats(self,stats,f):
+        print(f"\n=====> optimization run {str(self.params['name_scenario'])}",file=f) 
+        learningGin.print_stats(stats, f)
+        print(f"=====> optimization run \'{self.params['name_scenario']}\' took {stats.get('duration'):10.2f} seconds\n",file=f)
+        
 
 

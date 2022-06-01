@@ -1,54 +1,62 @@
-import learningGin
-import time
 import copy
 import datetime
 import ginDQNParameters
 from GPyOpt.methods import BayesianOptimization
 from bayesOpt import TrainingBayesianOptimizer
 
+TRAIN_EPISODES = 5
+MAX_ITER=5
 #################################################################
 #   optimizes the parameter sets used by the learningGin module #
 #               Sets the  parameters for Bayesian Optimization  #
 #################################################################
 class DQNBayesianOptimizer(TrainingBayesianOptimizer):
+    STRATEGIES = ('nn-convf', 'nn-convb', 'nn-linear')
     def __init__(self, params, optim_params):
         super().__init__(params, optim_params)
 
     def create_name_scenario(self, inputs):
-        lr_string='{:.8f}'.format(float(inputs[0]))[2:]
-        layer_sizes = self.params['layer_sizes']
-        name_scenario = 'gin_lr{}_struct{}_{}_{}_eps{:2.3f}'.format(
-                                lr_string,
-                                int(inputs[1]),
-                                int(inputs[2]),
-                                int(inputs[3]),
-                                float(inputs[4]))
+        name_scenario = 'bo'
+
+        for p in ('player1','player2'):
+            p_str="p" + p[-1]
+            pparams = self.params[p]['nn']
+            lr_str='{:.6f}'.format(float(pparams['learning_rate']))[2:]
+            ls_str = ""
+            for ls in pparams['layer_sizes']:
+                if not len(ls_str)==0:
+                    ls_str += "_"
+                ls_str += f"{ls}"
+
+            name_scenario += '_' + p_str
+            name_scenario += '_' + f"{self.params[p]['strategy']}"
+            name_scenario += '_' + ls_str
+            name_scenario += '_lr' + lr_str
+            name_scenario += '_eps' + f"{pparams['epsilon_decay_linear']:.6f}"
+            name_scenario += '_relu' + f"{int(pparams['no_relu'])}"
+
         return name_scenario                    
 
     def copy_inputs_to_params(self, inputs:(list),target_params:(dict)):
         pass
             
     def customize_optim_params(self,inputs):
-        player_inputs = [{},{}]
-        for i in range(len(inputs)):
-            name = self.optim_params[i]
-            if ['name'][-1] == '1':
-                player_inputs[0][name[:-2]] = inputs[i]
-            elif ['name'][-1] == '2':
-                player_inputs[1][name[:-2]] = inputs[i]
-            else:
-                self.params[name] = inputs[i]
+        player_inputs, nonplayer_inputs = self.reshape_inputs(inputs)
+        for np_key in nonplayer_inputs:
+            self.params[np_key] = nonplayer_inputs[np_key]
 
         for i in (1,2):
-            pi = player_inputs[i]
-            player_key = 'player' + int(i)
+            pi = player_inputs[i-1]
+            player_key = 'player' + str(i)
+            if 'strategy' in pi:
+                self.params[player_key]['strategy'] = pi['strategy']
             if not 'nn' in self.params[player_key]:
                 if 'nn-common' in self.params:
                     self.params[player_key]['nn'] = copy.deepcopy(self.params['nn-common'])
                 else:
                     self.params[player_key]['nn'] = {}
             target = self.params[player_key]['nn']
-            for nn_param in ('strategy', 'no_relu', 'learning_rate', 'epsilon_decay_linear'):
+            for nn_param in ('no_relu', 'learning_rate', 'epsilon_decay_linear'):
                 if nn_param in pi:
                     target[nn_param] = pi[nn_param]
 
@@ -59,24 +67,46 @@ class DQNBayesianOptimizer(TrainingBayesianOptimizer):
                     layer_sizes.append(ls)
             target['layer_sizes'] = layer_sizes
 
+    def reshape_inputs(self, inputs):
+        player_inputs = [{},{}]
+        nonplayer_inputs = {}
+        for i in range(len(inputs)):
+            name = self.optim_params[i]['name']
+            if name[-1] in ('1','2'):
+                key = name[:-1]
+                target = player_inputs[int(name[-1])-1]
+                if key == 'strategy':
+                    target[key] = DQNBayesianOptimizer.STRATEGIES[int(inputs[i])]
+                else:
+                    target[key] = inputs[i]
+            else:
+                nonplayer_inputs[name] = inputs[i]
+
+        return player_inputs, nonplayer_inputs
 #################################################################
 ##################
 #      Main      #
 ##################
 if __name__ == '__main__':
-    TRAIN_EPISODES = 2000
-    TEST_EPISODES = 500
-    MAX_ITER = 100
-
     start_time = datetime.datetime.now()
     print(f"bayesDqn.py: Bayesian optimization starting at {datetime.datetime.now()}") 
 
+    # obtain basic static params
     params = ginDQNParameters.define_parameters()
-    params['epsiodes'] = TRAIN_EPISODES
-    params['test_epsiodes'] = TEST_EPISODES
+    
+    # set up logging, 
+    params['episodes'] = TRAIN_EPISODES
     params['log_path'] = 'logs/bayesDqn_log.' + params['timestamp']+'.txt'
+
+    # list of indexes for strategies (bayesian params seemingly cannot be strings?)
+    strategies = []
+    for i in range(len(DQNBayesianOptimizer.STRATEGIES)):
+        strategies.append(i)
+
+    # initialize bayesian parameter list
     optim_params_template = [
-        {'name': "strategy", 'type': "discrete", 'domain': ('nn-convf', 'nn-convf', 'nn-linear')},
+        {'name': "strategy", 'type': "discrete", 
+                'domain': strategies},       # index to DQNBayesianOptimizer.STRATEGIES
         {'name': "learning_rate", 'type': "continuous", 'domain': (0.0001, 0.01)},
         {'name': 'epsilon_decay_linear', 'type': "continuous", 'domain': (float(8/params['episodes']),
                                                                          float(128/params['episodes'])), "fmt": "2.5f"},
@@ -84,16 +114,18 @@ if __name__ == '__main__':
         {'name': "second_layer_size", 'type': "discrete", 'domain': (200,300,400,800)},
         {'name': "third_layer_size", 'type': "discrete", 'domain': (0,40,80,160,220,340)},
         {'name': "fourth_layer_size", 'type': "discrete", 'domain': (10,20,30,50)},
-        {'name': "no_relu", 'type': "discrete", 'domain': (False, True)},
+        {'name': "no_relu", 'type': "discrete", 'domain': (0, 1)},
         # {'name': "nn-linear_state_size", 'type': "discrete", 'domain': (53, 312)},
         ]
 
     # Define optimizer
     # bayesOpt = BayesianOptimizer(params)
-    optim_params = {}
+    optim_params = []
     for player in ('1','2'):
         for op in optim_params_template:
-            optim_params[op['name']+player] = op
+            target_param = copy.deepcopy(op)
+            target_param['name'] += player 
+            optim_params.append(target_param)
     bayesOpt = DQNBayesianOptimizer(params, optim_params)
     bayesOpt.optimize_RL(max_iter=MAX_ITER)
 
