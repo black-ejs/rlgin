@@ -73,10 +73,6 @@ class learningPlayer:
 
         ginDQN = ginDQN.to(DEVICE)
 
-        ffff = ginDQN.parameters()
-        for f in ffff:
-            print(f"{type(f)} {f.size()}")
-
         if params['train']:
             ginDQN.optimizer = optim.Adam(ginDQN.parameters(), 
                                 weight_decay=0, lr=params['learning_rate'])
@@ -296,15 +292,18 @@ def run(params):
 
     total_duration = time.time() - startTime
     
+    total_reward = []
     for p in nn_players:
         if p.ginDQN.params['train']:
                 p.save_weights()
+        total_reward.append((p.name,p.total_reward))
 
     mean_durations, stdev_durations = get_mean_stdev(durations)
     mean_turns, stdev_turns = get_mean_stdev(turns_in_hand)
 
     stats.put("count_hands", counter_hands)
-    stats.put("total duration", total_duration)
+    stats.put("total_duration", total_duration)
+    stats.put("total_reward", total_reward) # list 
     stats.put("winMap", winMap)
     stats.put("mean_turns", mean_turns)
     stats.put("stdev_turns", stdev_turns)
@@ -326,6 +325,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
     print("learningGin: args ", args)
 
+    old_stdout = None
+    log = None
     try:
 
         params = ginDQNParameters.define_parameters()
@@ -338,8 +339,6 @@ if __name__ == '__main__':
 
         if not (args.logfile == None):
             params['log_path'] = args.logfile        
-        log = None
-        old_stdout = None
         if 'log_path' in params:
             log_path = params['log_path']
             if len(log_path)>0:
