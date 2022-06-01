@@ -8,9 +8,10 @@ def define_parameters():
     params['episodes'] = 5                  # gin hands
 
     # nn-common
+    params['nn-common'] = {}
     params['nn-common']['gamma'] = 0.99                  # value of future rewards
     params['nn-common']['gamma'] = 0.99                  # value of future rewards
-    params['nn-common']['epsilon_decay_linear'] = 100/params['edisodes']   # while learning, how quickly randomness decreases in each hand - per bayesDqn.py April 2022
+    params['nn-common']['epsilon_decay_linear'] = 100/params['episodes']   # while learning, how quickly randomness decreases in each hand - per bayesDqn.py April 2022
     params['nn-common']['learning_rate'] = 0.0001        # how aggressively to modify weights - per bayesDqn.py April 2022
     params['nn-common']['noise_epsilon'] = 1/500         # randomness in actions when not training
     params['nn-common']['memory_size'] = 25000
@@ -23,7 +24,7 @@ def define_parameters():
     params['player1'] = {}
     params['player1']['name'] = 'Primo'
     # params['player1']['strategy'] = 'br90'
-    params['player1']['strategy'] = 'nn-convf'
+    params['player1']['strategy'] = 'nn-linear'
     params['player1']['nn'] = copy.deepcopy(params['nn-common'])
     params['player1']['nn']['layer_sizes'] = [88, 300, 20]   # 'hidden'/interior layers - per bayesDqn.py April 2022
     params['player1']['nn']['train'] = True
@@ -34,8 +35,8 @@ def define_parameters():
     # PLAYER 2
     params['player2'] = {}
     params['player2']['name'] = 'Tempo'
-    params['player2']['strategy'] = 'nn-linear'
-    params['player1']['nn'] = copy.deepcopy(params['nn-common'])
+    params['player2']['strategy'] = 'nn-convb'
+    params['player2']['nn'] = copy.deepcopy(params['nn-common'])
     params['player2']['nn']['layer_sizes'] = [100, 50, 20]  # 'hidden'/interior layers - per bayesDqn.py April 2022
     params['player2']['nn']['train'] = True
     params['player2']['nn']['test'] = True
