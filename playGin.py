@@ -75,10 +75,10 @@ class OneDecisionGinStrategy(gin.GinStrategy):
 		else:
 			return gin.Draw.DECK
 		
-	def decideDiscardCard(self,ginhand):
-		## the hand will have 8 cards
+	def decideDiscardCard(self,ginhand:gin.GinHand):
+		## the hand will have an extra card
 		hand = ginhand.currentlyPlaying.playerHand
-		worstScore = 500
+		worstScore = 500000000
 		worst_cards = []
 
 		for c in hand.card:
@@ -98,6 +98,10 @@ class OneDecisionGinStrategy(gin.GinStrategy):
 		 
 		if len(worst_cards)==1:
 			worst_card=worst_cards[0]
+		elif len(worst_cards)==0:
+			print("OneDecisionGinStrategy.decideDiscardCard(): hmmm, interesting result here... there seems to be no worst card in this hand: {hand}, worstScore={worstScore}, last score={score}, selecting a random card") 
+			l = len(hand.card)
+			worst_card=hand.card[int(random.random()*l)]
 		else: 
 			l = len(worst_cards)
 			worst_card=worst_cards[int(random.random()*l)%l]
