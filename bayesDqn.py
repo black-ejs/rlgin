@@ -5,6 +5,7 @@ from bayesOpt import TrainingBayesianOptimizer
 
 TRAIN_EPISODES = 5000
 MAX_ITER = 25
+INITIAL_ITERS = 6
 #################################################################
 #   optimizes the parameter sets used by the learningGin module #
 #               Sets the  parameters for Bayesian Optimization  #
@@ -126,6 +127,6 @@ if __name__ == '__main__':
             target_param['name'] += player 
             optim_params.append(target_param)
     bayesOpt = DQNBayesianOptimizer(params, optim_params)
-    bayesOpt.optimize_RL(max_iter=MAX_ITER)
+    bayesOpt.optimize_RL(max_iter=MAX_ITER, initial_iters=INITIAL_ITERS)
 
     print(f"bayesDqn.py: Bayesian optimization run took {datetime.datetime.now()-start_time}") 

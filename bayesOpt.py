@@ -41,7 +41,7 @@ class TrainingBayesianOptimizer():
             i+=1
 
     ##########################################################
-    def optimize_RL(self, max_iter:(int)=20):
+    def optimize_RL(self, max_iter:(int)=20, initial_iters:(int)=6):
         """
         optimizes the parameter sets used by the learningGin module
         """
@@ -85,7 +85,7 @@ class TrainingBayesianOptimizer():
 
         bayes_optimizer = BayesianOptimization(f=optimize,
                                                domain=self.optim_params,
-                                               initial_design_numdata=6,
+                                               initial_design_numdata=initial_iters,
                                                acquisition_type="EI",
                                                exact_feval=True,
                                                # verbosity=True,
