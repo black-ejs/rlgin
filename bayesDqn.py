@@ -6,6 +6,7 @@ from bayesOpt import TrainingBayesianOptimizer
 TRAIN_EPISODES = 5000
 MAX_ITER = 25
 INITIAL_ITERS = 6
+CHANCE_PLAYERONE_BR90=0.1
 #################################################################
 #   optimizes the parameter sets used by the learningGin module #
 #               Sets the  parameters for Bayesian Optimization  #
@@ -20,20 +21,21 @@ class DQNBayesianOptimizer(TrainingBayesianOptimizer):
 
         for p in ('player1','player2'):
             p_str="p" + p[-1]
-            pparams = self.params[p]['nn']
-            lr_str='{:.6f}'.format(float(pparams['learning_rate']))[2:]
-            ls_str = ""
-            for ls in pparams['layer_sizes']:
-                if not len(ls_str)==0:
-                    ls_str += "_"
-                ls_str += f"{ls}"
-
             name_scenario += '_' + p_str
             name_scenario += '_' + f"{self.params[p]['strategy']}"
-            name_scenario += '_' + ls_str
-            name_scenario += '_lr' + lr_str
-            name_scenario += '_eps' + f"{pparams['epsilon_decay_linear']:.6f}"
-            name_scenario += '_relu' + f"{int(pparams['no_relu'])}"
+            if 'nn' in self.params[p]:
+                pparams = self.params[p]['nn']
+                lr_str='{:.6f}'.format(float(pparams['learning_rate']))[2:]
+                ls_str = ""
+                for ls in pparams['layer_sizes']:
+                    if not len(ls_str)==0:
+                        ls_str += "_"
+                    ls_str += f"{ls}"
+
+                name_scenario += '_' + ls_str
+                name_scenario += '_lr' + lr_str
+                name_scenario += '_eps' + f"{pparams['epsilon_decay_linear']:.6f}"
+                name_scenario += '_relu' + f"{int(pparams['no_relu'])}"
 
         return name_scenario                    
 
