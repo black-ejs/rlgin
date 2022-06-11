@@ -1,0 +1,427 @@
+from collections.abc import Iterable
+import copy
+
+import matplotlib.pyplot as plt
+import matplotlib.widgets as widgets
+from learningGin import NO_WIN_NAME
+
+import regressionPlotter
+import benchmarks
+
+MA_SIZE = 50
+
+## #############################################
+## #############################################
+## #############################################
+## #############################################
+## #############################################
+## #############################################
+class Plottable:
+    def __init__(self,plot,st,nn_key:(str)):
+        self.plot = plot
+        self.st = st
+        self.nn_key = nn_key
+        self.nn_player = st['nn_players'][nn_key]
+        self.pid = self.nn_player['pid']
+        self.fig_label = f"{plot}-bo{st['st_id']}-{nn_key}-{self.nn_player['strategy']}"
+
+    def get(self, key:(str)):
+        for dic in (self.nn_player, 
+                    self.st['scenario_players'][self.nn_key],
+                    self.st,
+                    self.st['params']):
+            if key in dic:
+                return dic[key]
+        return self.nn_player[key]  # force KeyError
+
+    def has_key(self, key:(str)):
+        for dic in (self.nn_player, 
+                    self.st['scenario_players'][self.nn_key],
+                    self.st):
+            if key in dic:
+                return True
+        return False  
+
+    def __lt__(self, other):
+        if self.st['name_scenario'] > other.st['name_scenario']:
+            return False
+        if self.st['name_scenario'] < other.st['name_scenario']:
+            return True
+        if self.nn_key > other.nn_key:
+            return False
+        if self.nn_key < other.nn_key:
+            return True
+        return self.plot < other.plot
+
+## #############################################
+class LearningPlotter(regressionPlotter.RegressionPlotter):
+
+    def rank_all_cumulative_wins(statsList):
+        for st in statsList:
+            LearningPlotter.plot_cumulative_wins(st, rank_only=True)
+
+    def plot_cumulative_wins(st, cumulative_averages:(Iterable)=None,
+                            rank_only:(bool)=False,
+                            plottable:(Plottable)=None):
+        hands = st['hands']
+        if not plottable==None:
+            plot_key = plottable.nn_key
+            plot_title = plottable.fig_label
+        else:
+            plot_key = list(st['nn_players'].keys())[0]
+            plot_title = 'cumu - ' + st['name_scenario']
+        for nnp in st['nn_players'].values():
+            win_index = int(nnp['pid'])-1
+            array_ordinals = []
+            array_cumu_wins = []
+            for hand in hands:
+                array_ordinals.append(int(hand['hand_index']))
+                array_cumu_wins.append(int(hand['wins'][win_index]))
+
+            if rank_only or nnp['name']!=plot_key:
+                slopes = LearningPlotter.do_poly_regression(array_cumu_wins,
+                                array_ordinals, 
+                                splines=3)
+            else:       
+                benchmark_player, benchmark_opponent = LearningPlotter.get_benchmark_players(st)
+                benchmark_arrays=benchmarks.get_cumulative_wins(benchmark_player,benchmark_opponent,len(hands))
+                slopes = LearningPlotter.plot_regression(array_cumu_wins, 
+                                array_ordinals, plot_title, 
+                                splines=[1,3], #=3,
+                                ylabel=f"{nnp['name']}: cumulative wins (total={array_cumu_wins[-1]})",
+                                average_array=cumulative_averages,
+                                benchmark_arrays=benchmark_arrays)
+            nnp['cumulative_wins_slopes'] = slopes
+            nnp['cumulative_wins_last_spline_slope'] = slopes[-1]
+            nnp['cumulative_wins_ratio'] = slopes[-1]/slopes[1] # [0]
+
+    ## ##############################
+    def rank_all_moving_averages(statsList):
+        for st in statsList:
+            LearningPlotter._rank_or_plot_ma('rank', st) 
+        
+    def rank_moving_average(st):
+        return LearningPlotter._rank_or_plot_ma('rank', st) 
+
+    def plot_moving_average(st, plottable=None):
+        return LearningPlotter._rank_or_plot_ma('plot', st, plottable=plottable) 
+
+    def _rank_or_plot_ma(which, st, plottable:(Plottable)=None):
+        nn_players = st['nn_players']
+        if len(nn_players) == 0:
+            return
+
+        if plottable==None:
+            target_name = list(st['nn_players'].keys())[0]
+            fig_label = st['name_scenario']
+        else:
+            target_name = plottable.nn_player['name']
+            fig_label = plottable.fig_label
+
+        for nnp in nn_players.values():
+            nnp_name = nnp['name']
+            array_ma = []
+            array_count = []
+            ma = nnp['ma_array']
+            for ma_val in ma:
+                array_ma.append(ma_val)
+                array_count.append(len(array_ma))
+            
+            if len(array_count)>0:
+                if which == 'plot' and nnp_name==target_name:
+                    benchmark_player, benchmark_opponent = LearningPlotter.get_benchmark_players(st)
+                    benchmark_ma=benchmarks.get_moving_average(benchmark_player,benchmark_opponent,MA_SIZE)
+                    benchmark_array=[]
+                    for i in range(len(array_count)):
+                        benchmark_array.append(benchmark_ma)
+                    slopes = LearningPlotter.plot_regression(array_ma, array_count, 
+                                    fig_label, splines=[1,3],
+                                    ylabel="wins last {} hands".format(MA_SIZE),
+                                    benchmark_arrays=(benchmark_array,array_count))
+                else:
+                    slopes = LearningPlotter.do_poly_regression(array_ma, array_count, splines=[1,3])
+                array_count = []
+                array_ma = []
+                nnp['moving_average_overall_slope'] = slopes[0]
+                nnp['moving_average_spline_slopes'] = slopes[1:]
+                nnp['moving_average_last_spline_slope'] = slopes[-1]
+
+    def get_benchmark_players(st:(dict)):
+        benchmark_player = 'r'  #random
+        if 'brandiac_random_percent' in st['params']:               
+            benchmark_opponent = 'br' + str(st['params']['brandiac_random_percent'])
+        else:
+            benchmark_opponent = 'b'
+        return (benchmark_player, benchmark_opponent)
+
+
+## ##############################
+## #############################################
+## #############################################
+## #############################################
+## #############################################
+## #############################################
+## #############################################
+## #############################################
+
+class LearningPlotManager:
+    def __init__(self, statsList:(Iterable), cumulative_averages:(Iterable)):
+        self.statsList = statsList
+
+        self.lastOpened = None
+        self.cumulative_averages = cumulative_averages
+        self.last_button = 0
+
+        self.plottables = []
+        for st in statsList:
+            for nn_key in st['nn_players']:
+                for plot in ("cumu", "ma"):
+                    plottable = Plottable(plot, st, nn_key)
+                    self.plottables.append(plottable)
+        self.plottables.sort()
+
+    ## ##############################
+    def onclickp(self, event):
+        self.onclick_next_prev(event, 'p')
+    def onclickn(self, event):
+        self.onclick_next_prev(event, 'n')
+    def onclick_next_prev(self, event, direction):
+
+        # print(f"onclick: direction={direction} event={vars(event)}")
+        plottable = self.get_plottable(event)
+        figure_id = plottable.fig_label
+        # print(f'click: figure_id={figure_id}')
+        if figure_id == None:
+            return
+
+        for i in range(len(self.plottables)):
+            p = self.plottables[i]
+            if p.fig_label == figure_id:
+                # print(f'click: i={i}, direction={direction}, fig_label={fig_label}')  #########
+                self.deactivatePlottable(p)
+                if direction == 'n':
+                    target_plottable = self.plottables[(i+1)%len(self.plottables)]
+                else:
+                    if i>0:
+                        target_plottable = self.plottables[i-1]
+                    else:
+                        target_plottable = self.plottables[-1]
+                self.activatePlottable(target_plottable)
+                break
+
+    ## ##############################
+    def onclickparams(self, event):
+        if not self.params_window_is_open():
+            plottable = self.get_plottable(event)
+            if plottable == None:
+                return
+            self.show_params(plottable.st)
+        self.update_plottables_window()
+
+    ## ##############################
+    def activatePlottable(self, plottable:(Plottable)):
+        # print(f"trainingAnalyszer: activating figure {fig_label}")
+        if 'cumu' == plottable.plot:
+            LearningPlotter.plot_cumulative_wins(plottable.st, self.cumulative_averages, plottable=plottable)
+        elif 'ma' == plottable.plot:
+            LearningPlotter.plot_moving_average(plottable.st, plottable=plottable)
+
+        if plottable.fig_label in plt.get_figlabels():
+            self.lastOpened = plottable
+            self.install_plottable_navigation(plottable)
+            # self.install_view_support()
+            if self.plottables_window_is_open():
+                self.update_plottables_window()
+            return plottable
+        else:
+            print(f"problem activating plottable with fig_label='{plottable.fig_label}'")
+
+    ## ##############################
+    def deactivatePlottable(self, plottable:(Plottable)):
+        # print(f"deactivating figure {fig_label}")
+        plt.close(plottable.fig_label)
+        if self.params_window_is_open():
+            plt.close(LearningPlotManager.PARAMS_FIG_ID)
+
+    ## ##############################
+    def get_plottable(self,event):
+        return self.lastOpened
+
+    ## ##############################
+    PLOTTABLE_LIST_FIG_ID = "plottables"
+    PLOTTABLE_LIST_FIG_W = 5
+    PLOTTABLE_LIST_FIG_H = 3
+    def show_plottables_window(self):
+        
+        if self.plottables_window_is_open():
+            self.update_plottables_window()
+            return
+
+        self.plottables_window = plt.figure(LearningPlotManager.PLOTTABLE_LIST_FIG_ID, 
+                                    figsize=(LearningPlotManager.PLOTTABLE_LIST_FIG_W,
+                                    LearningPlotManager.PLOTTABLE_LIST_FIG_H))
+        
+        fig_labels = []
+        s=""
+        for p in self.plottables:
+            fig_labels.append(p.fig_label)
+            s += p.fig_label + "\n"
+
+        self.plottables_window_list_ax = self.plottables_window.add_subplot(5,1,(1,4),label="click to plot")
+        self.plottables_window_list_ax.set_axis_off()
+        self.plottables_window_list_ax.set_frame_on(True)
+        #self.plottables_window_list_ax.text(0.01, 0.01, s,
+        #plt.text(0.01, 0.01, s,
+        #        backgroundcolor='#FFFFAA',
+        #        fontsize=8)
+        # self.plottables_text = widgets.TextBox(self.plottables_window_ax, "", initial=s, color="yellow")
+        self.radio_buttons = widgets.RadioButtons(self.plottables_window_list_ax,fig_labels)
+        self.radio_buttons.on_clicked(self.onclick_radio)
+
+        self.plottables_window_nav_ax = self.plottables_window.add_subplot(5,1,(1,4),label="click to plot")
+        self.plottables_window_nav_ax.set_axis_off()
+        self.plottables_window_nav_ax.set_frame_on(False)
+        self.last_button = 0
+        self.bnext = self.add_button('Next', self.onclickn)
+        self.bprev = self.add_button('Previous', self.onclickp)
+
+        ## plt.show()            
+        return
+
+    ## ##############################
+    def onclick_radio(self,event):
+        # print(f"onclick_radio(): event={event}")
+        selected_button_text = event
+        if selected_button_text == self.lastOpened.fig_label:
+            return
+        for p in self.plottables.values():
+            if p.fig_label == selected_button_text:
+                self.activatePlottable(p)
+            
+    ## ##############################
+    def update_plottables_window(self):
+        if self.plottables_window_is_open():
+            if self.lastOpened in self.plottables:
+                # active = self.plottables.index(self.lastOpened)
+                for i in range(len(self.radio_buttons.labels)):
+                    lbl = self.radio_buttons.labels[i].get_text()
+                    if lbl == self.lastOpened.fig_label:
+                        self.radio_buttons.set_active(i)
+            fig = plt.figure(LearningPlotManager.PLOTTABLE_LIST_FIG_ID)
+            plt.draw()
+            
+    ## ##############################
+    def install_plottable_navigation(self, plottable:Plottable):
+        self.last_button = 0
+
+        if not plottable.fig_label in plt.get_figlabels():
+            print(f'wtf: fig_label={plottable.fig_label}')
+        fig = plt.figure(plottable.fig_label)
+        axx = fig.subplots_adjust(bottom=0.2, top=0.99, right=0.99,left=0.12)
+
+        self.bparams = self.add_button("params", self.onclickparams)
+
+    ## ##############################
+    def plottables_window_is_open(self):
+        return LearningPlotManager.PLOTTABLE_LIST_FIG_ID in plt.get_figlabels()
+
+    ## ##############################
+    PARAMS_FIG_ID = "parameters"
+    PARAMS_FIG_W = 9
+    PARAMS_FIG_H = 7
+    PARAMS_LINE_LENGTH = 120
+    PARAMS_LINE_MAX = 200
+
+    ## ##############################
+    def show_params(self,st):
+        if not 'params' in st:
+            print(f"no params available for scenario {st['name_scenario']}")
+            return
+        fig = plt.figure(LearningPlotManager.PARAMS_FIG_ID, 
+                    figsize=(LearningPlotManager.PARAMS_FIG_W,LearningPlotManager.PARAMS_FIG_H))
+        
+        params = st['params']
+        s = ""
+        for key in params.keys():
+            #p = f"{key}: haha\n" 
+            p = f"{key}: {params[key]}\n"
+            s = self.chunk_string(s, p)
+
+        s += f"   ---   ---   ---\n"
+        bullshit = ""
+        for key in st.keys():
+            if key in ['hands', 'params', "ma_array", "ma_arrays", "ma_window", 'nn_players'] or key in params:
+                continue
+            if key == 'scenario_players':
+                my_players = copy.deepcopy(st[key])
+                for ppp in my_players.values():
+                    if 'nn' in ppp:
+                        nnn = ppp['nn']
+                        for kkk in ('ma_array','ma_window'):
+                            if kkk in nnn:
+                                nnn.pop(kkk)
+                p = f"{key}: {my_players}\n"
+            else:
+                #p = f"{key}: hoho\n" 
+                p = f"{key}: {st[key]}\n"
+            s = self.chunk_string(s, p)
+
+        self.params_ax = fig.add_subplot()
+        fig.subplots_adjust(left=0.01, bottom=0.01, right=0.99, top=0.99)
+        self.params_ax.set_axis_off()
+        self.params_ax.set_frame_on(True)
+        self.params_ax.text(0.01, 0.01, s,
+                backgroundcolor='#FFFF88',
+                fontsize=8)
+        #plt.text(0.01, 0.01, s,
+            #backgroundcolor='#FFFFAA',
+            #fontsize=8)
+
+        #plt.show()            
+        plt.draw()            
+        return
+    ## ##############################
+    # avoid matplotlib bug with wrapping long text
+    def chunk_string(self, s, p):
+        split = ", "
+        while len(p)>LearningPlotManager.PARAMS_LINE_MAX:
+            ndx=LearningPlotManager.PARAMS_LINE_LENGTH
+            chunk = p[:ndx]
+            while not split in chunk:
+                ndx+=1
+                chunk = p[:ndx]
+            chunk = chunk[:chunk.rindex(split)+2]
+            s += chunk + "\n"
+            p = p[len(chunk):]
+        if len(p) > 0:
+            s += p
+        return s
+        
+    ## ##############################
+    def params_window_is_open(self):
+        return LearningPlotManager.PARAMS_FIG_ID in plt.get_figlabels()
+
+    ## ##############################
+    BUTTON_Y=0.01
+    BUTTON_HEIGHT=0.075
+    BUTTON_WIDTH=0.1
+    BUTTON_X_SPACE=0.02
+    BUTTON_X_INC=BUTTON_WIDTH+BUTTON_X_SPACE
+    def add_button(self, label:(str)="?", onclick=None):
+        # prev_fig = plt.gcf()
+        ax = plt.axes([
+                    1-((self.last_button+1)*LearningPlotManager.BUTTON_X_INC), 
+                    LearningPlotManager.BUTTON_Y, 
+                    LearningPlotManager.BUTTON_WIDTH, 
+                    LearningPlotManager.BUTTON_WIDTH])
+        button = widgets.Button(ax, label)
+        if not onclick==None:
+            button.on_clicked(onclick)
+        self.last_button += 1
+        # plt.figure(prev_fig)
+        return button
+
+
+## ###################################################
+## ###################################################
+## ###################################################

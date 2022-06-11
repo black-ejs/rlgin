@@ -4,53 +4,76 @@ import distutils.util
 import matplotlib.pyplot as plt
 import matplotlib.widgets as widgets
 
-from trainingAnalyzer import TrainingPlotManager, TrainingLogParser, TrainingAnalyzer, TrainingPlotter
+from learningPlotter import LearningPlotManager, LearningPlotter, Plottable
+from learningLogParser import LearningLogParser
+from learningAnalyzer import LearningAnalyzer
 import regplot
 
 ## #############################################
-class DecisionPlotter(TrainingPlotter):
+class DecisionPlotter(LearningPlotter):
 
     ## ##############################
-    def get_decision_count(st):
-        hands = st['hands']        
+    def get_decision_count(plottable:Plottable):
+        hands = plottable.st['hands']        
         decision_count = -1
-        for hand in hands:
-            if 'decisions' in hand and len(hand['decisions'])>0:
-                decision_count = len(hands[0]['decisions'][0])
-                break
+        if (len(hands)>0) and ('decisions' in hands[0]) and (plottable.nn_key in hands[0]['decisions']):
+            decision_count = len(hands[0]['decisions'][plottable.nn_key][0])
         return  decision_count
 
     ## ##############################
-    def plot_decision_histogram(st, fig_label):
-        hands = st['hands']        
-        array_bins = []
+    def plot_decision_histogram(plottable:Plottable):
+        hands = plottable.st['hands']        
+        bins_l = [-0.4]
+        divs = 1000
+        inc = -(bins_l[0])/divs
+        divs2 = 1000
+        inc2 = inc/divs2
+        next = bins_l[-1]
+        for i in range(divs):
+            bins_l.append(next)
+            next += inc
+        next = bins_l[-1]
+        for i in range(divs2):
+            bins_l.append(next)
+            next += inc2
+        bins_l.append(0)
+        next = bins_l[-1]
+        for i in range(divs2):
+            bins_l.append(next)
+            next += inc2
+        next = bins_l[-1]
+        for i in range(divs):
+            bins_l.append(next)
+            next += inc
 
-        decision_count = DecisionPlotter.get_decision_count(st)
+        bins = bins_l
+
+        decision_count = DecisionPlotter.get_decision_count(plottable)
         if decision_count == -1:
             print("plot_decision_histogram: no decisions")
             return
 
         target = 0
         for i in range(1,decision_count):
-            if "iscard (" + str(i) +")" in fig_label:
+            if "iscard (" + str(i) +")" in plottable.fig_label:
                 target = i
                 break
 
         target_decisions = []
         for hand in hands:
             if 'decisions' in hand:
-                hand_decisions = hand['decisions']
+                hand_decisions = hand['decisions'][plottable.nn_key]
                 for d in hand_decisions:
                     target_decisions.append(d[target])
 
         DecisionPlotter.plot_histogram(target_decisions, 
-                        10, fig_label, 
+                        bins, plottable.fig_label, 
                         ylabel="Decision count",
                         xlabel="decision {}".format(target))
 
     ## ##############################
-    def get_zeroes_by_hand(st, fig_label):
-        hands = st['hands']        
+    def get_zeroes_by_hand(plottable:Plottable):
+        hands = plottable.st['hands']        
         array_zeroes = []
         array_ordinals = []
         array_no_winners = []
@@ -60,18 +83,18 @@ class DecisionPlotter(TrainingPlotter):
         array_losers = []
         array_lordinals = []
         array_epsilon = []
-        noise_epsilon = float(st['params']['noise_epsilon'])
-        if st['params']['train']:
-            epsilon_decay = float(st['params']['epsilon_decay_linear'])
+        noise_epsilon = float(plottable.nn_player['noise_epsilon'])
+        if plottable.nn_player['train']:
+            epsilon_decay = float(plottable.nn_player['epsilon_decay_linear'])
 
-        decision_count = DecisionPlotter.get_decision_count(st)
+        decision_count = DecisionPlotter.get_decision_count(plottable)
         if decision_count == -1:
             print("plot_zeroes_by_hand: no decisions")
             return
 
         target = 0
         for i in range(1,decision_count):
-            if "iscard " + str(i) +")" in fig_label:
+            if "iscard " + str(i) +")" in plottable.fig_label:
                 target = i
                 break
 
@@ -81,19 +104,21 @@ class DecisionPlotter(TrainingPlotter):
                     and (len(hand['decisions'])>0)):
                 continue
 
-            if not st['params']['train']:
+            if not plottable.nn_player['train']:
                 array_epsilon.append(noise_epsilon)
             else:
                 array_epsilon.append(max(1-(hand['hand_index']*epsilon_decay), noise_epsilon))
 
             count_zeroes = 0
-            hand_decisions = hand['decisions']
+            hand_decisions = hand['decisions'][plottable.nn_key]
             for d in hand_decisions:
-                if d[target] == 0:
+                # if d[target] == 0:
+                fakeZero = 1/10000
+                if d[target] < fakeZero and d[target] > -fakeZero:
                     count_zeroes += 1
             array_zeroes.append(count_zeroes/len(hand_decisions))
             array_ordinals.append(hand['hand_index'])
-            if hand['winner'] == TrainingLogParser.DQN_PLAYER_NAME:
+            if hand['winner'] == plottable.nn_key:
                 array_winners.append(count_zeroes/len(hand_decisions))
                 array_wordinals.append(hand['hand_index'])
             elif not (hand['winner'] == 'nobody'):
@@ -110,10 +135,10 @@ class DecisionPlotter(TrainingPlotter):
                 array_epsilon]
 
     ####################################
-    def plot_zeroes_by_hand(st, fig_label, 
+    def plot_zeroes_by_hand(plottable:Plottable, 
                 win_filters:(list)=[True, True, True], 
                 crop_epsilon:(bool)=True):
-        arrays = DecisionPlotter.get_zeroes_by_hand(st, fig_label)
+        arrays = DecisionPlotter.get_zeroes_by_hand(plottable)
         array_zeroes = arrays[0]
         array_ordinals = arrays[1]
         array_winners = arrays[2]
@@ -133,7 +158,7 @@ class DecisionPlotter(TrainingPlotter):
 
         if crop_epsilon:
             for i in range(len(array_epsilon)):
-                if array_epsilon[i] == float(st['params']['noise_epsilon']):
+                if array_epsilon[i] == float(plottable.nn_player['noise_epsilon']):
                     start_pos=i
                     start_index = array_ordinals[i]
                     break
@@ -161,7 +186,7 @@ class DecisionPlotter(TrainingPlotter):
 
         DecisionPlotter.plot_regression(plot_y, 
                     plot_x,
-                    fig_label, 
+                    plottable.fig_label, 
                     splines=[1,3],
                     scatter=False,
                     ylabel=f"% zero in hand",
@@ -219,33 +244,23 @@ class DecisionPlotter(TrainingPlotter):
 ## #############################################
 ## #############################################
 
-class DecisionPlotManager(TrainingPlotManager):
+class DecisionPlotManager(LearningPlotManager):
 
     def __init__(self, statsList:(Iterable), cumulative_averages:(Iterable)):
         super().__init__(statsList, cumulative_averages)
         self.win_filters = [True, True, True, True]
         for st in statsList:
-            name_scenario=st['name_scenario']
-            nl = len(name_scenario)
-            ## fig_label = 'Decisions (draw source) - {}'.format(st['name_scenario'])
-            fig_label = 'Zeroes by hand (draw source) - {}'.format(name_scenario)
-            i=0
-            insert_point = len(self.figures)
-            for f in self.figures:
-                if (len(f)>=nl) and (f[-nl:]==name_scenario):
-                    insert_point=i
-                    break
-                i+=1
-            self.figures.insert(insert_point, fig_label)
+            for nn_key in st['nn_players']:
+                for plot in ("zeroes", "decisions"):
+                    plottable = Plottable(plot, st, nn_key)
+                    self.plottables.append(plottable)
+        self.plottables.sort()
 
-    def activateFigure(self, fig_label:(str)):
-        # print(f"decisionProfiler: activating figure {fig_label}")
-        if 'zeroes by hand' in fig_label.lower():
-            name_scenario = fig_label[fig_label.index(' - ')+3:]
-            stats = self.find_stats(name_scenario)
-            DecisionPlotter.plot_zeroes_by_hand(stats, fig_label, self.win_filters, crop_epsilon=self.win_filters[3])            
-            self.lastOpened = fig_label
-            self.install_navigation(fig_label)
+    def activatePlottable(self, plottable:Plottable):
+        if 'zeroes' == plottable.plot:
+            DecisionPlotter.plot_zeroes_by_hand(plottable, self.win_filters, crop_epsilon=self.win_filters[3])            
+            #self.lastOpened = plottable
+            #self.install_plottable_navigation(plottable)
             rax = plt.axes([0.01, 0.01, 0.14, 0.12])
             self.win_filter_checkbuttonsa = widgets.CheckButtons(
                                                 rax,
@@ -258,31 +273,27 @@ class DecisionPlotManager(TrainingPlotManager):
                                                 actives=self.win_filters[2:4])
             self.win_filter_checkbuttonsa.on_clicked(self.on_checkclick)
             self.win_filter_checkbuttonsb.on_clicked(self.on_checkclick)
-        elif 'ecisions' in fig_label:
-            name_scenario = fig_label[fig_label.index(' - ')+3:]
-            stats = self.find_stats(name_scenario)
-            DecisionPlotter.plot_decision_histogram(stats, fig_label)            
-            self.lastOpened = fig_label
-            self.install_navigation(fig_label)
-        else:
-            return super().activateFigure(fig_label)
+        elif 'decisions' == plottable.plot:
+            DecisionPlotter.plot_decision_histogram(plottable)            
+
+        return super().activatePlottable(plottable)
 
 
-    def deactivateFigure(self, figure_id):
+    def deactivatePlottable(self, plottable):
         self.win_filter_checkbuttonsa = None
         self.win_filter_checkbuttonsb = None
-        super().deactivateFigure(figure_id)
+        super().deactivatePlottable(plottable)
 
     ## #############################################
     def on_checkclick(self, event):
-        figure_id = self.get_figure_id(event)
+        plottable = self.get_plottable(event)
         status = []
         status.extend(self.win_filter_checkbuttonsa.get_status())
         status.extend(self.win_filter_checkbuttonsb.get_status())
         if not status == self.win_filters:
             self.win_filters=status
-            self.deactivateFigure(figure_id)
-            self.activateFigure(figure_id)
+            self.deactivatePlottable(plottable)
+            self.activatePlottable(plottable)
 
 ## ###################################################
 ## ###################################################
@@ -291,22 +302,21 @@ class DecisionPlotManager(TrainingPlotManager):
 ## ###################################################
 ## ###################################################
 ## ###################################################
-class DecisionLogParser(TrainingLogParser):
+class DecisionLogParser(LearningLogParser):
 
     ## ##############################
     def __init__(self):
         super().__init__()
-        self.decisions = []
-        self.count_decisions = 0
+        self.decisions = {}
 
     ## ##############################
     def get_default_name_scenario(self):
         return self.filepath + '.decide_' + str(self.session_count)
 
-    ## ##############################
+    ## ##############################   
     def init_training_session(self):
         super().init_training_session()
-        self.decisions = []
+        self.decisions = {}
 
     ## ##############################
     def processLine(self, line:(str), include_partials:(bool)=False):
@@ -321,11 +331,13 @@ class DecisionLogParser(TrainingLogParser):
             decisions = line[line.index('[')+1:line.index(']')].split(",")
             for i in range(len(decisions)):
                 decisions[i] = float(decisions[i])
-            self.decisions.append(decisions)
+            if not (name in self.decisions):
+                self.decisions[name] = []
+            self.decisions[name].append(decisions)
         else:
             if ("Winner: " in line) and len(self.decisions)>0:
                 self.hands[-1]['decisions'] = self.decisions
-                self.decisions = []
+                self.decisions = {}
             super().processLine(line, include_partials)
 
 ## ##############################
@@ -334,7 +346,7 @@ class DecisionLogParser(TrainingLogParser):
 ## ##############################
 ## ##############################
 ## ##############################
-class DecisionProfiler(TrainingAnalyzer):
+class DecisionProfiler(LearningAnalyzer):
     def __init__(self):
         super().__init__()
 
@@ -357,7 +369,7 @@ import argparse
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser()
     argparser.add_argument('path_to_logfile',
-                    default='logs/convo.megalog', # 'logs/erw',  
+                    default='logs/bayesDqn-june.2.log', #'logs/convo.megalog', # 'logs/erw',  
                     nargs='?', help='path to the logfile to be plotted')
     argparser.add_argument('include_partials',
                     default='False', 
