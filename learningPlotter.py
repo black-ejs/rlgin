@@ -1,5 +1,6 @@
 from collections.abc import Iterable
 import copy
+from re import I
 
 import matplotlib.pyplot as plt
 import matplotlib.widgets as widgets
@@ -179,6 +180,7 @@ class LearningPlotManager:
                     plottable = Plottable(plot, st, nn_key)
                     self.plottables.append(plottable)
         self.plottables.sort()
+        self.plottables_window = None
 
     ## ##############################
     def onclickp(self, event):
@@ -249,15 +251,18 @@ class LearningPlotManager:
 
     ## ##############################
     PLOTTABLE_LIST_FIG_ID = "plottables"
-    PLOTTABLE_LIST_FIG_W = 5
-    PLOTTABLE_LIST_FIG_H = 3
+    PLOTTABLE_LIST_FIG_W = 4
+    PLOTTABLE_LIST_FIG_H = 7
     def show_plottables_window(self):
         
         if self.plottables_window_is_open():
             self.update_plottables_window()
             return
-
-        self.plottables_window = plt.figure(LearningPlotManager.PLOTTABLE_LIST_FIG_ID, 
+        elif not (self.plottables_window == None):
+            plt.figure(self.plottables_window.label)
+            return
+        else:
+            self.plottables_window = plt.figure(LearningPlotManager.PLOTTABLE_LIST_FIG_ID, 
                                     figsize=(LearningPlotManager.PLOTTABLE_LIST_FIG_W,
                                     LearningPlotManager.PLOTTABLE_LIST_FIG_H))
         
@@ -267,9 +272,11 @@ class LearningPlotManager:
             fig_labels.append(p.fig_label)
             s += p.fig_label + "\n"
 
-        self.plottables_window_list_ax = self.plottables_window.add_subplot(5,1,(1,4),label="click to plot")
+        self.plottables_window_list_ax = self.plottables_window.add_subplot(10,1,(1,9),label="click to plot")
+        self.plottables_window.subplots_adjust(top=0.99, bottom=0.01, left=0.01, right=0.99, wspace=0.05, hspace=0.05)
         self.plottables_window_list_ax.set_axis_off()
         self.plottables_window_list_ax.set_frame_on(True)
+        self.plottables_window_list_ax.set_facecolor('#44BBFF')
         #self.plottables_window_list_ax.text(0.01, 0.01, s,
         #plt.text(0.01, 0.01, s,
         #        backgroundcolor='#FFFFAA',
@@ -277,26 +284,56 @@ class LearningPlotManager:
         # self.plottables_text = widgets.TextBox(self.plottables_window_ax, "", initial=s, color="yellow")
         self.radio_buttons = widgets.RadioButtons(self.plottables_window_list_ax,fig_labels)
         self.radio_buttons.on_clicked(self.onclick_radio)
+        self.bogus_connect = self.radio_buttons.connect_event('button_press_event',self.onclick_radio_bogus)
+
+        #iii=0
+        #for dd in self.radio_buttons.circles:
+        #    radius = dd.get_radius()
+        #    print(f"self.radio_buttons.circles[{iii}] radius={radius}")
+        #    iii +=1
+        #    dd.set(radius=max(radius, 0.004))
 
         self.plottables_window_nav_ax = self.plottables_window.add_subplot(5,1,(1,4),label="click to plot")
         self.plottables_window_nav_ax.set_axis_off()
         self.plottables_window_nav_ax.set_frame_on(False)
         self.last_button = 0
         self.bnext = self.add_button('Next', self.onclickn)
-        self.bprev = self.add_button('Previous', self.onclickp)
+        self.bprev = self.add_button('Prev', self.onclickp)
 
         ## plt.show()            
         return
 
+    def onclick_radio_bogus(self,event):
+        print(f"onclick_radio_bogus(): event={event}")
+        #if event.inaxes == self.radio_buttons.ax:
+        #    print("hit in self.radio_buttons.ax")
+        if (not (event.xdata==None)):
+            target = None
+            i=0
+            for t in self.radio_buttons.labels:
+                if event.xdata>t.get_position()[0] and event.ydata<t.get_position()[1]:
+                    target = i
+                # print(f"self.radio_buttons.labels[{i}].get_clip_box()={t.get_clip_box()}")
+                # print(f"self.radio_buttons.labels[{i}].get_position()={t.get_position()}")
+                i+=1
+            if not (target==None):
+                # print(f"hit in target {target}, text is {self.radio_buttons.labels[target].get_text()}")
+                self.onclick_radio(self.radio_buttons.labels[target].get_text())
+
     ## ##############################
     def onclick_radio(self,event):
-        # print(f"onclick_radio(): event={event}")
+        print(f"onclick_radio(): event={event}, self.radio_buttons.active={self.radio_buttons.active}")
+        if self.radio_buttons.ignore(event):
+            print(f"onclick_radio(): ignoring this event: {event}")
+            return
         selected_button_text = event
         if selected_button_text == self.lastOpened.fig_label:
             return
-        for p in self.plottables.values():
+        for p in self.plottables:
             if p.fig_label == selected_button_text:
+                self.deactivatePlottable(self.lastOpened)
                 self.activatePlottable(p)
+                break
             
     ## ##############################
     def update_plottables_window(self):
