@@ -62,9 +62,12 @@ class DecisionPlotter(LearningPlotter):
         target_decisions = []
         for hand in hands:
             if 'decisions' in hand:
-                hand_decisions = hand['decisions'][plottable.nn_key]
-                for d in hand_decisions:
-                    target_decisions.append(d[target])
+                if not (plottable.nn_key in hand['decisions']):
+                    print(f"plot_decision_histogram: no decisions for {plottable.nn_key} in hand {hand['hand_index']} of scenario {plottable.fig_label}")
+                else:
+                    hand_decisions = hand['decisions'][plottable.nn_key]
+                    for d in hand_decisions:
+                        target_decisions.append(d[target])
 
         DecisionPlotter.plot_histogram(target_decisions, 
                         bins, plottable.fig_label, 
@@ -102,6 +105,9 @@ class DecisionPlotter(LearningPlotter):
 
             if not (('decisions' in hand) 
                     and (len(hand['decisions'])>0)):
+                continue
+            if not (plottable.nn_key in hand['decisions']):
+                print(f"get_zeroes_by_hand: plot_zeroes_by_hand: no decisions for {plottable.nn_key} in hand {hand['hand_index']} of scenario {plottable.fig_label}")
                 continue
 
             if not plottable.nn_player['train']:
