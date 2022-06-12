@@ -304,7 +304,7 @@ class LearningPlotManager:
         return
 
     def onclick_radio_bogus(self,event):
-        print(f"onclick_radio_bogus(): event={event}")
+        #print(f"onclick_radio_bogus(): event={event}")
         #if event.inaxes == self.radio_buttons.ax:
         #    print("hit in self.radio_buttons.ax")
         if (not (event.xdata==None)):
@@ -322,7 +322,7 @@ class LearningPlotManager:
 
     ## ##############################
     def onclick_radio(self,event):
-        print(f"onclick_radio(): event={event}, self.radio_buttons.active={self.radio_buttons.active}")
+        #print(f"onclick_radio(): event={event}, self.radio_buttons.active={self.radio_buttons.active}")
         if self.radio_buttons.ignore(event):
             print(f"onclick_radio(): ignoring this event: {event}")
             return
