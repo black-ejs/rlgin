@@ -92,18 +92,13 @@ class LearningAnalyzer:
 
             plotManager = self.create_PlotManager(logParser.statsList, logParser.cumulative_average)
             scenario = self.get_first_figure(logParser.statsList)
-            # plotManager.activateFigure(scenario)
 
 
             gstart = time.time()
-            print(f"activating plottable {plotManager.plottables[0].fig_label}...")
             plottable = plotManager.activatePlottable(plotManager.plottables[0])
-            print(f"plottable {plottable.fig_label} activated.... {time.time()-gstart}s")
             if not plottable == plotManager.plottables[0]:
-                print("WTF")
-            print(f"showing plottables window...")
+                print(f"** WARNING ** at startup, activatePlottable(<{plotManager.plottables[0]}>) did not return the proper plottable")
             plotManager.show_plottables_window()
-            print(f"plotManager.plottables_window_is_open(): {plotManager.plottables_window_is_open()}....")
 
             #p=0
             while True:
