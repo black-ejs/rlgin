@@ -277,14 +277,12 @@ class LearningPlotManager:
         self.plottables_window_list_ax.set_axis_off()
         self.plottables_window_list_ax.set_frame_on(True)
         self.plottables_window_list_ax.set_facecolor('#44BBFF')
-        #self.plottables_window_list_ax.text(0.01, 0.01, s,
-        #plt.text(0.01, 0.01, s,
-        #        backgroundcolor='#FFFFAA',
-        #        fontsize=8)
-        # self.plottables_text = widgets.TextBox(self.plottables_window_ax, "", initial=s, color="yellow")
+
         self.radio_buttons = widgets.RadioButtons(self.plottables_window_list_ax,fig_labels)
-        self.radio_buttons.on_clicked(self.onclick_radio)
+        # self.radio_buttons.on_clicked(self.onclick_radio)
         self.bogus_connect = self.radio_buttons.connect_event('button_press_event',self.onclick_radio_bogus)
+        for lbl in self.radio_buttons.labels:
+            lbl.set_fontsize(8)
 
         #iii=0
         #for dd in self.radio_buttons.circles:
@@ -300,21 +298,22 @@ class LearningPlotManager:
         self.bnext = self.add_button('Next', self.onclickn)
         self.bprev = self.add_button('Prev', self.onclickp)
 
+        self.update_plottables_window()
         ## plt.show()            
         return
 
     def onclick_radio_bogus(self,event):
         #print(f"onclick_radio_bogus(): event={event}")
-        #if event.inaxes == self.radio_buttons.ax:
-        #    print("hit in self.radio_buttons.ax")
+        if event.inaxes == self.radio_buttons.ax:
+            print("hit in self.radio_buttons.ax")
         if (not (event.xdata==None)):
             target = None
             i=0
             for t in self.radio_buttons.labels:
-                if event.xdata>t.get_position()[0] and event.ydata<t.get_position()[1]:
+                contains_event, contains_info = t.contains(event)
+                if contains_event:
                     target = i
-                # print(f"self.radio_buttons.labels[{i}].get_clip_box()={t.get_clip_box()}")
-                # print(f"self.radio_buttons.labels[{i}].get_position()={t.get_position()}")
+                #print(f"self.radio_buttons.labels[{i}].get_position()={t.get_position()}")
                 i+=1
             if not (target==None):
                 # print(f"hit in target {target}, text is {self.radio_buttons.labels[target].get_text()}")
@@ -337,13 +336,15 @@ class LearningPlotManager:
             
     ## ##############################
     def update_plottables_window(self):
-        if self.plottables_window_is_open():
-            if self.lastOpened in self.plottables:
-                # active = self.plottables.index(self.lastOpened)
-                for i in range(len(self.radio_buttons.labels)):
-                    lbl = self.radio_buttons.labels[i].get_text()
-                    if lbl == self.lastOpened.fig_label:
-                        self.radio_buttons.set_active(i)
+        if not (self.plottables_window == None):
+            for i in range(len(self.radio_buttons.labels)):
+                lbl = self.radio_buttons.labels[i]
+                lbl.set_backgroundcolor("#0077FF")
+                if (self.lastOpened in self.plottables) and (
+                            lbl.get_text() == self.lastOpened.fig_label): 
+                    # active = self.plottables.index(self.lastOpened)
+                    self.radio_buttons.set_active(i)
+                    lbl.set_backgroundcolor("#00FF77")
             fig = plt.figure(LearningPlotManager.PLOTTABLE_LIST_FIG_ID)
             plt.draw()
             
