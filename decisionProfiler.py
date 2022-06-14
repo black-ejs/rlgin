@@ -375,7 +375,7 @@ import argparse
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser()
     argparser.add_argument('path_to_logfile',
-                    default='logs/bayesDqn-june.2.log', #'logs/convo.megalog', # 'logs/erw',  
+                    default='logs/bayesDqn-junea.megalog', #'logs/bayesDqn-june.2.log'
                     nargs='?', help='path to the logfile to be plotted')
     argparser.add_argument('include_partials',
                     default='False', 
