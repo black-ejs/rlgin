@@ -220,7 +220,11 @@ class LearningLogParser:
             ## end of hand
             self.parse_win_line(line)
         if "total_reward: [(" in line:
-            self.stats['total_reward'] = line[14:]
+            self.stats['total_reward'] = eval(line[14:])
+            for tw in self.stats['total_reward']:
+                playerName = tw[0]
+                playerTotal = tw[1]
+                self.nn_players[playerName]['total_reward'] = playerTotal
         if "winMap: " in line:
             cpos = line.find(",")
             x = cpos-1
