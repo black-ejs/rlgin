@@ -4,6 +4,8 @@ from re import I
 
 import matplotlib.pyplot as plt
 import matplotlib.widgets as widgets
+from matplotlib.gridspec import GridSpec
+
 from learningGin import NO_WIN_NAME
 
 import regressionPlotter
@@ -189,7 +191,7 @@ class LearningPlotManager:
         self.onclick_next_prev(event, 'n')
     def onclick_next_prev(self, event, direction):
 
-        # print(f"onclick: direction={direction} event={vars(event)}")
+        #print(f"onclick: direction={direction} event={vars(event)}")
         plottable = self.get_plottable(event)
         figure_id = plottable.fig_label
         # print(f'click: figure_id={figure_id}')
@@ -253,6 +255,7 @@ class LearningPlotManager:
     PLOTTABLE_LIST_FIG_ID = "plottables"
     PLOTTABLE_LIST_FIG_W = 4
     PLOTTABLE_LIST_FIG_H = 7
+    PLOTTABLE_LIST_ENTRIES = 20
     def show_plottables_window(self):
         
         if self.plottables_window_is_open():
@@ -264,48 +267,45 @@ class LearningPlotManager:
         else:
             self.plottables_window = plt.figure(LearningPlotManager.PLOTTABLE_LIST_FIG_ID, 
                                     figsize=(LearningPlotManager.PLOTTABLE_LIST_FIG_W,
-                                    LearningPlotManager.PLOTTABLE_LIST_FIG_H))
-        
-        fig_labels = []
-        s=""
-        for p in self.plottables:
-            fig_labels.append(p.fig_label)
-            s += p.fig_label + "\n"
+                                    LearningPlotManager.PLOTTABLE_LIST_FIG_H),
+                                    constrained_layout=True)
 
-        self.plottables_window_list_ax = self.plottables_window.add_subplot(10,1,(1,9),label="click to plot")
-        self.plottables_window.subplots_adjust(top=0.99, bottom=0.01, left=0.01, right=0.99, wspace=0.05, hspace=0.05)
+        gs = GridSpec(10,10, figure=self.plottables_window)        
+
+        # plottables list
+        self.plottables_window_list_ax = self.plottables_window.add_subplot(gs[0:-1,0:9])
         self.plottables_window_list_ax.set_axis_off()
         self.plottables_window_list_ax.set_frame_on(True)
-        self.plottables_window_list_ax.set_facecolor('#44BBFF')
 
-        self.radio_buttons = widgets.RadioButtons(self.plottables_window_list_ax,fig_labels)
-        # self.radio_buttons.on_clicked(self.onclick_radio)
-        self.bogus_connect = self.radio_buttons.connect_event('button_press_event',self.onclick_radio_bogus)
-        for lbl in self.radio_buttons.labels:
-            lbl.set_fontsize(8)
-
-        #iii=0
-        #for dd in self.radio_buttons.circles:
-        #    radius = dd.get_radius()
-        #    print(f"self.radio_buttons.circles[{iii}] radius={radius}")
-        #    iii +=1
-        #    dd.set(radius=max(radius, 0.004))
-
-        self.plottables_window_nav_ax = self.plottables_window.add_subplot(5,1,(1,4),label="click to plot")
+        # buttons
+        self.plottables_window_nav_ax = self.plottables_window.add_subplot(gs[-1,0:])
         self.plottables_window_nav_ax.set_axis_off()
         self.plottables_window_nav_ax.set_frame_on(False)
         self.last_button = 0
-        self.bnext = self.add_button('Next', self.onclickn)
-        self.bprev = self.add_button('Prev', self.onclickp)
+        self.bnext = self.add_button('Next', self.onclickn, ax=self.plottables_window_nav_ax)
+        self.bprev = self.add_button('Prev', self.onclickp, ax=self.plottables_window_nav_ax)
 
-        self.update_plottables_window()
+        # scrollbar
+        if len(self.plottables) > LearningPlotManager.PLOTTABLE_LIST_ENTRIES:
+            self.plottables_window_scroll_ax = self.plottables_window.add_subplot(gs[0:-1,-1:])
+            self.scroller = widgets.Slider(self.plottables_window_scroll_ax,
+                                            "",
+                                            0,
+                                            len(self.plottables)-LearningPlotManager.PLOTTABLE_LIST_ENTRIES,
+                                            valinit=len(self.plottables),
+                                            orientation="vertical",
+                                            valstep=1.0)
+            self.scroller.valtext.set_visible(False)                                        
+            self.scroller.on_changed(self.on_scroll_change)
+
+        # self.plottables_window.subplots_adjust(top=0.98, bottom=0.02, left=0.02, right=0.98, wspace=0.03, hspace=0.03)
+        self.scroll_plottables_list(0)
         ## plt.show()            
         return
 
+    ## ##############################
     def onclick_radio_bogus(self,event):
-        #print(f"onclick_radio_bogus(): event={event}")
-        if event.inaxes == self.radio_buttons.ax:
-            print("hit in self.radio_buttons.ax")
+        # print(f"onclick_radio_bogus(): event={event}")
         if (not (event.xdata==None)):
             target = None
             i=0
@@ -318,10 +318,21 @@ class LearningPlotManager:
             if not (target==None):
                 # print(f"hit in target {target}, text is {self.radio_buttons.labels[target].get_text()}")
                 self.onclick_radio(self.radio_buttons.labels[target].get_text())
+                return
+
+            contains_event, contains_info = self.bprev.ax.contains(event)
+            if contains_event:
+                self.onclickp(event)
+                return
+
+            contains_event, contains_info = self.bnext.ax.contains(event)
+            if contains_event:
+                self.onclickn(event)
+                return
 
     ## ##############################
     def onclick_radio(self,event):
-        #print(f"onclick_radio(): event={event}, self.radio_buttons.active={self.radio_buttons.active}")
+        # print(f"onclick_radio(): event={event}, self.radio_buttons.active={self.radio_buttons.active}")
         if self.radio_buttons.ignore(event):
             print(f"onclick_radio(): ignoring this event: {event}")
             return
@@ -334,6 +345,39 @@ class LearningPlotManager:
                 self.activatePlottable(p)
                 break
             
+    ## ##############################
+    def on_scroll_change(self,event):
+        # print(f"on_scroll_change(): event={event}")
+        pos=int(event)
+        pos=self.scroller.valmax-pos;
+        self.scroll_plottables_list(pos)
+
+    ## ##############################
+    def scroll_plottables_list(self,pos):
+        if pos>len(self.plottables)-LearningPlotManager.PLOTTABLE_LIST_ENTRIES:
+            pos = len(self.plottables)-LearningPlotManager.PLOTTABLE_LIST_ENTRIES
+        pos=0 if pos<0 else pos
+
+        fig_labels = []
+        for p in self.plottables[pos:]:
+            fig_labels.append(p.fig_label)
+            if len(fig_labels)==LearningPlotManager.PLOTTABLE_LIST_ENTRIES:
+                break
+
+        self.plottables_window_list_ax.clear()
+        self.radio_buttons = widgets.RadioButtons(self.plottables_window_list_ax,fig_labels)
+        # self.radio_buttons.on_clicked(self.onclick_radio)
+        self.bogus_connect = self.radio_buttons.connect_event('button_press_event',self.onclick_radio_bogus)
+        for lbl in self.radio_buttons.labels:
+            lbl.set_fontsize(8)
+        #iii=0
+        #for dd in self.radio_buttons.circles:
+        #    radius = dd.get_radius()
+        #    print(f"self.radio_buttons.circles[{iii}] radius={radius}")
+        #    iii +=1
+        #    dd.set(radius=max(radius, 0.004))
+        self.update_plottables_window()
+
     ## ##############################
     def update_plottables_window(self):
         if not (self.plottables_window == None):
@@ -445,14 +489,22 @@ class LearningPlotManager:
     BUTTON_WIDTH=0.1
     BUTTON_X_SPACE=0.02
     BUTTON_X_INC=BUTTON_WIDTH+BUTTON_X_SPACE
-    def add_button(self, label:(str)="?", onclick=None):
+    def add_button(self, label:(str)="?", onclick=None, ax:(plt.Axes)=None):
         # prev_fig = plt.gcf()
-        ax = plt.axes([
-                    1-((self.last_button+1)*LearningPlotManager.BUTTON_X_INC), 
-                    LearningPlotManager.BUTTON_Y, 
-                    LearningPlotManager.BUTTON_WIDTH, 
-                    LearningPlotManager.BUTTON_WIDTH])
-        button = widgets.Button(ax, label)
+
+        if (ax==None):
+            button_ax = plt.axes([
+                        1-((self.last_button+1)*LearningPlotManager.BUTTON_X_INC), 
+                        LearningPlotManager.BUTTON_Y, 
+                        LearningPlotManager.BUTTON_WIDTH, 
+                        LearningPlotManager.BUTTON_HEIGHT])
+        else:
+            button_ax = ax.inset_axes([
+                        1-((self.last_button+1)*LearningPlotManager.BUTTON_X_INC), 
+                        LearningPlotManager.BUTTON_Y, 
+                        LearningPlotManager.BUTTON_WIDTH, 
+                        0.9])
+        button = widgets.Button(button_ax, label)
         if not onclick==None:
             button.on_clicked(onclick)
         self.last_button += 1
