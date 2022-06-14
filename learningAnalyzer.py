@@ -34,14 +34,16 @@ class LearningAnalyzer:
         """
         maxlen = -100000
         for st in statsList:
-            maxlen = max(maxlen,len(st['name_scenarioz']))
+            maxlen = max(maxlen,len(st['name_scenario']))
         name_title = " name_scenario "
         while len(name_title) < maxlen-2:
             name_title = "-" + name_title + "-"
         """
-        print(f"total_reward\twpk\tma_last_slope  ma_full_slope\tcum_last_slope\tcum_ratio\tgen")
+        print(f"player          \ttotal_reward\twpk\tma_last_slope  ma_full_slope\tcum_last_slope\tcum_ratio\tgen")
 
         for st in statsList:
+            scenario_name = st['name_scenario']
+            scenario_players = st['scenario_players']
             star = ""
             if not 'wins2' in st:
                 star = "*"  # should only happen if "include_partials==True"
@@ -49,23 +51,25 @@ class LearningAnalyzer:
                 gen=st['generation']
             else:
                 gen='-'
-            print(f"{star}{st['name_scenario']}:")
-            for p in st['scenario_players']:
-                pparams = st['scenario_players'][p]
-                if pparams['name'] in st['nn_players']:
-                    nnparams = st['nn_players'][pparams['name']]
+            print(f"{star}{scenario_name}:")
+            for p in scenario_players:
+                pparams = scenario_players[p]
+                player_name = pparams['name']
+                nn_players = st['nn_players']
+                if player_name in nn_players:
+                    nnparams = nn_players[player_name]
                 else:
                     nnparams = None
-                print(f"'{pparams['name']}': {pparams['strategy']}")
+                line = f"'{player_name}': {pparams['strategy']}"
                 if not nnparams == None:
-                    print(f"{nnparams['total_reward']: 2.4f}  "
+                    line +=(f"\t{nnparams['total_reward']: 2.4f}  "
                             f"\t{nnparams['wins_per_1000_hands']:2.3f}"
                             f"\t{nnparams['moving_average_last_spline_slope']: 1.7f}  "
                             f"\t{nnparams['moving_average_overall_slope']: 1.7f}"
                             f"\t{nnparams['cumulative_wins_last_spline_slope']:1.7f}"
                             f"\t{nnparams['cumulative_wins_ratio']:1.3f}"
-                            f"\t{gen}"
-                    )
+                            f"\t{gen}")
+                print(line)
         print(f"{len(statsList)} scenarios sorted by {self.get_scenario_sort_key()}")    
 
     ## ##############################
@@ -130,7 +134,7 @@ import argparse
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser()
     argparser.add_argument('path_to_logfile',
-                    default='logs/bayesDqn-june.2.log', #'logs/dueling.scratch.log',  #'logs/mega2', 
+                    default='logs/oneBayes.log', #'logs/dueling.scratch.log',  #'logs/mega2', 
                     nargs='?', help='path to the logfile to be plotted')
     argparser.add_argument('include_partials',
                     default='False', 
