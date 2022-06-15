@@ -2,6 +2,7 @@ from typing import Union
 from collections.abc import Iterable
 import sys
 import math
+import statistics
 import copy
 
 import numpy as np
@@ -11,7 +12,7 @@ import matplotlib.widgets as widgets
 
 import regplot
 
-FIGURE_WIDTH = 10
+FIGURE_WIDTH = 9
 FIGURE_HEIGHT = 5
 
 ## #############################################
@@ -60,8 +61,11 @@ class RegressionPlotter:
                 color=None, 
                 label=None)
 
+        avg=statistics.mean(array_x)
+        std=statistics.stdev(array_x)
+
         if xlabel == None:
-            xlabel = "decision values"
+            xlabel = "decision values, avg={avg} std={std}"
         if ylabel == None:
             ylabel = "frequency"
         ax.set(xlabel=xlabel, ylabel=ylabel)
