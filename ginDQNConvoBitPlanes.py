@@ -61,7 +61,7 @@ class ginDQNConvoBitPlanes(ginDQN.ginDQN):
             self.setState(c, unknown_channel, out_of_play_channel)
 
         me = player
-        my_hand = ginhand.playing[me].playerHand
+        my_hand = ginhand.playing[me.name].playerHand
 
         if ginhand.discard == None:
             if pile_substitute == None:

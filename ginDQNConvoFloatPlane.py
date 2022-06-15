@@ -75,7 +75,7 @@ class ginDQNConvoFloatPlane(ginDQN.ginDQN):
             self.val2State(c, state, self.state_values['UNKNOWN'])
         
         me = player
-        my_hand = ginhand.playing[me].playerHand
+        my_hand = ginhand.playing[me.name].playerHand
 
         if ginhand.discard == None:
             if pile_substitute == None:

@@ -12,7 +12,9 @@ class ginDQNLinear(ginDQN.ginDQN):
     def __init__(self, params):
         super().__init__(params)
 
-    def get_state(self, ginhand, player, pile_substitute = None):
+    def get_state(self, ginhand:(gin.Hand), 
+                    player:(gin.Player),
+                    pile_substitute:(gin.Card) = None):
         """
         Return the state.
         The state is a numpy array of 53 values, representing:
@@ -38,7 +40,7 @@ class ginDQNLinear(ginDQN.ginDQN):
             state.append(self.state_values['UNKNOWN'])
 
         me = player
-        my_hand = ginhand.playing[me].playerHand
+        my_hand = ginhand.playing[me.name].playerHand
         top_of_pile = ginhand.firstPileCard
         for turn in ginhand.turns:
 
