@@ -31,6 +31,7 @@ def define_parameters():
     params['player1']['nn']['test'] = True
     params['player1']['nn']["load_weights"] = False          # False if starting from scratch, True if re-training 
     params['player1']['nn']['weights_path'] = 'weights/weights.nn-convf.h5'
+    params['player1']['nn']['use_cheat_rewards'] = False
 
     # PLAYER 2
     params['player2'] = {}
@@ -42,6 +43,7 @@ def define_parameters():
     params['player2']['nn']['test'] = True
     params['player2']['nn']["load_weights"] = False   # False if starting from scratch, True if re-training 
     params['player2']['nn']['weights_path'] = 'weights/weights.nn-linear.h5'
+    params['player2']['nn']['use_cheat_rewards'] = False
 
     # game structure
     params['extend_hands'] = True          # recycle discards when deck is exhausted, up to max_steps_per_hand
