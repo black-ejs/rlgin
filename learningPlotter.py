@@ -370,6 +370,7 @@ class LearningPlotManager:
         self.bogus_connect = self.radio_buttons.connect_event('button_press_event',self.onclick_radio_bogus)
         for lbl in self.radio_buttons.labels:
             lbl.set_fontsize(8)
+            lbl.set_color('white')
         #iii=0
         #for dd in self.radio_buttons.circles:
         #    radius = dd.get_radius()
@@ -388,7 +389,7 @@ class LearningPlotManager:
                             lbl.get_text() == self.lastOpened.fig_label): 
                     # active = self.plottables.index(self.lastOpened)
                     self.radio_buttons.set_active(i)
-                    lbl.set_backgroundcolor("#00FF77")
+                    lbl.set_backgroundcolor("#0000FF")
             fig = plt.figure(LearningPlotManager.PLOTTABLE_LIST_FIG_ID)
             plt.draw()
             
