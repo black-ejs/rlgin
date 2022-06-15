@@ -39,7 +39,7 @@ class ginDQN(DQNAgent):
         Return the reward.
         """
         self.reward = 0
-        if ginhand.playing[player].playerHand.wins():
+        if ginhand.playing[player.name].playerHand.wins():
             # I won!
             self.reward = self.win_reward
         elif ginhand.currentlyPlaying.playerHand.wins():
@@ -49,7 +49,32 @@ class ginDQN(DQNAgent):
             # no winner - not helping
             self.reward = self.no_winner_reward
 
+        if (('use_cheat_rewards' in self.params)
+                and (self.params['use_cheat_rewards'])):
+            self.reward = self.get_cheat_reward(ginhand, player,  self.reward)
+
         return self.reward
+
+    def get_cheat_reward(self, ginhand:(gin.GinHand), player, normal_reward):
+        if not hasattr(self, 'prev_cheat_score'):
+            self.prev_cheat_score = 0
+        if self.reward > 0:
+            return self.reward
+        myhand = ginhand.playing[player.name].playerHand
+        cards = []
+        pretty = myhand.prettyStr().split()
+        for cstr in pretty:
+            cards.append(gin.Card.fromStr(cstr))
+        size=0
+        for i in range(1,len(cards)):
+            if ((cards[i].rank == cards[i-1].rank+1) and 
+                        (cards[i].suit == cards[i-1].suit)):
+                size+=1 # run
+            if cards[i].rank == cards[i-1].rank:
+                size+=1 # match
+        cheat_score = float(size)/float(len(cards))
+        cheat_reward = cheat_score - self.prev_cheat_score
+        return cheat_reward
 
 ## ###############################################
 
