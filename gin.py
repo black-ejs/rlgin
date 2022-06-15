@@ -68,11 +68,16 @@ class Card:
 		return s>o
 
 	def toInt(self) -> int:
-		return self.suit*13 + self.rank;
+		return self.suit*NUM_RANKS + self.rank;
 
 	def fromInt(hval):
 		i=int(hval)
-		return Card(int(i)%int(NUM_RANKS),int(i)/int(13))
+		return Card(int(i)%int(NUM_RANKS),int(i)/int(NUM_RANKS))
+
+	def fromStr(hval:(str)):
+		rank = Card.rankNames.index(hval[:-1])
+		suit = Card.suitNames.index(hval[-1])
+		return Card(rank,suit)
 
 ## #################################################x
 class Hand:
@@ -353,9 +358,9 @@ class GinHand:
 		self.lifecycle_stage = GinHand.UNDEALT
 		self.playing = {}
 		self.playingOne = Playing(playerOne,strategyOne)
-		self.playing[playerOne] = self.playingOne
+		self.playing[playerOne.name] = self.playingOne
 		self.playingTwo = Playing(playerTwo,strategyTwo)
-		self.playing[playerTwo] = self.playingTwo
+		self.playing[playerTwo.name] = self.playingTwo
 		self.deck = Deck()
 		self.deck.shuffle()		
 		self.turns = []
