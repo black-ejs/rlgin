@@ -65,17 +65,20 @@ class DecisionPlotter(LearningPlotter):
                 if not (plottable.nn_key in hand['decisions']):
                     print(f"plot_decision_histogram: no decisions for {plottable.nn_key} in hand {hand['hand_index']} of scenario {plottable.fig_label}")
                 else:
-                    hand_decisions = hand['decisions'][plottable.nn_key]
-                    for d in hand_decisions:
-                        target_decisions.append(d[target])
+                    target_decisions.extend(hand['decisions'][plottable.nn_key])
+
+        if target==0:
+            xlabel = "draw decision (pile/deck)"
+        else:
+            xlabel = f"discard choice {target}"
 
         DecisionPlotter.plot_histogram(target_decisions, 
                         bins, plottable.fig_label, 
                         ylabel="Decision count",
-                        xlabel="decision {}".format(target))
+                        xlabel=xlabel)
 
     ## ##############################
-    def get_zeroes_by_hand(plottable:Plottable):
+    def get_zeroes_by_hand(plottable:Plottable, threshold:(float)=0):
         hands = plottable.st['hands']        
         array_zeroes = []
         array_ordinals = []
@@ -119,9 +122,10 @@ class DecisionPlotter(LearningPlotter):
             hand_decisions = hand['decisions'][plottable.nn_key]
             for d in hand_decisions:
                 # if d[target] == 0:
-                fakeZero = 1/10000
-                if d[target] < fakeZero and d[target] > -fakeZero:
+                if d[target] < threshold and d[target] > -threshold:
                     count_zeroes += 1
+            # threshold_50 = statistics.median(hand_decisions)
+                
             array_zeroes.append(count_zeroes/len(hand_decisions))
             array_ordinals.append(hand['hand_index'])
             if hand['winner'] == plottable.nn_key:
@@ -143,8 +147,9 @@ class DecisionPlotter(LearningPlotter):
     ####################################
     def plot_zeroes_by_hand(plottable:Plottable, 
                 win_filters:(list)=[True, True, True], 
-                crop_epsilon:(bool)=True):
-        arrays = DecisionPlotter.get_zeroes_by_hand(plottable)
+                crop_epsilon:(bool)=True,
+                threshold:(float)=0):
+        arrays = DecisionPlotter.get_zeroes_by_hand(plottable, threshold)
         array_zeroes = arrays[0]
         array_ordinals = arrays[1]
         array_winners = arrays[2]
@@ -264,7 +269,11 @@ class DecisionPlotManager(LearningPlotManager):
 
     def activatePlottable(self, plottable:Plottable):
         if 'zeroes' == plottable.plot:
-            DecisionPlotter.plot_zeroes_by_hand(plottable, self.win_filters, crop_epsilon=self.win_filters[3])            
+            threshold=(1/10000)
+            DecisionPlotter.plot_zeroes_by_hand(plottable, 
+                            self.win_filters, 
+                            crop_epsilon=self.win_filters[3],
+                            threshold=threshold)
             #self.lastOpened = plottable
             #self.install_plottable_navigation(plottable)
             rax = plt.axes([0.01, 0.01, 0.14, 0.12])
