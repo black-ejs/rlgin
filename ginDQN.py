@@ -74,6 +74,9 @@ class ginDQN(DQNAgent):
                 size+=1 # match
         cheat_score = float(size)/float(len(cards))
         cheat_reward = cheat_score - self.prev_cheat_score
+        if cheat_reward!=0:
+            print(f"cheat_reward={cheat_reward}, size={size} hand={myhand.prettyStr()}  prev={self.prev_cheat_score}")
+        self.prev_cheat_score = cheat_score
         return cheat_reward
 
 ## ###############################################
