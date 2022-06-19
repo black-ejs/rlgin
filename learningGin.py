@@ -229,6 +229,7 @@ def run(params):
     stats.put('winMap', winMap)
 
     print(f"--- SCENARIO START at {stats.get('run_timestamp')} ---")
+    print(params)
 
     startTime = time.time()
     while counter_hands < params['episodes']:
