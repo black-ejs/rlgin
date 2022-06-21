@@ -1,5 +1,6 @@
 from collections.abc import Iterable
 import distutils.util
+import statistics
 
 import matplotlib.pyplot as plt
 import matplotlib.widgets as widgets
@@ -23,30 +24,6 @@ class DecisionPlotter(LearningPlotter):
     ## ##############################
     def plot_decision_histogram(plottable:Plottable):
         hands = plottable.st['hands']        
-        bins_l = [-0.4]
-        divs = 1000
-        inc = -(bins_l[0])/divs
-        divs2 = 1000
-        inc2 = inc/divs2
-        next = bins_l[-1]
-        for i in range(divs):
-            bins_l.append(next)
-            next += inc
-        next = bins_l[-1]
-        for i in range(divs2):
-            bins_l.append(next)
-            next += inc2
-        bins_l.append(0)
-        next = bins_l[-1]
-        for i in range(divs2):
-            bins_l.append(next)
-            next += inc2
-        next = bins_l[-1]
-        for i in range(divs):
-            bins_l.append(next)
-            next += inc
-
-        bins = bins_l
 
         decision_count = DecisionPlotter.get_decision_count(plottable)
         if decision_count == -1:
@@ -65,17 +42,42 @@ class DecisionPlotter(LearningPlotter):
                 if not (plottable.nn_key in hand['decisions']):
                     print(f"plot_decision_histogram: no decisions for {plottable.nn_key} in hand {hand['hand_index']} of scenario {plottable.fig_label}")
                 else:
-                    target_decisions.extend(hand['decisions'][plottable.nn_key])
+                    hand_decisions = hand['decisions'][plottable.nn_key]
+                    for d in hand_decisions:
+                        target_decisions.append(d[target])
+
+        avg=statistics.mean(target_decisions)
+        std=statistics.stdev(target_decisions)
+
+        bins = DecisionPlotter.get_histogram_bins(target_decisions, avg, std)
 
         if target==0:
-            xlabel = "draw decision (pile/deck)"
+            xlabel = "draw decision (pile or deck)"
         else:
             xlabel = f"discard choice {target}"
+        xlabel += f", avg={avg:0.4f} std={std:0.4f}"
 
         DecisionPlotter.plot_histogram(target_decisions, 
                         bins, plottable.fig_label, 
                         ylabel="Decision count",
                         xlabel=xlabel)
+
+    def get_histogram_bins(data, avg, std):
+        divs = 2000
+        lower_limit = avg - std*100.0
+        upper_limit = avg + std*100.0
+        counter_start = avg - std*3.0
+        counter_end = avg + std*3.0
+        bins_l = [lower_limit, counter_start]
+        inc = (counter_end - counter_start)/divs
+
+        next = bins_l[-1]
+        for i in range(divs):
+            next += inc
+            bins_l.append(next)
+        bins_l.append(upper_limit)
+
+        return bins_l
 
     ## ##############################
     def get_zeroes_by_hand(plottable:Plottable, threshold:(float)=0):
@@ -384,7 +386,7 @@ import argparse
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser()
     argparser.add_argument('path_to_logfile',
-                    default='logs/bayesDqn-junea.megalog', #'logs/bayesDqn-june.2.log'
+                    default='logs/cheat_rewards.2.log', #'logs/bayesDqn-june.2.log'
                     nargs='?', help='path to the logfile to be plotted')
     argparser.add_argument('include_partials',
                     default='False', 

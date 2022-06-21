@@ -2,7 +2,6 @@ from typing import Union
 from collections.abc import Iterable
 import sys
 import math
-import statistics
 import copy
 
 import numpy as np
@@ -45,7 +44,7 @@ class RegressionPlotter:
 
         figure = plt.figure(figure_id, figsize=(FIGURE_WIDTH,FIGURE_HEIGHT))
         ax = figure.gca()
-
+        
         plt.hist(array_x, 
                 bins=bins, 
                 range=None, 
@@ -61,15 +60,7 @@ class RegressionPlotter:
                 color=None, 
                 label=None)
 
-        avg=statistics.mean(array_x)
-        std=statistics.stdev(array_x)
-
-        if xlabel == None:
-            xlabel = "decision values, avg={avg} std={std}"
-        if ylabel == None:
-            ylabel = "frequency"
         ax.set(xlabel=xlabel, ylabel=ylabel)
-
         plt.draw()
 
         return 
