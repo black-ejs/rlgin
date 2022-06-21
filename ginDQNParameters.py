@@ -5,7 +5,7 @@ def define_parameters():
     timestamp = str(datetime.datetime.now().strftime("%Y%m%d%H%M%S"))
     params = dict()
 
-    params['episodes'] = 5                  # gin hands
+    params['episodes'] = 50                  # gin hands
 
     # nn-common
     params['nn-common'] = {}
@@ -26,23 +26,23 @@ def define_parameters():
     # params['player1']['strategy'] = 'br90'
     params['player1']['strategy'] = 'nn-linear'
     params['player1']['nn'] = copy.deepcopy(params['nn-common'])
-    params['player1']['nn']['layer_sizes'] = [88, 300, 20]   # 'hidden'/interior layers - per bayesDqn.py April 2022
+    params['player1']['nn']['layer_sizes'] = [100, 300, 50]   # 'hidden'/interior layers - per bayesDqn.py April 2022
     params['player1']['nn']['train'] = True
     params['player1']['nn']['test'] = True
     params['player1']['nn']["load_weights"] = False          # False if starting from scratch, True if re-training 
-    params['player1']['nn']['weights_path'] = 'weights/weights.nn-convf.h5'
+    params['player1']['nn']['weights_path'] = "weights/weights." + params['player1']['strategy']  + ".h5"
     params['player1']['nn']['use_cheat_rewards'] = False
 
     # PLAYER 2
     params['player2'] = {}
     params['player2']['name'] = 'Tempo'
-    params['player2']['strategy'] = 'nn-convb'
+    params['player2']['strategy'] = 'nn-convf'
     params['player2']['nn'] = copy.deepcopy(params['nn-common'])
     params['player2']['nn']['layer_sizes'] = [100, 50, 20]  # 'hidden'/interior layers - per bayesDqn.py April 2022
     params['player2']['nn']['train'] = True
     params['player2']['nn']['test'] = True
     params['player2']['nn']["load_weights"] = False   # False if starting from scratch, True if re-training 
-    params['player2']['nn']['weights_path'] = 'weights/weights.nn-linear.h5'
+    params['player2']['nn']['weights_path'] = "weights/weights." + params['player2']['strategy']  + ".h5"
     params['player2']['nn']['use_cheat_rewards'] = False
 
     # game structure
