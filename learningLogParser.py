@@ -336,9 +336,17 @@ class LearningLogParser:
                 tot1 += (st['wins1']-mean_wins_1)**2
                 tot2 += (st['wins2']-mean_wins_2)**2
         score_stats['std_wins_1']=math.sqrt(tot1/count_scenarios)
-        score_stats['cv_wins_1']=math.sqrt(tot1/count_scenarios)/mean_wins_1
         score_stats['std_wins_2']=math.sqrt(tot2/count_scenarios)
-        score_stats['cv_wins_2']=math.sqrt(tot2/count_scenarios)/mean_wins_2
+        if mean_wins_1>0:
+            cv_wins_1 = math.sqrt(tot1/count_scenarios)/mean_wins_1
+        else:
+            cv_wins_1 = 0
+        score_stats['cv_wins_1']=cv_wins_1
+        if mean_wins_2>0:
+            cv_wins_2 = math.sqrt(tot2/count_scenarios)/mean_wins_2
+        else:
+            cv_wins_2 = 0
+        score_stats['cv_wins_2']=cv_wins_2
         max_cum_len = 0
         for ca in self.cumulative_averages:
             max_cum_len = max(max_cum_len,len(ca))
