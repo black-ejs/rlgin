@@ -13,7 +13,7 @@ import regressionPlotter
 import benchmarks
 import gin
 
-MA_SIZE = 50
+MA_SIZE = 200
 
 ## #############################################
 ## #############################################
@@ -37,6 +37,14 @@ class LearningLogParser:
         self.stats['nn_players'] = self.nn_players
         ma_arrays = {}
         for p in self.nn_players.values():
+            if 'mode' in self.stats:
+                if p[self.stats['mode']]:  # e.g. p['train']==True
+                    p['mode']=self.stats['mode']
+                else:
+                    p['mode']="idle" 
+            else:
+                p['mode']="idle" 
+
             if len(p['ma_array']) == 0:
                 # we never made it to the window
                 # dummy something up to avoid problems
@@ -209,7 +217,7 @@ class LearningLogParser:
                 self.save_training_session()
             self.init_training_session()
         if "Training.." in line:
-            self.stats['mode']='train'
+            self.stats['mode']="train"
             self.stats['name_scenario'] += '.' + self.stats['mode']
         if "Testing.." in line:
             self.stats['mode']='test'

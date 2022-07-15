@@ -276,8 +276,6 @@ class DecisionPlotManager(LearningPlotManager):
                             self.win_filters, 
                             crop_epsilon=self.win_filters[3],
                             threshold=threshold)
-            #self.lastOpened = plottable
-            #self.install_plottable_navigation(plottable)
             rax = plt.axes([0.01, 0.01, 0.14, 0.12])
             self.win_filter_checkbuttonsa = widgets.CheckButtons(
                                                 rax,

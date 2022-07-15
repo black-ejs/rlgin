@@ -11,7 +11,7 @@ from learningGin import NO_WIN_NAME
 import regressionPlotter
 import benchmarks
 
-MA_SIZE = 50
+MA_SIZE = 200
 
 ## #############################################
 ## #############################################
@@ -26,7 +26,13 @@ class Plottable:
         self.nn_key = nn_key
         self.nn_player = st['nn_players'][nn_key]
         self.pid = self.nn_player['pid']
-        self.fig_label = f"{plot}-bo{st['st_id']}-{nn_key}-{self.nn_player['strategy']}"
+        self.fig_label =   (f"{self.plot}"
+                          + f"-bo{st['st_id']}" 
+                          + f"-{self.nn_key}"
+                          + f"-{self.nn_player['strategy']}"
+                          + f"_{self.nn_player['mode']}"
+                          + f"_{self.st['scenario_players'][self.nn_key]['wins']}w"
+                            )
 
     def get(self, key:(str)):
         for dic in (self.nn_player, 
@@ -46,14 +52,24 @@ class Plottable:
         return False  
 
     def __lt__(self, other):
-        if self.st['name_scenario'] > other.st['name_scenario']:
+        mywins = self.st['scenario_players'][self.nn_key]['wins'] 
+        otherwins = other.st['scenario_players'][other.nn_key]['wins']
+        if mywins < otherwins:
             return False
-        if self.st['name_scenario'] < other.st['name_scenario']:
+        if mywins > otherwins:
+            return True
+        if self.st['st_id'] > other.st['st_id']:
+            return False
+        if self.st['st_id'] < other.st['st_id']:
             return True
         if self.nn_key > other.nn_key:
             return False
         if self.nn_key < other.nn_key:
             return True
+        if self.nn_player['mode'] > other.nn_player['mode']: 
+            return True # want "train" before "test"
+        if self.nn_player['mode'] < other.nn_player['mode']: 
+            return False # want "train" before "test"
         return self.plot < other.plot
 
 ## #############################################
@@ -219,7 +235,7 @@ class LearningPlotManager:
             plottable = self.get_plottable(event)
             if plottable == None:
                 return
-            self.show_params(plottable.st)
+            self.show_params(plottable)
         self.update_plottables_window()
 
     ## ##############################
@@ -416,7 +432,8 @@ class LearningPlotManager:
     PARAMS_LINE_MAX = 200
 
     ## ##############################
-    def show_params(self,st):
+    def show_params(self, plottable:Plottable):
+        st = plottable.st
         if not 'params' in st:
             print(f"no params available for scenario {st['name_scenario']}")
             return
@@ -424,36 +441,50 @@ class LearningPlotManager:
                     figsize=(LearningPlotManager.PARAMS_FIG_W,LearningPlotManager.PARAMS_FIG_H))
         
         params = st['params']
+        scenario_players = st['scenario_players']
+        for player in scenario_players.values():
+            if player['pid'] == plottable.pid:
+                my_player_str = self.chunk_player(player, params)
+            else:
+                opponent_str = self.chunk_player(player, params)
+            
+        s = "--- my player ---\n" + my_player_str
+        self.params_axL = fig.add_subplot(1,3,1)
+        fig.subplots_adjust(left=0.01, bottom=0.01, right=0.99, top=0.99)
+        self.params_axL.set_axis_off()
+        self.params_axL.set_frame_on(True)
+        self.params_axL.text(0.01, 0.01, s,
+                backgroundcolor='#FFFF88',
+                fontsize=8)
+
         s = ""
         for key in params.keys():
-            #p = f"{key}: haha\n" 
+            if key in ('hands', 'ma_array', 'ma_arrays', 'ma_window', 'nn_players', 'nn-common', 'player2', 'player1'):
+                continue
             p = f"{key}: {params[key]}\n"
             s = self.chunk_string(s, p)
 
-        s += f"   ---   ---   ---\n"
-        bullshit = ""
         for key in st.keys():
-            if key in ['hands', 'params', "ma_array", "ma_arrays", "ma_window", 'nn_players'] or key in params:
+            if key in ['hands', 'params', "ma_array", "ma_arrays", "ma_window", 'nn_players', 'nn_common', 'scenario_players'] or key in params:
                 continue
-            if key == 'scenario_players':
-                my_players = copy.deepcopy(st[key])
-                for ppp in my_players.values():
-                    if 'nn' in ppp:
-                        nnn = ppp['nn']
-                        for kkk in ('ma_array','ma_window'):
-                            if kkk in nnn:
-                                nnn.pop(kkk)
-                p = f"{key}: {my_players}\n"
-            else:
-                #p = f"{key}: hoho\n" 
-                p = f"{key}: {st[key]}\n"
+            p = f"{key}: {st[key]}\n"
             s = self.chunk_string(s, p)
 
-        self.params_ax = fig.add_subplot()
+        self.params_axM = fig.add_subplot(1,3,2)
         fig.subplots_adjust(left=0.01, bottom=0.01, right=0.99, top=0.99)
-        self.params_ax.set_axis_off()
-        self.params_ax.set_frame_on(True)
-        self.params_ax.text(0.01, 0.01, s,
+        self.params_axM.set_axis_off()
+        self.params_axM.set_frame_on(True)
+        self.params_axM.text(0.01, 0.01, s,
+                backgroundcolor='#FFFF88',
+                fontsize=8)
+
+        s = "--- opponent ---\n" + opponent_str
+
+        self.params_axR = fig.add_subplot(1,3,3)
+        fig.subplots_adjust(left=0.01, bottom=0.01, right=0.99, top=0.99)
+        self.params_axR.set_axis_off()
+        self.params_axR.set_frame_on(True)
+        self.params_axR.text(0.01, 0.01, s,
                 backgroundcolor='#FFFF88',
                 fontsize=8)
         #plt.text(0.01, 0.01, s,
@@ -463,6 +494,28 @@ class LearningPlotManager:
         #plt.show()            
         plt.draw()            
         return
+
+    ## ##############################
+    def chunk_player(self, player, params):
+        s = ""
+        pp=""
+        nn=""
+        for kkk in player.keys():
+            if kkk in ['hands', 'params', "ma_array", "ma_arrays", "ma_window", 'nn_players', 'nn-common'] or kkk in params:
+                continue
+            if kkk == 'nn':
+                nnn = player[kkk]
+                for lll in nnn.keys():
+                    if lll in ['hands', 'params', "ma_array", "ma_arrays", "ma_window", 'nn_players', 'nn-common'] or lll in params:
+                        continue
+                    nn += f"{lll}: {nnn[lll]}\n"
+            else:
+                pp += f"{kkk}: {player[kkk]}\n"
+        s = self.chunk_string(s, pp)
+        s += f"   ---   ---   ---\n"
+        s = self.chunk_string(s, nn)
+        return s
+
     ## ##############################
     # avoid matplotlib bug with wrapping long text
     def chunk_string(self, s, p):

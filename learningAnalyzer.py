@@ -6,8 +6,6 @@ from learningGin import NO_WIN_NAME
 from learningLogParser import LearningLogParser
 from learningPlotter import LearningPlotManager, LearningPlotter
 
-MA_SIZE = 50
-
 ## #############################################
 ## #############################################
 ## #############################################
@@ -102,6 +100,7 @@ class LearningAnalyzer:
             plottable = plotManager.activatePlottable(plotManager.plottables[0])
             if not plottable == plotManager.plottables[0]:
                 print(f"** WARNING ** at startup, activatePlottable(<{plotManager.plottables[0]}>) did not return the proper plottable")
+            print(f"show time...")
             plotManager.show_plottables_window()
 
             #p=0
