@@ -310,9 +310,40 @@ def run(params):
     stats.put("stdev_turns", stdev_turns)
     stats.put("mean_durations", mean_durations)
     stats.put("stdev_durations", stdev_durations)
-    stats.put("stdev_durations", stdev_durations)
 
     return stats
+
+## #############################################
+def run_train_test(params):
+    start_time = time.time()
+    print(f"****** learningGin execution at {datetime.datetime.now()} ")
+    print(f"params: {params}")
+
+    do_train = False
+    for p in ('player1', 'player2'):
+        if ('nn' in params[p]) and ('train' in params[p]['nn']):
+            do_train = (do_train or params[p]['nn']['train'])
+    if do_train:
+        print("Training...")
+        stats = run(params) 
+        print_stats(stats)
+
+    do_test = False
+    for p in ('player1', 'player2'):
+        if ('nn' in params[p]) and ('test' in params[p]['nn']):
+            test_param = params[p]['nn']['test']
+            if test_param:
+                params[p]['nn']['train'] = False
+                params[p]['nn']['load_weights'] = True 
+                do_test = True
+    if do_test:
+        print("Testing...")
+        if 'test_epsiodes' in params:
+            params['episodes'] = params['test_episodes']
+        stats = run(params)  
+        print_stats(stats)
+
+    print(f"****** learningGin execution took {time.time() - start_time} seconds")
 
 ## #############################################
 if __name__ == '__main__':
@@ -326,20 +357,20 @@ if __name__ == '__main__':
     args = parser.parse_args()
     print("learningGin: args ", args)
 
+    params = ginDQNParameters.define_parameters()
+    params['display'] = True
+
+    if args.episodes != -1:
+        params['episodes'] = args.episodes
+    if args.name_scenario != None:
+        params['name_scenario'] = args.name_scenario
+    if not (args.logfile == None):
+        params['log_path'] = args.logfile        
+
     old_stdout = None
     log = None
     try:
-
-        params = ginDQNParameters.define_parameters()
-        params['display'] = True
-
-        if args.episodes != -1:
-            params['episodes'] = args.episodes
-        if args.name_scenario != None:
-            params['name_scenario'] = args.name_scenario
-
-        if not (args.logfile == None):
-            params['log_path'] = args.logfile        
+            
         if 'log_path' in params:
             log_path = params['log_path']
             if len(log_path)>0:
@@ -348,35 +379,7 @@ if __name__ == '__main__':
                     old_stdout = sys.stdout
                     sys.stdout = log
 
-        start_time = time.time()
-        print(f"****** learningGin execution at {datetime.datetime.now()} ")
-        print(f"params: {params}")
-
-        do_train = False
-        for p in ('player1', 'player2'):
-            if ('nn' in params[p]) and ('train' in params[p]['nn']):
-                do_train = (do_train or params[p]['nn']['train'])
-        if do_train:
-            print("Training...")
-            stats = run(params) 
-            print_stats(stats)
-
-        do_test = False
-        for p in ('player1', 'player2'):
-            if ('nn' in params[p]) and ('test' in params[p]['nn']):
-                test_param = params[p]['nn']['test']
-                if test_param:
-                    params[p]['nn']['train'] = False
-                    params[p]['nn']['load_weights'] = True 
-                    do_test = True
-        if do_test:
-            print("Testing...")
-            if 'test_epsiodes' in params:
-                params['episodes'] = params['test_episodes']
-            stats = run(params)  
-            print_stats(stats)
-
-        print(f"****** learningGin execution took {time.time() - start_time} seconds")
+        run_train_test(params)
 
     finally:
         if not old_stdout == None:
