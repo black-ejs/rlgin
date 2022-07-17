@@ -10,9 +10,8 @@ def define_parameters():
     # nn-common
     params['nn-common'] = {}
     params['nn-common']['gamma'] = 0.99                  # value of future rewards
-    params['nn-common']['gamma'] = 0.99                  # value of future rewards
-    params['nn-common']['epsilon_decay_linear'] = 100/params['episodes']   # while learning, how quickly randomness decreases in each hand - per bayesDqn.py April 2022
-    params['nn-common']['learning_rate'] = 0.0001        # how aggressively to modify weights - per bayesDqn.py April 2022
+    params['nn-common']['epsilon_decay_linear'] = 100/params['episodes']   # while learning, how quickly randomness decreases in each hand 
+    params['nn-common']['learning_rate'] = 0.001         # how aggressively to modify weights
     params['nn-common']['noise_epsilon'] = 1/500         # randomness in actions when not training
     params['nn-common']['memory_size'] = 25000
     params['nn-common']['batch_size'] = 2500
@@ -24,9 +23,9 @@ def define_parameters():
     params['player1'] = {}
     params['player1']['name'] = 'Primo'
     # params['player1']['strategy'] = 'br90'
-    params['player1']['strategy'] = 'nn-linear'
+    params['player1']['strategy'] = 'nn-linearb'
     params['player1']['nn'] = copy.deepcopy(params['nn-common'])
-    params['player1']['nn']['layer_sizes'] = [100, 300, 50]   # 'hidden'/interior layers - per bayesDqn.py April 2022
+    params['player1']['nn']['layer_sizes'] = [312, 800, 50]   # 'hidden'/interior layers - per bayesDqn.py April 2022
     params['player1']['nn']['train'] = True
     params['player1']['nn']['test'] = True
     params['player1']['nn']["load_weights"] = False          # False if starting from scratch, True if re-training 
@@ -36,9 +35,9 @@ def define_parameters():
     # PLAYER 2
     params['player2'] = {}
     params['player2']['name'] = 'Tempo'
-    params['player2']['strategy'] = 'nn-convf'
+    params['player2']['strategy'] = 'nn-convb'
     params['player2']['nn'] = copy.deepcopy(params['nn-common'])
-    params['player2']['nn']['layer_sizes'] = [100, 50, 20]  # 'hidden'/interior layers - per bayesDqn.py April 2022
+    params['player2']['nn']['layer_sizes'] = [100, 400, 20]  # 'hidden'/interior layers - per bayesDqn.py April 2022
     params['player2']['nn']['train'] = True
     params['player2']['nn']['test'] = True
     params['player2']['nn']["load_weights"] = False   # False if starting from scratch, True if re-training 
