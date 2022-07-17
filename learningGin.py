@@ -19,6 +19,7 @@ import ginDQNParameters
 from ginDQNConvoBitPlanes import ginDQNConvoBitPlanes
 from ginDQNConvoFloatPlane import ginDQNConvoFloatPlane
 from ginDQNLinear import ginDQNLinear
+from ginDQNLinearB import ginDQNLinearB
 NO_WIN_NAME = 'nobody'
 
 ## #############################################
@@ -66,6 +67,8 @@ class learningPlayer:
 
         if self.strategy == "nn-linear":
             ginDQN = ginDQNLinear(params)
+        elif self.strategy == "nn-linearb":
+            ginDQN = ginDQNLinearB(params)
         elif self.strategy == "nn-convf":
             ginDQN = ginDQNConvoFloatPlane(params)
         elif self.strategy == "nn-convb":
