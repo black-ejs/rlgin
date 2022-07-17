@@ -1,7 +1,3 @@
-import random
-import torch
-DEVICE = 'cpu' # 'cuda' if torch.cuda.is_available() else 'cpu'
-
 from DQN import DQNAgent
 import gin
 import ginDQN
@@ -15,10 +11,21 @@ class ginDQNLinearB(ginDQN.ginDQN):
     def get_state(self, ginhand:(gin.Hand), 
                     player:(gin.Player),
                     pile_substitute:(gin.Card) = None):
-        return ginDQNBitPlanes.get_state(ginhand,player,pile_substitute)
+        tensor_state = ginDQNBitPlanes.get_state(ginhand,player,pile_substitute)
+        # flatten it
+        state = []
+        for channel in tensor_state:
+            for row in channel:
+                state.extend(row)
+        return  DQNAgent.as_numpy_array(state)
 
     def init_input_size(self,params):
-        return ginDQNBitPlanes.calc_input_size()
+        plane_sizes = ginDQNBitPlanes.calc_input_size(params)
+        rez = 1
+        for sz in plane_sizes:
+            rez *= sz
+        self.input_size=rez
+
 
     
 

@@ -1,3 +1,4 @@
+from collections.abc import Iterable
 import random
 import torch
 import torch.nn as nn
@@ -83,6 +84,8 @@ class ginDQN(DQNAgent):
 
     def init_input_size(self,params):
         self.input_size = params['input_size']
+        if isinstance(self.input_size,Iterable):
+            self.input_size = tuple(self.input_size)
 
     def create_layers(self):
         # Layers

@@ -59,7 +59,7 @@ class ginDQNConvoBitPlanes(ginDQN.ginDQN):
     ## ###############################################
 
     def init_input_size(self,params):
-        self.input_size = ginDQNBitPlanes.calc_input_size()
+        self.input_size = ginDQNBitPlanes.calc_input_size(params)
 
     def forward(self, x):
         # Conv2D layer

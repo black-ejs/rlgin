@@ -103,5 +103,5 @@ class ginDQNBitPlanes():
         input_size.append(ginDQNBitPlanes.CONVO_BATCHSIZE)
         input_size.append(ginDQNBitPlanes.CONVO_INPUT_CHANNELS)
         input_size.extend(ginDQNBitPlanes.CONVO_INPUT_CHANNEL_SIZE)
-        return input_size
+        return tuple(input_size)
 
