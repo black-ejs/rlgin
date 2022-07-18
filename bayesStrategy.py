@@ -5,15 +5,16 @@ import ginDQNParameters
 from bayesOpt import TrainingBayesianOptimizer
 
 TRAIN_EPISODES = 5
-MAX_ITER = 25
-INITIAL_ITERS = 25
+MAX_ITER = 50
+INITIAL_ITERS = 40
+BR90_PROBABILITY = 0.25
 #################################################################
 #   optimizes the parameter sets used by the learningGin module #
 #               Sets the  parameters for Bayesian Optimization  #
 #################################################################
 class StrategyBayesianOptimizer(TrainingBayesianOptimizer):
     STRATEGIES = ('nn-convf', 'nn-convb', 
-                    'nn-linear', 'nn-linearb', 'br90')
+                    'nn-linear', 'nn-linearb')
     def __init__(self, params, optim_params):
         super().__init__(params, optim_params)
 
@@ -30,6 +31,7 @@ class StrategyBayesianOptimizer(TrainingBayesianOptimizer):
                 gamma_str='{:.6f}'.format(float(pparams['gamma']))[2:]
                 name_scenario += '_' + gamma_str
 
+        print(f"bayesStrategy: name_scenario is {name_scenario  }")
         return name_scenario                    
 
     def copy_inputs_to_params(self, inputs:(list),target_params:(dict)):
@@ -67,7 +69,10 @@ class StrategyBayesianOptimizer(TrainingBayesianOptimizer):
                 key = name[:-1]
                 target = player_inputs[int(name[-1])-1]
                 if key == 'strategy':
-                    target[key] = StrategyBayesianOptimizer.STRATEGIES[int(inputs[i])]
+                    if random.random() > BR90_PROBABILITY:
+                        target[key] = StrategyBayesianOptimizer.STRATEGIES[int(inputs[i])]
+                    else:
+                        target[key] = 'br90'
                 else:
                     target[key] = inputs[i]
             else:
