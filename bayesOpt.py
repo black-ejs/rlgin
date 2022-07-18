@@ -90,6 +90,7 @@ class TrainingBayesianOptimizer():
 
         bayes_optimizer = BayesianOptimization(f=optimize,
                                                domain=self.optim_params,
+                                               # model_type="RF",
                                                initial_design_numdata=initial_iters,
                                                acquisition_type="EI",
                                                exact_feval=True,
