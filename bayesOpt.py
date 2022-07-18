@@ -1,5 +1,6 @@
 import sys
 import time
+import copy
 import learningGin
 from GPyOpt.methods import BayesianOptimization
 
@@ -15,7 +16,7 @@ from GPyOpt.methods import BayesianOptimization
 ################################################
 class TrainingBayesianOptimizer():
     def __init__(self, params, optim_params):
-        self.params = params
+        self.params = copy.deepcopy(params)
         self.optim_params = optim_params
         self.scenario_count = 0
 
@@ -66,7 +67,7 @@ class TrainingBayesianOptimizer():
 
             # run one scenario
             startTime = time.time()
-            stats = learningGin.run(self.params)
+            stats = learningGin.run(copy.deepcopy(self.params))
             self.scenario_count += 1
             duration = time.time() - startTime
             stats.put('duration',duration)

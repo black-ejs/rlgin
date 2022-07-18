@@ -6,13 +6,14 @@ from bayesOpt import TrainingBayesianOptimizer
 
 TRAIN_EPISODES = 5
 MAX_ITER = 25
-INITIAL_ITERS = 6
+INITIAL_ITERS = 25
 #################################################################
 #   optimizes the parameter sets used by the learningGin module #
 #               Sets the  parameters for Bayesian Optimization  #
 #################################################################
-class DQNBayesianOptimizer(TrainingBayesianOptimizer):
-    STRATEGIES = ('nn-convf', 'nn-convb', 'nn-linear', 'nn-linearb', 'br90')
+class StrategyBayesianOptimizer(TrainingBayesianOptimizer):
+    STRATEGIES = ('nn-convf', 'nn-convb', 
+                    'nn-linear', 'nn-linearb', 'br90')
     def __init__(self, params, optim_params):
         super().__init__(params, optim_params)
 
@@ -66,7 +67,7 @@ class DQNBayesianOptimizer(TrainingBayesianOptimizer):
                 key = name[:-1]
                 target = player_inputs[int(name[-1])-1]
                 if key == 'strategy':
-                    target[key] = DQNBayesianOptimizer.STRATEGIES[int(inputs[i])]
+                    target[key] = StrategyBayesianOptimizer.STRATEGIES[int(inputs[i])]
                 else:
                     target[key] = inputs[i]
             else:
@@ -75,7 +76,9 @@ class DQNBayesianOptimizer(TrainingBayesianOptimizer):
         return player_inputs, nonplayer_inputs
 
     def getta_gamma(self, scale):
-        g = 1 - (random.random() * (10**-scale))
+        
+        my_scale = float(scale)
+        g = 1 - (random.random() * (10**-my_scale))
         g = round(g,5)
         return g
 
@@ -96,7 +99,7 @@ if __name__ == '__main__':
 
     # list of indexes for strategies (bayesian params seemingly cannot be strings?)
     strategies = []
-    for i in range(len(DQNBayesianOptimizer.STRATEGIES)):
+    for i in range(len(StrategyBayesianOptimizer.STRATEGIES)):
         strategies.append(i)
 
     # initialize bayesian parameter list
@@ -114,7 +117,7 @@ if __name__ == '__main__':
             target_param = copy.deepcopy(op)
             target_param['name'] += player 
             optim_params.append(target_param)
-    bayesOpt = DQNBayesianOptimizer(params, optim_params)
+    bayesOpt = StrategyBayesianOptimizer(params, optim_params)
     bayesOpt.optimize_RL(max_iter=MAX_ITER, initial_iters=INITIAL_ITERS)
 
     print(f"bayesDqn.py: Bayesian optimization run took {datetime.datetime.now()-start_time}") 
