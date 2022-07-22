@@ -22,15 +22,15 @@ def define_parameters():
     # PLAYER 1
     params['player1'] = {}
     params['player1']['name'] = 'Primo'
-    # params['player1']['strategy'] = 'br90'
-    params['player1']['strategy'] = 'nn-linearb'
-    params['player1']['nn'] = copy.deepcopy(params['nn-common'])
-    params['player1']['nn']['layer_sizes'] = [312, 800, 50]   # 'hidden'/interior layers - per bayesDqn.py April 2022
-    params['player1']['nn']['train'] = True
-    params['player1']['nn']['test'] = True
-    params['player1']['nn']["load_weights"] = False          # False if starting from scratch, True if re-training 
-    params['player1']['nn']['weights_path'] = "weights/weights." + params['player1']['strategy']  + ".h5"
-    params['player1']['nn']['use_cheat_rewards'] = False
+    params['player1']['strategy'] = 'br90'
+    # params['player1']['strategy'] = 'nn-linearb'
+    # params['player1']['nn'] = copy.deepcopy(params['nn-common'])
+    # params['player1']['nn']['layer_sizes'] = [312, 800, 50]   # 'hidden'/interior layers - per bayesDqn.py April 2022
+    # params['player1']['nn']['train'] = True
+    # params['player1']['nn']['test'] = True
+    # params['player1']['nn']["load_weights"] = False          # False if starting from scratch, True if re-training 
+    # params['player1']['nn']['weights_path'] = "weights/weights." + params['player1']['strategy']  + ".h5"
+    # params['player1']['nn']['use_cheat_rewards'] = False
 
     # PLAYER 2
     params['player2'] = {}
