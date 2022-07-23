@@ -106,7 +106,7 @@ if __name__ == '__main__':
     
     # set up logging, 
     params['episodes'] = TRAIN_EPISODES
-    params['log_path'] = 'logs/bayesDqn_log.' + params['timestamp']+'.txt'
+    params['log_path'] = 'logs/bayesLayerSizes_log.' + params['timestamp']+'.txt'
 
     # Define optimizer
     # bayesOpt = BayesianOptimizer(params)
