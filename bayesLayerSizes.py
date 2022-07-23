@@ -4,7 +4,7 @@ import random
 import ginDQNParameters
 from bayesOpt import TrainingBayesianOptimizer
 
-TRAIN_EPISODES = 5
+TRAIN_EPISODES = 1000
 MAX_ITER = 50   
 INITIAL_ITERS = 40
 BR90_PROBABILITY = 0.25
