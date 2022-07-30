@@ -4,10 +4,9 @@ import random
 import ginDQNParameters
 from bayesOpt import TrainingBayesianOptimizer
 
-TRAIN_EPISODES = 1000
+TRAIN_EPISODES = 5
 MAX_ITER = 50   
 INITIAL_ITERS = 40
-BR90_PROBABILITY = 0.25
 #################################################################
 #   optimizes the parameter sets used by the learningGin module #
 #               Sets the  parameters for Bayesian Optimization  #
@@ -31,7 +30,7 @@ class StrategyBayesianOptimizer(TrainingBayesianOptimizer):
                 gamma_str='{:.6f}'.format(float(pparams['gamma']))[2:]
                 name_scenario += '_' + gamma_str
 
-        print(f"bayesStrategy: name_scenario is {name_scenario  }")
+        print(f"name_scenario is {name_scenario  }")
         return name_scenario                    
 
     def copy_inputs_to_params(self, inputs:(list),target_params:(dict)):
@@ -69,10 +68,7 @@ class StrategyBayesianOptimizer(TrainingBayesianOptimizer):
                 key = name[:-1]
                 target = player_inputs[int(name[-1])-1]
                 if key == 'strategy':
-                    if random.random() > BR90_PROBABILITY:
-                        target[key] = StrategyBayesianOptimizer.STRATEGIES[int(inputs[i])]
-                    else:
-                        target[key] = 'br90'
+                    target[key] = StrategyBayesianOptimizer.STRATEGIES[int(inputs[i])]
                 else:
                     target[key] = inputs[i]
             else:
@@ -93,7 +89,7 @@ class StrategyBayesianOptimizer(TrainingBayesianOptimizer):
 ##################
 if __name__ == '__main__':
     start_time = datetime.datetime.now()
-    print(f"bayesDqn.py: Bayesian optimization starting at {datetime.datetime.now()}") 
+    print(f"Bayesian optimization starting at {datetime.datetime.now()}") 
 
     # obtain basic static params
     params = ginDQNParameters.define_parameters()
@@ -117,7 +113,7 @@ if __name__ == '__main__':
     # Define optimizer
     # bayesOpt = BayesianOptimizer(params)
     optim_params = []
-    for player in ('1','2'):
+    for player in ('2'):
         for op in optim_params_template:
             target_param = copy.deepcopy(op)
             target_param['name'] += player 
@@ -125,4 +121,4 @@ if __name__ == '__main__':
     bayesOpt = StrategyBayesianOptimizer(params, optim_params)
     bayesOpt.optimize_RL(max_iter=MAX_ITER, initial_iters=INITIAL_ITERS)
 
-    print(f"bayesDqn.py: Bayesian optimization run took {datetime.datetime.now()-start_time}") 
+    print(f"Bayesian optimization run took {datetime.datetime.now()-start_time}") 
