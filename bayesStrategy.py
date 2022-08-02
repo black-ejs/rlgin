@@ -4,7 +4,7 @@ import random
 import ginDQNParameters
 from bayesOpt import TrainingBayesianOptimizer
 
-TRAIN_EPISODES = 5
+TRAIN_EPISODES = 5000
 MAX_ITER = 50   
 INITIAL_ITERS = 40
 #################################################################
@@ -36,7 +36,11 @@ class StrategyBayesianOptimizer(TrainingBayesianOptimizer):
     def copy_inputs_to_params(self, inputs:(list),target_params:(dict)):
         pass
             
-    def customize_optim_params(self,inputs):
+    def customize_optim_params(self,inputs):  
+        timestamp = str(datetime.datetime.now().strftime("%Y%m%d%H%M%S"))
+        self.params['timestamp'] = timestamp
+        self.params['timestamp'] = timestamp
+
         player_inputs, nonplayer_inputs = self.reshape_inputs(inputs)
         for np_key in nonplayer_inputs:
             self.params[np_key] = nonplayer_inputs[np_key]
@@ -58,6 +62,8 @@ class StrategyBayesianOptimizer(TrainingBayesianOptimizer):
                         target['gamma'] = 0.1
                     else:
                         target['gamma'] = self.getta_gamma(pi['gamma'])
+
+                    target['weights_path'] = "weights/weights." + pi['strategy'] + "." + timestamp + ".h5"
 
     def reshape_inputs(self, inputs):
         player_inputs = [{},{}]
