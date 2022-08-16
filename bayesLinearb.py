@@ -6,7 +6,7 @@ from bayesOpt import TrainingBayesianOptimizer
 
 TRAIN_EPISODES = 5000
 MAX_ITER = 50   
-INITIAL_ITERS = 4o
+INITIAL_ITERS = 40
 #################################################################
 #   optimizes the parameter sets used by the learningGin module #
 #               Sets the  parameters for Bayesian Optimization  #
