@@ -80,12 +80,13 @@ class LinearbBayesianOptimizer(TrainingBayesianOptimizer):
 
         return player_inputs, nonplayer_inputs
 
-    def getta_gamma(self, scale):
+    def getta_gamma(self, input_gamma):
         
-        my_scale = float(scale)
+        my_scale = float(input_gamma)
         # g = 1 - (random.random() * (10**-my_scale))
-        g = 0.90 + scale
-        g = round(g,5)
+        # g = 0.90 + my_scale
+        #g = round(g,5)
+        g = round(my_scale,5)
         return g
 
 #################################################################
@@ -106,7 +107,7 @@ if __name__ == '__main__':
     # initialize bayesian parameter list
     optim_params_template = [
         {'name': "strategy", 'type': "discrete", 'domain': (0.0, 0.1)},
-        {'name': "gamma", 'type': "discrete", 'domain': (0.00, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09)},
+        {'name': "gamma", 'type': "continuous", 'domain': (0.85,0.98)},
         ]
 
     # Define optimizer
