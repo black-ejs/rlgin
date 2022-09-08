@@ -15,7 +15,7 @@ class BayesPlotter(DecisionPlotter):
                         y_param_name:(str)='wins_per_1000_hands', # 'moving_average_spline_slopes',
                         ylabel:(str)="wins per 1000 hands", # "slope - moving average of wins, last {} hands".format(LearningPlotter.MA_SIZE),
                         splines=1, order=1):
-        strat_map = {'nn-linear':0, 'nn-convf':1, 'nn-convb':2 }
+        strat_map = {'nn-linear':0, 'nn-convf':1, 'nn-convb':2, 'nn-linearb':3 }
         array_score = []
         array_param = []
         for st in statsList:
@@ -64,8 +64,9 @@ class BayesPlotManager(DecisionPlotManager):
 
     def get_bayes_param_names(self):
         dqn_params_o = ["l1","l2","l3","learning_rate", "epsilon_decay_linear"]
-        dqn_params = ["l1","l2","l3","l4","learning_rate", "epsilon_decay_linear",
+        dqn_params_x = ["l1","l2","l3","l4","learning_rate", "epsilon_decay_linear",
                         "strategy", "no_relu"]
+        dqn_params = ["strategy", "gamma"]
         reward_params = ["win_reward","no_winner_reward","loss_reward"]
         generation_params = ["generation"]
         candidates = dqn_params
