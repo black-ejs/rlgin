@@ -106,6 +106,7 @@ def optimize_strategy(strategy_name:(str)):
     optim_params_template = [
         {'name': "strategy", 'type': "discrete", 'domain': (0.0, 0.1)},
         {'name': "gamma", 'type': "continuous", 'domain': (0.85,0.98)},
+        {'name': "learning_rate", 'type': "discrete", 'domain': (0.001, 0.005, 0.01, 0.0, 0.1)},
         ]
 
     # Define optimizer
