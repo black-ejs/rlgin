@@ -1,12 +1,11 @@
 import copy
 import datetime
-import random
 import ginDQNParameters
 from bayesOpt import TrainingBayesianOptimizer
 
-TRAIN_EPISODES = 5000
-MAX_ITER = 50   
-INITIAL_ITERS = 40
+TRAIN_EPISODES = 5
+MAX_ITER = 5
+INITIAL_ITERS = 4
 #################################################################
 #   optimizes the parameter sets used by the learningGin module #
 #               Sets the  parameters for Bayesian Optimization  #
@@ -26,8 +25,11 @@ class HyperparameterBayesianOptimizer(TrainingBayesianOptimizer):
             if 'nn' in self.params[p]:
                 pparams = self.params[p]['nn']
                 
-                gamma_str='{:.6f}'.format(float(pparams['gamma']))[2:]
-                name_scenario += '_' + gamma_str
+                gamma_str='{:.4f}'.format(float(pparams['gamma']))[2:]
+                name_scenario += '_' + "g" + gamma_str
+
+                lr_str='{:.4f}'.format(float(pparams['learning_rate']))[2:]
+                name_scenario += '_' + "lr" + lr_str
 
         print(f"name_scenario is {name_scenario  }")
         return name_scenario                    
@@ -61,6 +63,8 @@ class HyperparameterBayesianOptimizer(TrainingBayesianOptimizer):
                         target['gamma'] = 0.1
                     else:
                         target['gamma'] = self.getta_gamma(pi['gamma'])
+
+                    target['learning_rate'] = pi['learning_rate']
 
                     target['weights_path'] = "weights/weights." + pi['strategy'] + "." + timestamp + ".h5"
 
@@ -120,7 +124,8 @@ def optimize_strategy(strategy_name:(str)):
     bayesOpt.strategy_name = strategy_name
     bayesOpt.optimize_RL(max_iter=MAX_ITER, initial_iters=INITIAL_ITERS)
 
-    print(f"Linearb optimization run took {datetime.datetime.now()-start_time}") 
+    duration = datetime.datetime.now()-start_time
+    print(f"Hyperparameter optimization for strategy '{strategy_name}' took {duration}") 
 
 #################################################################
 ##################
@@ -129,7 +134,9 @@ def optimize_strategy(strategy_name:(str)):
 import argparse
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser()
-    argparser.add_argument('strategy_name',
+    argparser.add_argument('--strategy_name',
                     default='nn-linearb', 
                     nargs='?', help='GinStrategy to be optimized')
     args = argparser.parse_args()
+
+    optimize_strategy(args.strategy_name)
