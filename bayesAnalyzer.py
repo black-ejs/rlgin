@@ -7,8 +7,6 @@ import matplotlib.widgets as widgets
 from learningPlotter import Plottable
 from decisionProfiler import DecisionPlotter, DecisionPlotManager, DecisionProfiler
 
-DQN_PLAYER_NAME = "Tempo"
-
 ## #############################################
 class BayesPlotter(DecisionPlotter):    
     def plot_bayes_param(statsList, param_name, 
@@ -51,13 +49,37 @@ class BayesPlotter(DecisionPlotter):
         
         bayes_slopes = []
         if len(array_param)>0:
+            average_array = BayesPlotter.create_average_array(array_param, array_score)
             bayes_slopes = BayesPlotter.plot_regression(array_score, 
                                         array_param, 
                                         "bayes - " + param_name, 
                                         splines=splines,
                                         order=order,
+                                        average_array = average_array,
                                         ylabel=ylabel)
         return bayes_slopes
+
+    def create_average_array(array_param, array_score):
+        counts = {}
+        totals = {}
+        ndx = 0
+        for p in array_param:
+            if p in counts:
+                counts[p] += 1
+                totals[p] += array_score[ndx]
+            else:
+                counts[p] = 1
+                totals[p] = array_score[ndx]
+            ndx += 1
+
+        if len(totals) > 10:
+            return None
+
+        averages_score = []
+        for t in counts:
+            averages_score.append(totals[t]/counts[t])
+        
+        return averages_score
 
 ## #############################################
 class BayesPlotManager(DecisionPlotManager):
@@ -66,7 +88,8 @@ class BayesPlotManager(DecisionPlotManager):
         dqn_params_o = ["l1","l2","l3","learning_rate", "epsilon_decay_linear"]
         dqn_params_x = ["l1","l2","l3","l4","learning_rate", "epsilon_decay_linear",
                         "strategy", "no_relu"]
-        dqn_params = ["strategy", "gamma"]
+        dqn_params = ["strategy", "gamma", "generation"] # lb-br-a, etc. 
+        dqn_params_b = ["strategy", "gamma"] # bStra
         reward_params = ["win_reward","no_winner_reward","loss_reward"]
         generation_params = ["generation"]
         candidates = dqn_params
@@ -142,7 +165,8 @@ import argparse
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser()
     argparser.add_argument('path_to_logfile',
-                    default='logs/oneBayes.log',  #'logs/bayesDqn-junea.megalog', 
+                    # default='logs/oneBayes.log',  #'logs/bayesDqn-junea.megalog', 
+                    default='logs/megatrain.azz',  #'logs/bayesDqn-junea.megalog', 
                     nargs='?', help='path to the logfile to be plotted')
     argparser.add_argument('include_partials',
                     default='False', 
