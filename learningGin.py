@@ -356,6 +356,7 @@ if __name__ == '__main__':
     parser.add_argument("--episodes", nargs='?', type=int, default=-1)
     parser.add_argument("--logfile", nargs='?', type=str, default=None)
     parser.add_argument("--name_scenario", nargs='?', type=str, default=None)
+    parser.add_argument("--generation", nargs='?', type=int, default=-1)
     # parser.add_argument("--display", nargs='?', type=distutils.util.strtobool, default=True)
     args = parser.parse_args()
     print("learningGin: args ", args)
@@ -369,6 +370,8 @@ if __name__ == '__main__':
         params['name_scenario'] = args.name_scenario
     if not (args.logfile == None):
         params['log_path'] = args.logfile        
+    if args.generation != -1:
+        params['generation'] = args.generation
 
     old_stdout = None
     log = None
