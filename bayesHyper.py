@@ -11,9 +11,10 @@ INITIAL_ITERS = 40
 #   optimizes the parameter sets used by the learningGin module #
 #               Sets the  parameters for Bayesian Optimization  #
 #################################################################
-class LinearbBayesianOptimizer(TrainingBayesianOptimizer):
+class HyperparameterBayesianOptimizer(TrainingBayesianOptimizer):
     def __init__(self, params, optim_params):
         super().__init__(params, optim_params)
+        self.strategy_name = "not-set"
 
     def create_name_scenario(self, inputs):
         name_scenario = 'bo'
@@ -72,7 +73,7 @@ class LinearbBayesianOptimizer(TrainingBayesianOptimizer):
                 key = name[:-1]
                 target = player_inputs[int(name[-1])-1]
                 if key == 'strategy':
-                    target[key] = "nn-linearb"
+                    target[key] = self.strategy_name
                 else:
                     target[key] = inputs[i]
             else:
@@ -90,19 +91,16 @@ class LinearbBayesianOptimizer(TrainingBayesianOptimizer):
         return g
 
 #################################################################
-##################
-#      Main      #
-##################
-if __name__ == '__main__':
+def optimize_strategy(strategy_name:(str)):
     start_time = datetime.datetime.now()
-    print(f"Linearb optimization starting at {datetime.datetime.now()}") 
+    print(f"Hyperparameter optimization for strategy '{strategy_name}' starting at {datetime.datetime.now()}") 
 
     # obtain basic static params
     params = ginDQNParameters.define_parameters()
     
     # set up logging, 
     params['episodes'] = TRAIN_EPISODES
-    params['log_path'] = 'logs/bayesDqn_log.' + params['timestamp']+'.txt'
+    params['log_path'] = 'logs/bayesHyper_log.' + params['timestamp']+'.txt'
 
     # initialize bayesian parameter list
     optim_params_template = [
@@ -111,14 +109,26 @@ if __name__ == '__main__':
         ]
 
     # Define optimizer
-    # bayesOpt = BayesianOptimizer(params)
     optim_params = []
     for player in ('2'):
         for op in optim_params_template:
             target_param = copy.deepcopy(op)
             target_param['name'] += player 
             optim_params.append(target_param)
-    bayesOpt = LinearbBayesianOptimizer(params, optim_params)
+    bayesOpt = HyperparameterBayesianOptimizer(params, optim_params)
+    bayesOpt.strategy_name = strategy_name
     bayesOpt.optimize_RL(max_iter=MAX_ITER, initial_iters=INITIAL_ITERS)
 
     print(f"Linearb optimization run took {datetime.datetime.now()-start_time}") 
+
+#################################################################
+##################
+#      Main      #
+##################
+import argparse
+if __name__ == '__main__':
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument('strategy_name',
+                    default='nn-linearb', 
+                    nargs='?', help='GinStrategy to be optimized')
+    args = argparser.parse_args()
