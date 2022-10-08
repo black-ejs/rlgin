@@ -37,7 +37,7 @@ def define_parameters():
     params['player2']['name'] = 'Tempo'
     params['player2']['strategy'] = 'nn-linearb'
     params['player2']['nn'] = copy.deepcopy(params['nn-common'])
-    params['player2']['nn']['layer_sizes'] = [312, 800, 50]   # 'hidden'/interior layers - per bayesDqn.py April 2022
+    params['player2']['nn']['layer_sizes'] = [400, 200, 40]   # 'hidden'/interior layers - per bayesDqn.py April 2022
     params['player2']['nn']['train'] = True
     params['player2']['nn']['test'] = True
     params['player2']['nn']["load_weights"] = False   # False if starting from scratch, True if re-training 
