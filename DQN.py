@@ -6,22 +6,15 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-import copy
 DEVICE = 'cpu' # 'cuda' if torch.cuda.is_available() else 'cpu'
 
 class DQNAgent(torch.nn.Module):
+    MAX_EFFECTIVE_DISCOUNT = 0.009
+
     def __init__(self, params):
         super().__init__()
         self.params = params
 
-        # left from snake-ga
-        self.actual = [] 
-        self.agent_target = 1
-        self.agent_predict = 0
-        self.dataframe = pd.DataFrame()
-        self.short_memory = np.array([])
-        self.memory = collections.deque(maxlen=params['memory_size'])
-        
         # nn params
         self.learning_rate = params['learning_rate']        
         self.epsilon = params['noise_epsilon']
@@ -38,6 +31,8 @@ class DQNAgent(torch.nn.Module):
 
         self.reward = 0
         self.optimizer = None
+        self.episode_memory = collections.deque(maxlen=1000)
+        self.memory = collections.deque(maxlen=params['memory_size'])
         self.posttrain_weights = None
 
         self.network()
@@ -83,70 +78,104 @@ class DQNAgent(torch.nn.Module):
         """
         pass
 
+    def remember_episode(self):
+        self.memory.extend(self.episode_memory)
+        self.episode_memory.clear()
+
     def remember(self, state, action, reward, next_state, done):
         """
         Store the <state, action, reward, next_state, is_done> tuple in a 
         memory buffer for replay memory.
         """
-        self.memory.append((state, action, reward, next_state, done))
+        self.episode_memory.append((state, action, reward, next_state, done))
+        if not reward==0:
+            self.distribute_reward_discount(self.episode_memory, reward)
+
+    def distribute_reward_discount(self, memory, undiscounted_reward:float):
+        discount = self.gamma
+        memory_index = -2
+        while discount>DQNAgent.MAX_EFFECTIVE_DISCOUNT and memory_index>0-len(memory): 
+            effective_reward = undiscounted_reward*discount
+            self.update_reward(memory, memory_index, effective_reward)
+            memory_index-=1
+            discount *= self.gamma
+
+    def update_reward(self, memory:collections.deque, index:int, addl_reward:float):
+        (state, action, reward, next_state, done) = memory[index]
+        memory[index] = (state, action, reward+addl_reward, next_state, done)
+
+    #def replay_OLD(self, memory, batch_size):
+    #    """
+    #    Replay memory.
+    #    """
+    #    if len(memory) == 0:
+    #        return
+    #
+    #    if len(memory) > batch_size:
+    #        minibatch = random.sample(memory, batch_size)
+    #    else:
+    #        minibatch = memory
+    #    for state, action, reward, next_state, done in minibatch:
+    #        self.train()
+    #        torch.set_grad_enabled(True)
+    #        target = reward
+    #        next_state_tensor = torch.tensor(np.expand_dims(next_state, 0), dtype=torch.float32).to(DEVICE)
+    #        state_tensor      = torch.tensor(np.expand_dims(state,      0), dtype=torch.float32, requires_grad=True).to(DEVICE)
+    #        if not done:
+    #            target = reward + self.gamma * torch.max(self.forward(next_state_tensor)[0])
+    #        output = self.forward(state_tensor)
+    #        target_f = output.clone()
+    #        if len(target_f.size()) > 1:
+    #            target_f[0][np.argmax(action)] = target
+    #        else:
+    #            target_f[0] = target
+    #        target_f.detach()
+    #        self.optimizer.zero_grad()
+    #        loss = F.mse_loss(output, target_f)
+    #        loss.backward()
+    #        self.optimizer.step()            
 
     def replay_new(self, memory, batch_size):
         """
         Replay memory.
         """
+        if len(memory) == 0:
+            return
         if len(memory) > batch_size:
             minibatch = random.sample(memory, batch_size)
         else:
             minibatch = memory
+        self.replay_minibatch(minibatch)
+
+    def replay_minibatch(self, minibatch):
         for state, action, reward, next_state, done in minibatch:
             self.train()
             torch.set_grad_enabled(True)
             target = reward
-            next_state_tensor = torch.tensor(np.expand_dims(next_state, 0), dtype=torch.float32).to(DEVICE)
             state_tensor = torch.tensor(np.expand_dims(state, 0), dtype=torch.float32, requires_grad=True).to(DEVICE)
-            if not done:
-                target = reward + self.gamma * torch.max(self.forward(next_state_tensor)[0])
             output = self.forward(state_tensor)
             target_f = output.clone()
-            if len(target_f.size()) > 1:
-                target_f[0][np.argmax(action)] = target
-            else:
-                target_f[0] = target
+            target_f[np.argmin(action)] = target
+            #if len(target_f.size()) > 1:
+            #    target_f[0][np.argmin(action)] = target
+            #else:
+            #    target_f[0] = target
             target_f.detach()
             self.optimizer.zero_grad()
             loss = F.mse_loss(output, target_f)
             loss.backward()
             self.optimizer.step()            
 
-    def translatePrediction(prediction):
+    def translatePrediction(self, prediction):
         ##  translation = np.argmax(prediction.detach().cpu().numpy()[0])
-        translation = float(prediction.detach().cpu().numpy()[0])
+        detached = prediction.detach().cpu().numpy()[0]
+        translation = float(detached)
         return translation
 
-    def train_short_memory(self, state, action, reward, next_state, done):
+    def train_episode(self):
         """
         Train the DQN agent on the <state, action, reward, next_state, is_done>
-        tuple at the current timestep.
+        tuples for the current episode, once the epidoe has completed and the 
+        deferred rewards hae been distributed
         """
-        self.train()
-        torch.set_grad_enabled(True)
-        target = reward
-        next_state_tensor = torch.tensor(
-                            next_state.reshape(self.input_size), 
-                            dtype=torch.float32).to(DEVICE)
-        state_tensor = torch.tensor(
-                            state.reshape(self.input_size), 
-                            dtype=torch.float32, requires_grad=True).to(DEVICE)
-        if not done:
-            target = reward + self.gamma * torch.max(self.forward(next_state_tensor))
-        output = self.forward(state_tensor)
-        target_f = output.clone()
-        if len(target_f.size()) > 1:
-            target_f[0][np.argmax(action)] = target
-        else:
-            target_f[0] = target
-        target_f.detach()
-        self.optimizer.zero_grad()
-        loss = F.mse_loss(output, target_f)
-        loss.backward()
-        self.optimizer.step()
+        return self.replay_minibatch(self.episode_memory)

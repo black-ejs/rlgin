@@ -7,7 +7,6 @@ import numpy as np
 import statistics
 import torch.optim as optim
 import torch 
-import distutils.util
 DEVICE = 'cpu' # 'cuda' if torch.cuda.is_available() else 'cpu'
 
 from DQN import DQNAgent
@@ -20,6 +19,7 @@ from ginDQNConvoBitPlanes import ginDQNConvoBitPlanes
 from ginDQNConvoFloatPlane import ginDQNConvoFloatPlane
 from ginDQNLinear import ginDQNLinear
 from ginDQNLinearB import ginDQNLinearB
+import ginDQNConvFHandOut
 NO_WIN_NAME = 'nobody'
 
 ## #############################################
@@ -58,8 +58,12 @@ class learningPlayer:
         dqn_params = self.params['nn']
         if self.ginDQN == None:
             self.ginDQN = self.initializeDQN(dqn_params)
-        nn_strategy = ginDQN.ginDQNStrategy(dqn_params, self.ginDQN)
-        nn_strategy.benchmark_scorer = BrainiacGinStrategy()
+        if self.strategy == "nn-cfh":
+            nn_strategy = ginDQNConvFHandOut.ginDQNHandOutStrategy(dqn_params, self.ginDQN)
+            nn_strategy.benchmark_scorer = ginDQNConvFHandOut.ginHandOutBenchmarkStrategy ()
+        else:
+            nn_strategy = ginDQN.ginDQNStrategy(dqn_params, self.ginDQN)
+            nn_strategy.benchmark_scorer = BrainiacGinStrategy()
         return nn_strategy
 
     def initializeDQN(self,params):
@@ -73,6 +77,8 @@ class learningPlayer:
             ginDQN = ginDQNConvoFloatPlane(params)
         elif self.strategy == "nn-convb":
             ginDQN = ginDQNConvoBitPlanes(params)    
+        elif self.strategy == "nn-cfh":
+            ginDQN = ginDQNConvFHandOut.ginDQNConvFHandOut(params)
 
         ginDQN = ginDQN.to(DEVICE)
 
@@ -147,11 +153,13 @@ def display(counter_hands, hand_duration, ginhand:(gin.GinHand), log_decisions):
                 p2=len(correlation_array_benchmark)
                 if not p1==p2:
                     print("** warning correlations arrays different lengths :-(")
-                cc = np.corrcoef(
-                    np.array(
-                        [correlation_array_dqn,
-                         correlation_array_benchmark]))                
-                print(f"benchmark-correlation: {cc[0,1]}")
+                    return
+                #cc = np.corrcoef(
+                #    np.array(
+                #        [correlation_array_dqn,
+                #         correlation_array_benchmark]))                
+                #print(f"benchmark-correlation: {cc[0,1]}")
+                #print(f"benchmark-correlation: N/A")
             except RuntimeWarning:
                 print(f"benchmark-correlation: 0")
 
@@ -231,10 +239,10 @@ def run(params):
     winMap = {player1.name:0, player2.name:0, NO_WIN_NAME:0}
     stats.put('winMap', winMap)
 
-    print(f"--- SCENARIO START at {stats.get('run_timestamp')} ---")
+    startTime = time.time()
+    print(f"--- SCENARIO START at {startTime} ---")
     print(params)
 
-    startTime = time.time()
     while counter_hands < params['episodes']:
         ## TODO: check for abort
         
@@ -294,7 +302,8 @@ def run(params):
         #    # state_dict = agent.state_dict()
         #    # print(state_dict)
 
-    total_duration = time.time() - startTime
+    endTime = time.time()
+    total_duration = endTime - startTime
     
     total_reward = []
     for p in nn_players:
@@ -305,6 +314,9 @@ def run(params):
     mean_durations, stdev_durations = get_mean_stdev(durations)
     mean_turns, stdev_turns = get_mean_stdev(turns_in_hand)
 
+    stats.put("start_time", startTime)
+    stats.put("end_time", endTime)
+    stats.put("count_hands", counter_hands)
     stats.put("count_hands", counter_hands)
     stats.put("total_duration", total_duration)
     stats.put("total_reward", total_reward) # list 
@@ -313,6 +325,7 @@ def run(params):
     stats.put("stdev_turns", stdev_turns)
     stats.put("mean_durations", mean_durations)
     stats.put("stdev_durations", stdev_durations)
+    print(f"--- SCENARIO END at {time.time()} ---")
 
     return stats
 

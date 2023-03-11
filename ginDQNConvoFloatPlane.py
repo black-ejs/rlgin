@@ -77,11 +77,11 @@ class ginDQNConvoFloatPlane(ginDQN.ginDQN):
         me = player
         my_hand = ginhand.playing[me.name].playerHand
 
-        if ginhand.discard == None:
+        if ginhand.discard == None and len(my_hand.card)<gin.HAND_SIZE+1:
             if pile_substitute == None:
                 print("nothing to select here!")
                 return DQNAgent.as_numpy_array([state])
-            if not (pile_substitute in my_hand.card):
+            elif not (pile_substitute in my_hand.card):
                 print("** DISCARD DECISION WITH CARD NOT IN MY HAND")
  
         if not (pile_substitute == None):  

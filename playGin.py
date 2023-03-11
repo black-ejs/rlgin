@@ -62,7 +62,7 @@ class OneDecisionGinStrategy(gin.GinStrategy):
 	## how much do we want this card? 
 	## return a value from 0 to 1
 	## derived classes override this
-	def scoreCandidate(self, sevenCardHand, candidate, ginhand):
+	def scoreCandidate(self, myHand, candidate, ginhand):
 		return random.random()
 
 	def decideDrawSource(self,ginhand):

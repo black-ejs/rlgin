@@ -156,6 +156,8 @@ class ginDQNStrategy(playGin.OneDecisionGinStrategy):
         ## deal with previous turn
         if not self.turns==0:
             reward = self.agent.set_reward(ginhand,self.myPlayer)
+            if not reward == 0:
+                print(f"=== WARNING: non-zero reward={reward} before end-of-hand: {ginhand}")
             ginhand.nn_players[self.myPlayer.name]['total_reward'] += reward
             if self.train:
                 self.learnTurn(self.turn_states, self.turn_scores, reward, new_state, 
@@ -169,12 +171,21 @@ class ginDQNStrategy(playGin.OneDecisionGinStrategy):
         ginhand.lastTurn().turn_scores = self.turn_scores 
         ginhand.lastTurn().turn_benchmarks = self.turn_benchmarks
         
-    def scoreCandidate(self, sevenCardHand, candidate, ginhand):
+    def get_random_score(self):
+        if self.agent.output_size < 2:
+            return random.random()
+        rez = []
+        for i in range(self.agent.output_size):
+            rez.append(random.random())
+        return rez
+
+    def scoreCandidate(self, myHand, candidate, ginhand):
         # perform random actions based on agent.epsilon, or choose the action
         current_state = self.agent.get_state(ginhand,self.myPlayer,candidate)
         is_random = False
+        score = None
         if random.uniform(0, 1) < self.agent.epsilon:
-            score = random.random()
+            score = self.get_random_score()
             is_random = True
         else:
             # predict action based on the old state
@@ -182,12 +193,12 @@ class ginDQNStrategy(playGin.OneDecisionGinStrategy):
                 state_old_tensor = torch.tensor(current_state.reshape(self.agent.input_size), 
                                                 dtype=torch.float32).to(DEVICE)
                 prediction = self.agent(state_old_tensor)
-                score = DQNAgent.translatePrediction(prediction)
+                score = self.translatePrediction(prediction)
         self.turn_scores.append(score)
         self.turn_states.append(current_state)
-        if not self.benchmark_scorer == None:
+        if (not self.benchmark_scorer == None): ## and (not candidate==None):
             benchmark = self.benchmark_scorer.scoreCandidate(
-                                sevenCardHand, candidate, ginhand)
+                                myHand, candidate, ginhand)
             self.turn_benchmarks.append(benchmark)
         return score
         
@@ -197,6 +208,10 @@ class ginDQNStrategy(playGin.OneDecisionGinStrategy):
             # nothing to learn here, except perhaps philosophically
             return
         reward = self.agent.set_reward(ginhand,self.myPlayer)
+        if reward == 0:
+            print(f"=== WARNING: zero reward={reward} at end-of-hand: {ginhand}")
+        else:
+            dummy=-1
         ginhand.nn_players[self.myPlayer.name]['total_reward'] += reward
         if self.train:
             ## deal with our last turn
@@ -208,6 +223,9 @@ class ginDQNStrategy(playGin.OneDecisionGinStrategy):
         else:
             ginhand.turns[-2].turn_scores = self.turn_scores
             ginhand.turns[-2].turn_benchmarks = self.turn_benchmarks
+
+        self.agent.train_episode()
+        self.agent.remember_episode()
         
     ## #############################################
     def compare_weights(pretrain_weights, posttrain_weights):
