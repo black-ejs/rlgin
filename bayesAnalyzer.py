@@ -1,5 +1,5 @@
 from collections.abc import Iterable
-import random
+import datetime
 import distutils.util
 import matplotlib.pyplot as plt
 import matplotlib.widgets as widgets
@@ -18,34 +18,46 @@ class BayesPlotter(DecisionPlotter):
         array_param = []
         for st in statsList:
             param_val = None
+            y_param = None
             if param_name in st:
                 param_val = st[param_name]
             elif 'params' in st and param_name in st['params']:
                 param_val = st['params'][param_name]
             if (not (param_val==None)) and (y_param_name in st):
                 y_param = st[y_param_name]
-                array_param.append(param_val)
-                if isinstance(y_param,Iterable):
-                    array_score.append(y_param[-1])
-                else:
-                    array_score.append(y_param)
             elif 'nn_players' in st:
                 for nnp in st['nn_players'].values():
                     if 'use_cheat_rewards' in nnp and nnp['use_cheat_rewards']:
                         continue
-                    if (param_name in nnp) and (y_param_name in nnp):
+                    # ####################
+                    # ####################
+                    # ####################
+                    ssss = ("nn-convf", "nn-linearb")
+                    if not (nnp['strategy'] in ssss):
+                        continue
+                    # ####################
+                    # ####################
+                    # ####################
+                    if y_param_name in nnp:
                         y_param = nnp[y_param_name]            
+                    if (param_name in nnp):
                         if param_name == 'strategy':
                             param_val = strat_map[nnp[param_name]]
                             if splines>1:
                                 splines = 2
                         else:
                             param_val = nnp[param_name]
-                        array_param.append(param_val)
-                        if isinstance(y_param,Iterable):
-                            array_score.append(y_param[-1])
-                        else:
-                            array_score.append(y_param)
+
+            if (not (param_val==None)) and (not (y_param==None)):      
+                if (param_name=='timestamp'):
+                    param_val = BayesPlotter.date2int(param_val)
+                array_param.append(param_val)
+                if isinstance(y_param,Iterable):
+                    array_score.append(y_param[-1])
+                else:
+                    array_score.append(y_param)
+            else:
+                print(f"problem locating param_values: param_name='{param_name}'   y_param_name='{y_param_name}'")
         
         bayes_slopes = []
         if len(array_param)>0:
@@ -58,6 +70,16 @@ class BayesPlotter(DecisionPlotter):
                                         average_array = average_array,
                                         ylabel=ylabel)
         return bayes_slopes
+
+    def date2int(timestamp):
+        yyyy = int(str(timestamp)[:4])
+        MM = int(str(timestamp)[4:6])
+        dd = int(str(timestamp)[6:8])
+        hh = int(str(timestamp)[8:10])
+        mm = int(str(timestamp)[10:12])
+        ss = int(str(timestamp)[12:14])
+        return int(datetime.datetime(yyyy,MM,dd,hh,mm,ss).timestamp())
+        # return ss + mm*60 + hh*3600 + dd*3600*24 + mm*31*24*3600 + yy*31*24*3600*366
 
     def create_average_array(array_param, array_score):
         counts = {}
@@ -88,8 +110,10 @@ class BayesPlotManager(DecisionPlotManager):
         dqn_params_o = ["l1","l2","l3","learning_rate", "epsilon_decay_linear"]
         dqn_params_x = ["l1","l2","l3","l4","learning_rate", "epsilon_decay_linear",
                         "strategy", "no_relu"]
-        dqn_params = ["strategy", "gamma", "generation"] # lb-br-a, etc. 
+        dqn_params_g = ["strategy", "gamma", "generation"] # lb-br-a, etc. 
+        dqn_params = ["strategy", "gamma", "learning_rate", "timestamp"] # bHyper 
         dqn_params_b = ["strategy", "gamma"] # bStra
+        
         reward_params = ["win_reward","no_winner_reward","loss_reward"]
         generation_params = ["generation"]
         candidates = dqn_params
@@ -102,7 +126,6 @@ class BayesPlotManager(DecisionPlotManager):
                         break
                 if candidate in rez:
                     break
-
         return rez
 
     def __init__(self, statsList:(Iterable), cumulative_averages:(Iterable)):
