@@ -61,6 +61,13 @@ class ginDQNConvFHandOut(ginDQNConvoFloatPlane):
         x = self.layers[-1](x) # last layer
         return x
 
+    # because we use "argmin" to parse our model's output
+    # we want LOWER values to be MORE correct
+    # we will reverse the normal "more is more" 
+    #def set_reward(self, ginhand, player):
+    #    self.reward = -super().set_reward(ginhand, player)
+    #    return self.reward
+
 ## ###############################################
 ## ###############################################
 ## ###############################################

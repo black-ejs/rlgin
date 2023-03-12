@@ -155,11 +155,12 @@ class DQNAgent(torch.nn.Module):
             state_tensor = torch.tensor(np.expand_dims(state, 0), dtype=torch.float32, requires_grad=True).to(DEVICE)
             output = self.forward(state_tensor)
             target_f = output.clone()
+
+            # replace the value of the action taken with the reward
+            # the difference between this value (the reward) and the 
+            # value supplied will be the back-propagated error
             target_f[np.argmin(action)] = target
-            #if len(target_f.size()) > 1:
-            #    target_f[0][np.argmin(action)] = target
-            #else:
-            #    target_f[0] = target
+
             target_f.detach()
             self.optimizer.zero_grad()
             loss = F.mse_loss(output, target_f)
