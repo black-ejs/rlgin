@@ -1,3 +1,4 @@
+import sys
 import random
 import numpy as np
 import pandas as pd
@@ -7,6 +8,15 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 DEVICE = 'cpu' # 'cuda' if torch.cuda.is_available() else 'cpu'
+
+def argmax(l:list):
+    max = sys.float_info.min
+    index = -1
+    for i in range(len(l)):
+        if l[i]>max:
+            max=l[i]
+            index = i
+    return i
 
 class DQNAgent(torch.nn.Module):
     MAX_EFFECTIVE_DISCOUNT = 0.009
@@ -159,7 +169,7 @@ class DQNAgent(torch.nn.Module):
             # replace the value of the action taken with the reward
             # the difference between this value (the reward) and the 
             # value supplied will be the back-propagated error
-            target_f[np.argmin(action)] = target
+            target_f[np.argmax(action)] = target
 
             target_f.detach()
             self.optimizer.zero_grad()

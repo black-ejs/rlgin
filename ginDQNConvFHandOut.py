@@ -8,6 +8,7 @@ DEVICE = 'cpu' # 'cuda' if torch.cuda.is_available() else 'cpu'
 
 import gin
 import playGin
+import DQN
 import ginDQN
 from ginDQNConvoFloatPlane import ginDQNConvoFloatPlane
 
@@ -61,13 +62,6 @@ class ginDQNConvFHandOut(ginDQNConvoFloatPlane):
         x = self.layers[-1](x) # last layer
         return x
 
-    # because we use "argmin" to parse our model's output
-    # we want LOWER values to be MORE correct
-    # we will reverse the normal "more is more" 
-    #def set_reward(self, ginhand, player):
-    #    self.reward = -super().set_reward(ginhand, player)
-    #    return self.reward
-
 ## ###############################################
 ## ###############################################
 ## ###############################################
@@ -82,14 +76,9 @@ class ginDQNHandOutStrategy(ginDQN.ginDQNStrategy):
     def decideDrawSource(self,ginhand:gin.GinHand):
         score_array = self.scoreCandidate(ginhand.currentlyPlaying.playerHand, 
 											ginhand.discard, ginhand)
-        lowest = 99999.99999
-        lowest_i = -1
-        for i in range(len(score_array)):
-            if score_array[i] < lowest:
-                lowest = score_array[i]
-                lowest_i = i
+        discard_me = DQN.argmax(score_array)
         
-        if lowest_i == len(score_array)-1:
+        if discard_me == len(score_array)-1:
             return gin.Draw.DECK
         else:
             return gin.Draw.PILE
@@ -97,17 +86,13 @@ class ginDQNHandOutStrategy(ginDQN.ginDQNStrategy):
     def decideDiscardCard(self,ginhand:gin.GinHand):
         score_array = self.scoreCandidate(ginhand.currentlyPlaying.playerHand, 
 											ginhand.discard, ginhand)
-        lowest = 99999.99999
-        lowest_i = -1
-        for i in range(len(score_array)):
-            if score_array[i] < lowest:
-                lowest = score_array[i]
-                lowest_i = i
+        discard_me = DQN.argmax(score_array)
 
-        if lowest_i < 0:
-            return ginhand.currentlyPlaying.playerHand.card[lowest_i]
-        elif lowest_i < len(score_array):
-             return ginhand.currentlyPlaying.playerHand.card[lowest_i]
+        if discard_me < 0:
+            print(f"WARNING: invalid discard index {discard_me} in hand {ginhand.currentlyPlaying.playerHand}")
+            return ginhand.currentlyPlaying.playerHand.card[0]
+        elif discard_me < len(score_array):
+            return ginhand.currentlyPlaying.playerHand.card[discard_me]
         else:
             return ginhand.discard
 
@@ -155,4 +140,4 @@ class ginHandOutBenchmarkStrategy(playGin.BrainiacGinStrategy):
             allScores.append(super().scoreCandidate(gin.Hand(h), c, ginhand))
         return allScores
 
-            
+
