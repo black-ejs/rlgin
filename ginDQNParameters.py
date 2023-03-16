@@ -16,7 +16,7 @@ def define_parameters():
     params['nn-common']['memory_size'] = 250000
     params['nn-common']['batch_size'] = 2500
     params['nn-common']['win_reward'] = 0.99            # per bayesReward.py April 2022
-    params['nn-common']['loss_reward'] = -0.0045        # per bayesReward.py April 2022
+    params['nn-common']['loss_reward'] = -0.3           # per bayesReward.py April 2022
     params['nn-common']['no_winner_reward'] = -0.1   
 
     # PLAYER 1
