@@ -38,14 +38,14 @@ echo getting "${MODEL_NICKNAME}"-specific params....
 cp ../ginDQNParameters.py.${MODEL_NICKNAME} ginDQNParameters.py 
  
 echo cleaning up fram any previous runs... 
-[ -e "weights/weights.h5.post_training" ] && rm weights/weights.h5.post_training 
+[ -e weights/weights.*.h5.post_training ] && rm weights/weights.h5.post_training 
  
 echo launching scratchGin process... 
 python learningGin.py --name_scenario "${NAME_SCENARIO}" --logfile "${LOGFILE}" 
 echo scratchGin process completed 
  
 echo capturing weights to "${WEIGHTS_OUTPUT_FILE}" ... 
-[ -e "weights/weights.*.h5.post_training" ] && cp weights/weights.*.h5.post_training "${WEIGHTS_OUTPUT_FILE}" 
+[ -e weights/weights.*.h5.post_training ] && cp weights/weights.*.h5.post_training "${WEIGHTS_OUTPUT_FILE}" 
  
 cd .. 
 echo '#####################################################'
