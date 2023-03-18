@@ -16,7 +16,7 @@ def argmax(l:list):
         if l[i]>max:
             max=l[i]
             index = i
-    return i
+    return index
 
 class DQNAgent(torch.nn.Module):
     MAX_EFFECTIVE_DISCOUNT = 0.009
