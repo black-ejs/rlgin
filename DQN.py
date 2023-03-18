@@ -16,11 +16,6 @@ def argmax(l:list):
         if l[i]>max:
             max=l[i]
             index = i
-    if index<0:
-        for i in range(len(l)):
-            if l[i]>max:
-                max=l[i]
-                index = i
 
     return index
 
