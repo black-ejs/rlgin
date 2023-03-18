@@ -10,12 +10,18 @@ import torch.optim as optim
 DEVICE = 'cpu' # 'cuda' if torch.cuda.is_available() else 'cpu'
 
 def argmax(l:list):
-    max = sys.float_info.min
+    max = -(sys.float_info.max)
     index = -1
     for i in range(len(l)):
         if l[i]>max:
             max=l[i]
             index = i
+    if index<0:
+        for i in range(len(l)):
+            if l[i]>max:
+                max=l[i]
+                index = i
+
     return index
 
 class DQNAgent(torch.nn.Module):
