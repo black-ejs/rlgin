@@ -115,37 +115,6 @@ class DQNAgent(torch.nn.Module):
         (state, action, reward, next_state, done) = memory[index]
         memory[index] = (state, action, reward+addl_reward, next_state, done)
 
-    #def replay_OLD(self, memory, batch_size):
-    #    """
-    #    Replay memory.
-    #    """
-    #    if len(memory) == 0:
-    #        return
-    #
-    #    if len(memory) > batch_size:
-    #        minibatch = random.sample(memory, batch_size)
-    #    else:
-    #        minibatch = memory
-    #    for state, action, reward, next_state, done in minibatch:
-    #        self.train()
-    #        torch.set_grad_enabled(True)
-    #        target = reward
-    #        next_state_tensor = torch.tensor(np.expand_dims(next_state, 0), dtype=torch.float32).to(DEVICE)
-    #        state_tensor      = torch.tensor(np.expand_dims(state,      0), dtype=torch.float32, requires_grad=True).to(DEVICE)
-    #        if not done:
-    #            target = reward + self.gamma * torch.max(self.forward(next_state_tensor)[0])
-    #        output = self.forward(state_tensor)
-    #        target_f = output.clone()
-    #        if len(target_f.size()) > 1:
-    #            target_f[0][np.argmax(action)] = target
-    #        else:
-    #            target_f[0] = target
-    #        target_f.detach()
-    #        self.optimizer.zero_grad()
-    #        loss = F.mse_loss(output, target_f)
-    #        loss.backward()
-    #        self.optimizer.step()            
-
     def replay_new(self, memory, batch_size):
         """
         Replay memory.
