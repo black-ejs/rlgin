@@ -13,7 +13,7 @@ import regressionPlotter
 import benchmarks
 import gin
 
-MA_SIZE = 200
+MA_SIZE = 500
 
 ## #############################################
 ## #############################################

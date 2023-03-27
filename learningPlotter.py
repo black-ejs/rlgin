@@ -11,7 +11,7 @@ from learningGin import NO_WIN_NAME
 import regressionPlotter
 import benchmarks
 
-MA_SIZE = 200
+MA_SIZE = 500
 
 ## #############################################
 ## #############################################
@@ -139,12 +139,12 @@ class LearningPlotter(regressionPlotter.RegressionPlotter):
 
         for nnp in nn_players.values():
             nnp_name = nnp['name']
-            array_ma = []
-            array_count = []
+            array_ma = [0]
+            array_count = [0]
             ma = nnp['ma_array']
             for ma_val in ma:
                 array_ma.append(ma_val)
-                array_count.append(len(array_ma))
+                array_count.append(len(array_ma)+MA_SIZE)
             
             if len(array_count)>0:
                 if which == 'plot' and nnp_name==target_name:
