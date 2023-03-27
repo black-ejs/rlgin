@@ -7,11 +7,15 @@ def define_parameters():
 
     params['episodes'] = 500                 # gin hands
 
+    epsilon_decay_percent = 3   # 3% of hands
+    epsilon_episodes = (epsilon_decay_percent/100)*params['episodes']
+    epsilon_decay_linear_increment = 1/epsilon_episodes 
+
     # nn-common
     params['nn-common'] = {}
-    params['nn-common']['gamma'] = 0.91                  # value of future rewards
-    params['nn-common']['epsilon_decay_linear'] = 300/params['episodes']   # 3% of hands
     params['nn-common']['learning_rate'] = 0.1           # how aggressively to modify weights
+    params['nn-common']['gamma'] = 0.91                  # value of future rewards
+    params['nn-common']['epsilon_decay_linear'] = epsilon_decay_linear_increment 
     params['nn-common']['noise_epsilon'] = 1/500         # randomness in actions when not training
     params['nn-common']['memory_size'] = 250000
     params['nn-common']['batch_size'] = 2500
