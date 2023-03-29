@@ -79,6 +79,7 @@ class learningPlayer:
         elif self.strategy == "nn-cfh":
             ginDQN = ginDQNConvFHandOut.ginDQNConvFHandOut(params)
 
+        print(f"sending DQN ({self.strategy}/{type(ginDQN)}) to DEVICE ('{DQN.DEVICE}') for player {self.name}")
         ginDQN = ginDQN.to(DQN.DEVICE)
 
         if params['train']:
