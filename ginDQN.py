@@ -3,9 +3,9 @@ import random
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-DEVICE = 'cpu' # 'cuda' if torch.cuda.is_available() else 'cpu'
 
 from DQN import DQNAgent
+from DQN import DEVICE
 import gin
 import playGin
 

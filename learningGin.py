@@ -7,9 +7,8 @@ import numpy as np
 import statistics
 import torch.optim as optim
 import torch 
-DEVICE = 'cpu' # 'cuda' if torch.cuda.is_available() else 'cpu'
 
-from DQN import DQNAgent
+import DQN 
 import gin
 from playGin import BrainiacGinStrategy, BrandiacGinStrategy
 import playGin 
@@ -80,7 +79,7 @@ class learningPlayer:
         elif self.strategy == "nn-cfh":
             ginDQN = ginDQNConvFHandOut.ginDQNConvFHandOut(params)
 
-        ginDQN = ginDQN.to(DEVICE)
+        ginDQN = ginDQN.to(DQN.DEVICE)
 
         if params['train']:
             ginDQN.optimizer = optim.Adam(ginDQN.parameters(), 
