@@ -47,7 +47,7 @@ class ginDQNConvFHandOut(ginDQNConvoFloatPlane):
 
         # append to input state and pass to linear layers
         input_state_size = self.input_size[2]*self.input_size[3]
-        y = torch.tensor(self.input_state.reshape(input_state_size)).float()
+        y = torch.tensor(self.input_state.reshape(input_state_size)).float().to(DQN.DEVICE)
         combined_input_size = self.convo_output_size + input_state_size
         x = torch.cat((y,x))
 
