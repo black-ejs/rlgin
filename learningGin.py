@@ -79,7 +79,7 @@ class learningPlayer:
         elif self.strategy == "nn-cfh":
             ginDQN = ginDQNConvFHandOut.ginDQNConvFHandOut(params)
 
-        print(f"sending DQN ({self.strategy}/{type(ginDQN)}) to DEVICE ('{DQN.DEVICE}') for player {self.name}")
+        print(f"sending DQN ({self.strategy}/{type(ginDQN).__name__}) to DEVICE ('{DQN.DEVICE}') for player {self.name}")
         ginDQN = ginDQN.to(DQN.DEVICE)
 
         if params['train']:
@@ -87,7 +87,7 @@ class learningPlayer:
                                 weight_decay=0, lr=params['learning_rate'])
 
         if ginDQN.load_weights_success:
-            print(f"weights loaded from {ginDQN.weights_path} for player ${self.name} with strategy ${self.strategy}")
+            print(f"weights loaded from {ginDQN.weights_path} for player '{self.name}' with strategy '{self.strategy}'")
             if params['train']:
                 self.pretrain_weights = copy.deepcopy(ginDQN.state_dict())
 
