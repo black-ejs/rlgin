@@ -8,3 +8,5 @@ mkdir rlgin/weights
 cp rlgin/ginDQNParameters.py ginDQNParameters.py.${MODEL_NICKNAME}
 cp rlgin/utils/trainGin.sh .
 chmod a+x ./trainGin.sh
+cp rlgin/utils/trainDriver.sh .
+chmod a+x ./trainDriver.sh
