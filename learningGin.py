@@ -411,12 +411,17 @@ if __name__ == '__main__':
                     sys.stdout = log
 
         if 'max_python_memory' in params:
+            target_mpm = params["max_python_memory"]
+            print(f"setting max_python_memory={target_mpm}")
+            process = psutil.Process(os.getpid())
+            print(f" pre: max_rss={resource.getrusage(resource.RUSAGE_SELF).ru_maxrss} psinfo={process.memory_percent()}")
             old_mpm = resource.getrlimit(resource.RLIMIT_AS)
             rez_mpm = resource.setrlimit(resource.RLIMIT_AS,
                             [params["max_python_memory"],
                              params["max_python_memory"]])
             new_mpm = resource.getrlimit(resource.RLIMIT_AS)
-            print(f"old={old_mpm} rez={rez_mpm} new={new_mpm}")
+            print(f" old={old_mpm} rez={rez_mpm} new={new_mpm}")
+            print(f" post: max_rss={resource.getrusage(resource.RUSAGE_SELF).ru_maxrss} psinfo={process.memory_percent()}")
 
         run_train_test(params)
 
