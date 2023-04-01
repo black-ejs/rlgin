@@ -1,10 +1,15 @@
 import datetime
 import sys
-import copy
 import time
 import argparse
-import numpy as np
 import statistics
+
+import resource
+MAX_MEMORY= 1024*1024*1024
+import os
+import psutil
+
+import copy
 import torch.optim as optim
 import torch 
 
@@ -66,7 +71,7 @@ class learningPlayer:
         return nn_strategy
 
     def initializeDQN(self,params):
-        params['output_size'] = 1      # size of desired response, length of list of numpys 
+        params['output_size'] = 1    
 
         if self.strategy == "nn-linear":
             ginDQN = ginDQNLinear(params)
@@ -296,6 +301,10 @@ def run(params):
         if params['display']:
             display(counter_hands, hand_duration, ginhand, 
                 ('log_decisions' in params) and params['log_decisions'])
+            
+        if 'max_python_memory' in params:
+            process = psutil.Process(os.getpid())
+            print(f"max_memory={resource.getrusage(resource.RUSAGE_SELF).ru_maxrss} psinfo={process.memory_percent()}")
 
         #if model_is_crashed(ginhand):
         #    print(f"** possible model crash at hand {counter_hands} **")
@@ -359,7 +368,7 @@ def run_train_test(params):
         stats = run(params)  
         print_stats(stats)
 
-    print(f"****** learningGin execution took {time.time() - start_time} seconds")
+    print(f"****** learningGin execution took {time.time() - start_time} seconds at {datetime.datetime.now()}")
 
 ## #############################################
 if __name__ == '__main__':
@@ -370,6 +379,7 @@ if __name__ == '__main__':
     parser.add_argument("--logfile", nargs='?', type=str, default=None)
     parser.add_argument("--name_scenario", nargs='?', type=str, default=None)
     parser.add_argument("--generation", nargs='?', type=int, default=-1)
+    parser.add_argument("--max_memory", nargs='?', type=int, default=-1)
     # parser.add_argument("--display", nargs='?', type=distutils.util.strtobool, default=True)
     args = parser.parse_args()
     print("learningGin: args ", args)
@@ -385,6 +395,14 @@ if __name__ == '__main__':
         params['log_path'] = args.logfile        
     if args.generation != -1:
         params['generation'] = args.generation
+    if args.max_memory != -1:
+        params["max_python_memory"] = args.max_memory
+        old_mpm = resource.getrlimit(resource.RLIMIT_AS)
+        rez_mpm = resource.setrlimit(resource.RLIMIT_AS,
+                            [params["max_python_memory"],
+                             params["max_python_memory"]])
+        new_mpm = resource.getrlimit(resource.RLIMIT_AS)
+        print(f"old={old_mpm} rez={rez_mpm} new={new_mpm}")
 
     old_stdout = None
     log = None
