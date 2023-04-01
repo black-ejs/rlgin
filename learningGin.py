@@ -397,12 +397,6 @@ if __name__ == '__main__':
         params['generation'] = args.generation
     if args.max_memory != -1:
         params["max_python_memory"] = args.max_memory
-        old_mpm = resource.getrlimit(resource.RLIMIT_AS)
-        rez_mpm = resource.setrlimit(resource.RLIMIT_AS,
-                            [params["max_python_memory"],
-                             params["max_python_memory"]])
-        new_mpm = resource.getrlimit(resource.RLIMIT_AS)
-        print(f"old={old_mpm} rez={rez_mpm} new={new_mpm}")
 
     old_stdout = None
     log = None
@@ -415,6 +409,14 @@ if __name__ == '__main__':
                 if log.writable:
                     old_stdout = sys.stdout
                     sys.stdout = log
+
+        if 'max_python_memory' in params:
+            old_mpm = resource.getrlimit(resource.RLIMIT_AS)
+            rez_mpm = resource.setrlimit(resource.RLIMIT_AS,
+                            [params["max_python_memory"],
+                             params["max_python_memory"]])
+            new_mpm = resource.getrlimit(resource.RLIMIT_AS)
+            print(f"old={old_mpm} rez={rez_mpm} new={new_mpm}")
 
         run_train_test(params)
 
