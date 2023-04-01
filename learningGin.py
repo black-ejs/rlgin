@@ -303,8 +303,7 @@ def run(params):
                 ('log_decisions' in params) and params['log_decisions'])
             
         if 'max_python_memory' in params:
-            process = psutil.Process(os.getpid())
-            print(f"max_memory={resource.getrusage(resource.RUSAGE_SELF).ru_maxrss} psinfo={process.memory_percent()}")
+            print_psinfo()
 
         #if model_is_crashed(ginhand):
         #    print(f"** possible model crash at hand {counter_hands} **")
@@ -370,6 +369,11 @@ def run_train_test(params):
 
     print(f"****** learningGin execution took {time.time() - start_time} seconds at {datetime.datetime.now()}")
 
+def print_psinfo(prefix=""):
+    process = psutil.Process(os.getpid())
+    print(f"{prefix}max_rss={resource.getrusage(resource.RUSAGE_SELF).ru_maxrss} "
+        f"psinfo={process.memory_info().rss}/{process.memory_percent():1.2f}%")
+
 ## #############################################
 if __name__ == '__main__':
 
@@ -414,14 +418,14 @@ if __name__ == '__main__':
             target_mpm = params["max_python_memory"]
             print(f"setting max_python_memory={target_mpm}")
             process = psutil.Process(os.getpid())
-            print(f" pre: max_rss={resource.getrusage(resource.RUSAGE_SELF).ru_maxrss} psinfo={process.memory_percent()}")
+            print_psinfo(" pre:  ")
             old_mpm = resource.getrlimit(resource.RLIMIT_AS)
             rez_mpm = resource.setrlimit(resource.RLIMIT_AS,
                             [params["max_python_memory"],
                              params["max_python_memory"]])
             new_mpm = resource.getrlimit(resource.RLIMIT_AS)
             print(f" old={old_mpm} rez={rez_mpm} new={new_mpm}")
-            print(f" post: max_rss={resource.getrusage(resource.RUSAGE_SELF).ru_maxrss} psinfo={process.memory_percent()}")
+            print_psinfo(" post: ")
 
         run_train_test(params)
 
@@ -430,3 +434,5 @@ if __name__ == '__main__':
             sys.stdout = old_stdout
         if not log == None:
             log.close()
+
+
