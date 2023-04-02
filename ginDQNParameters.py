@@ -5,7 +5,7 @@ def define_parameters():
     timestamp = str(datetime.datetime.now().strftime("%Y%m%d%H%M%S"))
     params = dict()
 
-    params['episodes'] = 500                 # gin hands
+    params['episodes'] = 5                # gin hands
 
     epsilon_decay_percent = 3   # 3% of hands
     epsilon_episodes = (epsilon_decay_percent/100)*params['episodes']
@@ -13,8 +13,8 @@ def define_parameters():
 
     # nn-common
     params['nn-common'] = {}
-    params['nn-common']['learning_rate'] = 0.1           # how aggressively to modify weights
-    params['nn-common']['gamma'] = 0.91                  # value of future rewards
+    params['nn-common']['learning_rate'] = 0.05          # how aggressively to modify weights
+    params['nn-common']['gamma'] = 0.88                  # value of future rewards
     params['nn-common']['epsilon_decay_linear'] = epsilon_decay_linear_increment 
     params['nn-common']['noise_epsilon'] = 1/500         # randomness in actions when not training
     params['nn-common']['memory_size'] = 250000
@@ -27,14 +27,6 @@ def define_parameters():
     params['player1'] = {}
     params['player1']['name'] = 'Primo'
     params['player1']['strategy'] = 'br90'
-    # params['player1']['strategy'] = 'nn-linearb'
-    # params['player1']['nn'] = copy.deepcopy(params['nn-common'])
-    # params['player1']['nn']['layer_sizes'] = [312, 800, 50]   # 'hidden'/interior layers - per bayesDqn.py April 2022
-    # params['player1']['nn']['train'] = True
-    # params['player1']['nn']['test'] = True
-    # params['player1']['nn']["load_weights"] = False          # False if starting from scratch, True if re-training 
-    # params['player1']['nn']['weights_path'] = "weights/weights." + params['player1']['strategy']  + ".h5"
-    # params['player1']['nn']['use_cheat_rewards'] = False
 
     # PLAYER 2
     params['player2'] = {}
@@ -57,6 +49,6 @@ def define_parameters():
     # params['log_path'] = "logs/learningGin_log." + timestamp + ".txt"
     params['log_path'] = ""
     params["display"] = True
-    params["log_decisions"] = True
+    params["log_decisions"] = False
 
     return params
