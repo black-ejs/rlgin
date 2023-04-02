@@ -41,14 +41,24 @@ class ginDQNConvFHandOut(ginDQNConvoFloatPlane):
         self.layers = nn.ModuleList(llayers)
 
     def forward(self, x):
+
+        # capture input state
+        input_tensor = x
+
         # Conv2D layer
         x = self.layers[0](x)
         x = x.reshape(self.convo_output_size)  
 
         # append to input state and pass to linear layers
+        ## input_state_size = self.input_size[2]*self.input_size[3]
+        ## y = torch.tensor(self.input_state.reshape(input_state_size)).float().to(DQN.DEVICE)
+        ## combined_input_size = self.convo_output_size + input_state_size
+        ## x = torch.cat((y,x))
+
+        # append to input state and pass to linear layers
         input_state_size = self.input_size[2]*self.input_size[3]
-        y = torch.tensor(self.input_state.reshape(input_state_size)).float().to(DQN.DEVICE)
-        combined_input_size = self.convo_output_size + input_state_size
+        y = input_tensor.reshape(input_state_size)
+        ## combined_input_size = self.convo_output_size + input_state_size
         x = torch.cat((y,x))
 
         # Linear Layers
