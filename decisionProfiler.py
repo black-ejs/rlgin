@@ -1,6 +1,7 @@
 from collections.abc import Iterable
 import distutils.util
 import statistics
+import ast
 
 import matplotlib.pyplot as plt
 import matplotlib.widgets as widgets
@@ -343,9 +344,15 @@ class DecisionLogParser(LearningLogParser):
             draw_source = toks[7][:-2]
             discard = toks[10][:-2]
             #decisions = eval(line[line.index('['):line.index(']')+1])
-            decisions = line[line.index('[')+1:line.index(']')].split(",")
-            for i in range(len(decisions)):
-                decisions[i] = float(decisions[i])
+            decisions = line[line.index('>'):]
+            if decisions[0:1] == '[[':
+                # HandOut
+                decisions = ast.literal_eval(decisions)
+            else:
+                # old-school
+                decisions = line[line.index('[')+1:line.index(']')].split(",")
+                for i in range(len(decisions)):
+                    decisions[i] = float(decisions[i])
             if not (name in self.decisions):
                 self.decisions[name] = []
             self.decisions[name].append(decisions)
@@ -384,7 +391,7 @@ import argparse
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser()
     argparser.add_argument('path_to_logfile',
-                    default='logs/cheat_rewards.2.log', #'logs/bayesDqn-june.2.log'
+                    default='logs/scratchGin_HandOut.4.1.2023-03-18_144744.log', #'logs/bayesDqn-june.2.log'
                     nargs='?', help='path to the logfile to be plotted')
     argparser.add_argument('include_partials',
                     default='False', 

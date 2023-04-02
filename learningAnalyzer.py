@@ -133,7 +133,7 @@ import argparse
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser()
     argparser.add_argument('path_to_logfile',
-                    default='logs/oneBayes.log', #'logs/dueling.scratch.log',  #'logs/mega2', 
+                    default='logs/HandOut-HandOut.megalog', # 'logs/oneBayes.log', #'logs/dueling.scratch.log',  #'logs/mega2', 
                     nargs='?', help='path to the logfile to be plotted')
     argparser.add_argument('include_partials',
                     default='False', 
