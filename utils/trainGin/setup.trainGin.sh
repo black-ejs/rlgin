@@ -10,3 +10,7 @@ cp rlgin/utils/trainGin.sh .
 chmod a+x ./trainGin.sh
 cp rlgin/utils/trainDriver.sh .
 chmod a+x ./trainDriver.sh
+
+echo *******************************************************************
+echo **** get your weights/weights.h5.0, modify your ginDQNParameters.py, and you are ready to go
+echo *******************************************************************

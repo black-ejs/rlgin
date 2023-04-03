@@ -5,6 +5,12 @@ zone=us-west1-b
 if [[ "$1" == *"east4"* ]]; then
   zone=us-east4-c
 fi
+if [[ "$1" == *"east4c"* ]]; then
+  zone=us-east4-c
+fi
+if [[ "$1" == *"cent1a"* ]]; then
+  zone=us-central1-a
+fi
 if [[ "$1" == *"learn-a-vm-2"* ]]; then
   zone=us-central1-a
 fi
