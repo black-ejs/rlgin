@@ -1,0 +1,10 @@
+echo; 
+echo "##### TRAINING GROUND TARGETS at `date` #####"; 
+~/tgt.sh | tail -2; 
+grep turno ~/tgt.sh.out; 
+
+echo ; 
+echo "##### TIMINGS #####"; 
+~/took.sh | awk '/^[0-9]/{t=substr($1,1,8); h=substr($4,6); tt[h]+=t; ii[h]+=1;}END{for (h in ii) {print tt[h]/ii[h] " " h " " tt[h] " " ii[h] }}' | sort -n; 
+echo
+

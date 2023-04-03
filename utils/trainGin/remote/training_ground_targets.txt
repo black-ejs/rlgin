@@ -1,0 +1,10 @@
+HOT.3.2@rlgin-3-vm 
+HOT.4.2@rlgin-3-vm 
+HOT.3.2@r-learn-a-vm-2 
+HOT.4.2@r-learn-a-vm-2 
+HOT.6.6@rlgin-learn-a-vm 
+HOT.5.9@rlgin-learn-a-vm 
+HOT.4.1@r-v2-1xv100-template-1 
+HOT.5.7@r-v2-1xv100-template-1 
+HOT.5.6@r-1v-t4-east4-vm
+
