@@ -1,9 +1,6 @@
 #!/bin/bash
 #set -x
 
-#REMOTE_HOSTS="r-learn-c-east1b-vm-1 r-learn-c-east1b-vm-2"
-#SERIES_NICKNAME="NWO"
-#SERIES_INDEXES="1 2 3 4"
 source ./vars_NWO.sh
 
 #    CHOOSE setup for remote params 
