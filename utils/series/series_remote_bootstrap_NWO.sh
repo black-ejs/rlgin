@@ -1,9 +1,10 @@
 #!/bin/bash
 #set -x
 
-REMOTE_HOSTS="r-learn-c-east1b-vm-1 r-learn-c-east1b-vm-2"
-SERIES_NICKNAME="NWO"
-SERIES_INDEXES="1 2 3 4"
+#REMOTE_HOSTS="r-learn-c-east1b-vm-1 r-learn-c-east1b-vm-2"
+#SERIES_NICKNAME="NWO"
+#SERIES_INDEXES="1 2 3 4"
+source ./vars_NWO.sh
 
 #    CHOOSE setup for remote params 
 #REMOTE_ID=edward_schwarz
@@ -22,6 +23,7 @@ CURRENT_SCRIPT_NAME="`basename ${0}`"
 CURRENT_SCRIPT_SOURCE_DIR="`dirname ${0}`"
 CURRENT_SCRIPT_ORIGINAL_EXECUTION_DIR=`pwd`
 REMOTE_REPO_URL=https://github.com/black-ejs/rlgin
+BOOTSTRAP_LOG=./${CURRENT_SCRIPT_NAME}.bootstrap.log
 
 echo "*********** ${CURRENT_SCRIPT_NAME}: execution at `date` ***********"
 echo REMOTE_HOSTS="${REMOTE_HOSTS}"
@@ -36,9 +38,8 @@ SERIES_SCRIPTS_SOURCE_DIR=rlgin/utils/series
 
 echo "     ****** ${CURRENT_SCRIPT_NAME}: getting bootstrapping ${SERIES_NICKNAME} @ ${REMOTE_HOSTS} ******"
 echo ${SERIES_SCRIPTS_SOURCE_DIR}/series_remote_bootstrap "${REMOTE_HOSTS}"  "${SERIES_NICKNAME}"  "${SERIES_INDEXES}" "${SERIES_PARAMS_SPEC}"
-${SERIES_SCRIPTS_SOURCE_DIR}/series_remote_bootstrap.sh "${REMOTE_HOSTS}"  "${SERIES_NICKNAME}" "${SERIES_INDEXES}" "${SERIES_PARAMS_SPEC}"
+${SERIES_SCRIPTS_SOURCE_DIR}/series_remote_bootstrap.sh "${REMOTE_HOSTS}"  "${SERIES_NICKNAME}" "${SERIES_INDEXES}" "${SERIES_PARAMS_SPEC}" | tee "${BOOTSTRAP_LOG}"
+
 
 echo "     ****** ${CURRENT_SCRIPT_NAME}: cleaning up ******"
 rm -rf rlgin
-
-echo "     ****** ${CURRENT_SCRIPT_NAME}: execution completed at `date` ******"
