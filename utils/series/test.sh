@@ -1,5 +1,5 @@
 #!/bin/bash
-set -x
+#set -x
 
 REMOTE_HOST=r-learn-c-east1b-vm-1
 SERIES_NICKNAME=10

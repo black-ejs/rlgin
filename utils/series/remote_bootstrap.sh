@@ -85,7 +85,7 @@ else
 fi
 
 echo "  ********* ${CURRENT_SCRIPT_NAME}: contacting host and getting code ***********"
-~/gssh.sh "${REMOTE_HOST}" < "${CURRENT_SCRIPT_SOURCE_DIR}"/bootstrap_vm.sh
+~/gssh.sh "${REMOTE_HOST}" < "${CURRENT_SCRIPT_SOURCE_DIR}"/bootstrap_vm.sh 2>/dev/null | awk '{if (p==1) {print $0;}}/permitted by/{p=1;}'
 
 echo "  ********* ${CURRENT_SCRIPT_NAME}: bootstrapping series location for series ${SERIES_NCKNAME} ***********"
 ~/gcmd.sh  "~/dev/rlgin/utils/series/bootstrap_series.sh ${SERIES_NICKNAME}" "${REMOTE_HOST}"
