@@ -1,14 +1,40 @@
 #!/bin/bash
 #set -x
 
-REMOTE_HOSTS="r-learn-c-east1b-vm-1 r-learn-c-east1b-vm-2"
-SERIES_NICKNAME="NWO"
-SERIES_INDEXES="1 2 3 4"
-SERIES_PARAMS_SPEC=~/Documents/dev/projects/${SERIES_NICKNAME}/ginDQNParameters.py."${SERIES_NICKNAME}"
+REMOTE_HOSTS=${1}
+SERIES_NICKNAME=${2}
+SERIES_INDEXES=${3}
+SERIES_PARAMS_SPEC=${4}
 
 CURRENT_SCRIPT_NAME="`basename ${0}`"
 CURRENT_SCRIPT_SOURCE_DIR="`dirname ${0}`"
 CURRENT_SCRIPT_ORIGINAL_EXECUTION_DIR=`pwd`
+
+missing=""
+if [[ X"${REMOTE_HOSTS}"X == "XX" ]]
+then
+	missing="REMOTE_HOSTS"
+elif [[ X"${SERIES_NICKNAME}"X == "XX" ]]
+then
+	missing="SERIES_NICKNAME"
+elif [[ X"${SERIES_PARAMS_SPEC}"X == "XX" ]]
+then
+	missing="SERIES_INDEXES"
+elif [[ X"${SERIES_PARAMS_SPEC}"X == "XX" ]]
+then
+	missing="SERIES_INDEXES"
+fi	
+
+if [[ X"${missing}"X == "XX" ]]
+then
+	echo "    #### params ok"
+else
+    echo "*********** ERROR ***********"
+    echo REQUIRED PARAMETER "${missing}" NOT FOUND
+    echo "EXITING WITH CODE 9"
+    echo "*****************************"
+    exit 9
+fi
 
 echo "*********** ${CURRENT_SCRIPT_NAME}: execution at `date` ***********"
 echo REMOTE_HOSTS="${REMOTE_HOSTS}"
@@ -49,9 +75,9 @@ do
 	echo `set | grep RH${ii} | grep -v "_[=]"`
 done
 
-
 for jj in ${SERIES_INDEXES}
 do
+   	echo "    ***********************************"
 	echo "    ****** bootstrapping series ${SERIES_NICKNAME} index $jj *****"
 	rh_index=`expr ${jj} % ${REMOTE_HOST_COUNT} + 1`
 	RH=`set | grep RH${rh_index} | grep -v "_[=]" | awk '{split($0,aa,"="); print aa[2];}'`

@@ -166,7 +166,7 @@ then
 fi
 
 echo "  ********* ${CURRENT_SCRIPT_NAME}: finished for ${SERIES_NICKNAME} ***********"
-~/gcmd.sh "ls -l ${TARGET_PATH}" "${REMOTE_HOST}"
+~/gcmd.sh "echo ${TARGET_PATH}; ls -l ${TARGET_PATH}" "${REMOTE_HOST}"
 
 
 
