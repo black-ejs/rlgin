@@ -34,7 +34,7 @@ mkdir -p "${TARGET_PATH}"
 cd "${TARGET_PATH}"
 
 echo "**** OBTAINING rlgin EXECUTION CODE"
-git clone "{REMOTE_REPO_URL}"
+git clone "${REMOTE_REPO_URL}"
 
 echo "**** CREATING LOGS DIRECTORY"
 mkdir rlgin/logs
