@@ -105,7 +105,14 @@ fi
 echo "  ********* ${CURRENT_SCRIPT_NAME}: obtaining PARAMS for ${SERIES_NICKNAME} ***********"
 PARAMS_FILE="`basename ${PARAMS_SPEC}`"
 LOCAL_PARAMS_FILE=/tmp/${PARAMS_FILE}
-~/gscp.sh "${PARAMS_SPEC}" "${LOCAL_PARAMS_FILE}"
+
+if [[ "${PARAMS_SPEC}" == *${REMOTE_ID}\@* ]]
+then
+	~/gscp.sh "${PARAMS_SPEC}" "${LOCAL_PARAMS_FILE}"
+else
+	cp "${PARAMS_SPEC}" "${LOCAL_PARAMS_FILE}"
+fi
+
 if [[ -e ${LOCAL_PARAMS_FILE} ]]
 then
     echo "      ****** PARAMS copied to ${LOCAL_PARAMS_FILE} *******"
