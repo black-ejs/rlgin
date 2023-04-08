@@ -55,7 +55,7 @@ then
 	chmod a+x ./trainDriver.sh
 elif [[ "${TRAIN_OR_SCRATCH}" == "SCRATCH" ]]
 then
-	echo "**** COPYING TRAINING SCRIPTS"
+	echo "**** COPYING SCRATCH SCRIPTS"
 	cp rlgin/utils/scratch/scratchGin.sh .
 	chmod a+x ./scratchGin.sh
 	cp rlgin/utils/scratch/scratchDriver.sh .
@@ -63,7 +63,6 @@ then
 	cp rlgin/utils/scratch/testWeights.sh .
 	chmod a+x ./testWeights.sh
 fi
-
 
 echo "**** returning to original path: ${CURRENT_SCRIPT_ORIGINAL_EXECUTION_DIR}"
 cd ${CURRENT_SCRIPT_ORIGINAL_EXECUTION_DIR}
