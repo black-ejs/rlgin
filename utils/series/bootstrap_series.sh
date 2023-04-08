@@ -8,7 +8,7 @@ CURRENT_SCRIPT_SOURCE_DIR="`dirname ${0}`"
 CURRENT_SCRIPT_ORIGINAL_EXECUTION_DIR=`pwd`
 REMOTE_REPO_URL="https://github.com/black-ejs/rlgin"
 
-if [[ "X""${SERIES_NICKNAME}"X" == "XX" ]]
+if [[ "X""${SERIES_NICKNAME}""X" == "XX" ]]
 then
     echo "*********** ERROR ***********"
     echo REQUIRED PARAMETER SERIES NICKNAME NOT FOUND
