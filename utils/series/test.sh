@@ -25,7 +25,7 @@ PARAMS_RP="${REMOTE_ID}"@"${PARAMS_SOURCE_VM}"
 PARAMS_SPEC=${PARAMS_RP}:"${PARAMS_TARGET_PATH}"/"${PARAMS_FILE}"
 
 #BSCRIPT=./scratch_bootstrap.sh
-BSCRIPT=./training_bootstrap.sh
+BSCRIPT=./train_bootstrap.sh
 
 ##################################
 
