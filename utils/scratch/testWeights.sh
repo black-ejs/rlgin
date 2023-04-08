@@ -1,4 +1,4 @@
-##!/usr/bin/bash
+SS##!/usr/bin/bash
 ## run a test cycle, once for each of the weights in "weights/" subdir
 
 TIMESTAMP=`date -u +%Y-%m-%d_%H-%M-%S`
@@ -14,6 +14,14 @@ echo changing directories to "${RUN_DIR}"....
 cd "${RUN_DIR}"
 echo "current working directory = ${PWD}"
 
+if [[ -d "${INPUT_WEIGHTS_PATH}" ]]
+then
+	echo "   #### ""${INPUT_WEIGHTS_PATH}" already exists
+else
+	echo "   #### CREATING ""${INPUT_WEIGHTS_PATH}" 
+	mkdir -p "${INPUT_WEIGHTS_PATH}" 
+	cp weights/scratchGin*.h5  "${INPUT_WEIGHTS_PATH}"/
+fi
 
 for input_weights_file in `ls "${INPUT_WEIGHTS_PATH}"`
 do

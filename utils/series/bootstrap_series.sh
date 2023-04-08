@@ -2,6 +2,7 @@
 #set -x
 
 SERIES_NICKNAME="${1}"
+TRAIN_OR_SCRATCH="${2:-NEITHER}"
 
 CURRENT_SCRIPT_NAME="`basename ${0}`"
 CURRENT_SCRIPT_SOURCE_DIR="`dirname ${0}`"
@@ -45,11 +46,24 @@ mkdir rlgin/weights
 echo "**** COPYING PARAMETER TEMPLATE"
 cp rlgin/ginDQNParameters.py ginDQNParameters.py.${SERIES_NICKNAME}
 
-echo "**** COPYING TRAINING SCRIPTS"
-cp rlgin/utils/trainGin/trainGin.sh .
-chmod a+x ./trainGin.sh
-cp rlgin/utils/trainGin/trainDriver.sh .
-chmod a+x ./trainDriver.sh
+if [[ "${TRAIN_OR_SCRATCH}" == "TRAIN" ]]
+then
+	echo "**** COPYING TRAINING SCRIPTS"
+	cp rlgin/utils/trainGin/trainGin.sh .
+	chmod a+x ./trainGin.sh
+	cp rlgin/utils/trainGin/trainDriver.sh .
+	chmod a+x ./trainDriver.sh
+elif [[ "${TRAIN_OR_SCRATCH}" == "SCRATCH" ]]
+then
+	echo "**** COPYING TRAINING SCRIPTS"
+	cp rlgin/utils/scratch/scratchGin.sh .
+	chmod a+x ./scratchGin.sh
+	cp rlgin/utils/scratch/scratchDriver.sh .
+	chmod a+x ./scratchDriver.sh
+	cp rlgin/utils/scratch/testWeights.sh .
+	chmod a+x ./testWeights.sh
+fi
+
 
 echo "**** returning to original path: ${CURRENT_SCRIPT_ORIGINAL_EXECUTION_DIR}"
 cd ${CURRENT_SCRIPT_ORIGINAL_EXECUTION_DIR}
