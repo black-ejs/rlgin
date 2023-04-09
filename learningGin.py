@@ -413,6 +413,8 @@ if __name__ == '__main__':
                 if log.writable:
                     old_stdout = sys.stdout
                     sys.stdout = log
+                    old_stderr = sys.stderr
+                    sys.stderr = log
 
         if 'max_python_memory' in params:
             target_mpm = params["max_python_memory"]
@@ -432,6 +434,8 @@ if __name__ == '__main__':
     finally:
         if not old_stdout == None:
             sys.stdout = old_stdout
+        if not old_stdout == None:
+            sys.stderr = old_stderr
         if not log == None:
             log.close()
 
