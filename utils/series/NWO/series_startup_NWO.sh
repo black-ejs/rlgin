@@ -31,8 +31,9 @@ do
 	RTARGETDIR=`echo "${TARGET}" | cut -d@ -f1`
         RHOST=`echo "${TARGET}" | cut -d@ -f2`
 	DRIVER_INDEX=`echo ${RTARGETDIR} | awk '{print substr($0,length($0),1)}'`
-	ARG1="cd ${RTARGETDIR}; nohup ./scratchDriver.sh ${DRIVER_INDEX} > ./scratchDriver.sh.out & "
-	~/gcmd.sh "${ARG1}" "${RHOST}"
+	ARG1=" cd ${RTARGETDIR}; echo launching; nohup ./scratchDriver.sh ${DRIVER_INDEX} > ./scratchDriver.sh.out &  echo launched ; sleep 3; echo exiting"
+
+	~/gcmd2.sh "${ARG1}" "${RHOST}"	
 done
 
 
