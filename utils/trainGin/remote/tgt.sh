@@ -36,7 +36,7 @@ cat "${OUTPUT1}" | awk '
 				total_time=total_time+hand_time; } 
 			/ing[.][.]/ { 
 				phase=$0;} 
-			/[3a4]-vm|plate-|[abcd]-vm/ { 
+			/r.*[34]-vm|r.*plate-|r.*[abcd]-vm/ { 
 				if (total_time>0 && hands_done ==0) { 
 					avg=int(total_time/hand_count); 
 					tdo=int((5000-hand_count)*avg/36000)/100;  
@@ -94,10 +94,15 @@ cat "${FINAL_OUTPUT}" |  awk '
 					} else {ptrain=-1} 
 				} 
 			} 
-		    /HOT[.][0-9]*[.][0-9]*[.][0-9]*[.]2023-/ { 
-				idpos = match($0,"HOT[.][0-9]*[.][0-9]*[.][0-9]*[.]2023-")
-				id=substr($0,idpos+4);
+		    /logs\/.*[0-9]*[.][0-9]*[.][0-9]*[.]2023-.*log/ { 
+				log_name_regex="[0-9]*[.][0-9]*[.][0-9]*[.]2023-"
+				idpos = match($0,log_name_regex)
+				front=substr($0,1,idpos-1)
+				split(front,cc,"_")
+				series_nick=cc[length(cc)]
+				id=substr($0,idpos);
 				id=substr(id,1,index(id,"2023-")-2);
+				id=series_nick id
 				split(id,marks,".")
 				model=marks[1] "." marks[2]
 				if (model!=prev_model) {

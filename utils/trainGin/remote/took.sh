@@ -27,14 +27,15 @@ do
              echo \${logfile} @${HOST}; \
              grep ' took ' \${logfile}; \
           done;"  \
-         ${HOST} >> "${FINAL_OUTPUT}"
+         ${HOST} >> "${OUTPUT1}"
 done
 
-cat "${FINAL_OUTPUT}" | awk '  \
+cat "${OUTPUT1}" | awk '  \
 		/^--/  {rr=$2; host=$3;} \
 		/^[*]/ {took=$5; hsecs=(took-took%3600); h=hsecs/3600; msecs=(took-hsecs)-(took-hsecs)%60; m=msecs/60; \
 		print took "secs   avg@500=" (took/5000)*1000 "  run=" rr "  host=" host "  time=" h ":" m} \
 	' \
-	| sort -n
+	| sort -n >> "${FINAL_OUTPUT}"
 
+cat "${FINAL_OUTPUT}"
 
