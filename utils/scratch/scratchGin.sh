@@ -1,5 +1,6 @@
-##!/usr/bin/bash 
+#!/usr/bin/bash 
 ## this script is usually invoked with "nohup" or the equivalent 
+set -x
  
 SCRATCH_ID=${1:-0}  
 
@@ -40,6 +41,19 @@ cp ../ginDQNParameters.py.${MODEL_NICKNAME} ginDQNParameters.py
 echo cleaning up fram any previous runs... 
 [ -e weights/weights.*.h5.post_training ] && rm weights/weights.h5.post_training 
  
+echo checking python...
+which python
+python --version
+
+# 4/2023 conda broken in certain sub-shell situations, including ssh/nohup/&
+echo confirming conda
+which conda
+if [[ -e "/opt/conda/etc/profile.d/conda.sh" ]]
+then
+	source /opt/conda/etc/profile.d/conda.sh
+fi
+conda activate
+
 echo launching scratchGin process... 
 python learningGin.py --name_scenario "${NAME_SCENARIO}" --logfile "${LOGFILE}" 
 echo scratchGin process completed 
@@ -49,6 +63,7 @@ echo capturing weights to "${WEIGHTS_OUTPUT_FILE}" ...
  
 cd .. 
 echo '#####################################################'
+
 
 
 
