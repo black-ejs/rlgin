@@ -1,9 +1,9 @@
 #!/bin/bash
 #set -x
 
-SERIES_NICKNAME="${1:-${RLGIN_BATCH_JP_SERIES_NICKNAME}}"
-PARAMS_SPEC="${2:-${RLGIN_BATCH_JP_PARAMS_SPEC}}"
-TRAIN_OR_SCRATCH="${3:-${RLGIN_BATCH_JP_TRAIN_OR_SCRATCH}}"
+export SERIES_NICKNAME="${1:-${RLGIN_BATCH_JP_SERIES_NICKNAME}}"
+export PARAMS_SPEC="${2:-${RLGIN_BATCH_JP_PARAMS_SPEC}}"
+export TRAIN_OR_SCRATCH="${3:-${RLGIN_BATCH_JP_TRAIN_OR_SCRATCH}}"
 
 echo SERIES_NICKNAME="${SERIES_NICKNAME}"
 echo PARAMS_SPEC="${PARAMS_SPEC}"
@@ -56,6 +56,11 @@ fi
 echo "**** CREATING TARGET DIRECTORY ${TARGET_PATH}"
 mkdir -p "${TARGET_PATH}"
 cd "${TARGET_PATH}"
+
+echo "********** D R Y   R U N   *************"
+echo "**************** EXITING   *************"
+exit
+
 
 echo "**** copying in git repo "
 cp -r ${RLGIN_BATCH_LOCAL_REPO} ${EXECUTION_DIR}
