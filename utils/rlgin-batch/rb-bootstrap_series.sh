@@ -53,10 +53,6 @@ then
     exit 23
 fi
 
-echo "########### DRY RUN ##################"
-echo "########### EXITING ##################"
-exit
-
 echo "**** CREATING TARGET DIRECTORY ${TARGET_PATH}"
 mkdir -p "${TARGET_PATH}"
 cd "${TARGET_PATH}"
