@@ -61,6 +61,9 @@ echo "**** CREATING TARGET DIRECTORY ${TARGET_PATH}"
 mkdir -p "${TARGET_PATH}"
 cd "${TARGET_PATH}"
 
+echo "**** copying in git repo "
+cp -r ${RLGIN_BATCH_LOCAL_REPO} ${EXECUTION_DIR}
+
 echo "**** CREATING LOGS DIRECTORY"
 mkdir -p ${LOG_LOC}
 
