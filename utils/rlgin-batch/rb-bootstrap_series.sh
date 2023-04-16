@@ -15,7 +15,6 @@ CURRENT_SCRIPT_ORIGINAL_EXECUTION_DIR=`pwd`
 
 REMOTE_REPO_URL=${RLGIN_BATCH_REPO_URL}
 TRAINING_GROUND=${RLGIN_BATCH_SERIES_BASE}
-LOCAL_REPO=rlgin
 EXECUTION_DIR=rlgin
 LOG_LOC=${EXECUTION_DIR}/logs 
 WEIGHTS_LOC=${EXECUTION_DIR}/weights
@@ -54,12 +53,13 @@ then
     exit 23
 fi
 
+echo "########### DRY RUN ##################"
+echo "########### EXITING ##################"
+exit
+
 echo "**** CREATING TARGET DIRECTORY ${TARGET_PATH}"
 mkdir -p "${TARGET_PATH}"
 cd "${TARGET_PATH}"
-
-echo "**** OBTAINING rlgin EXECUTION CODE"
-git clone "${REMOTE_REPO_URL}" ${LOCAL_REPO}
 
 echo "**** CREATING LOGS DIRECTORY"
 mkdir -p ${LOG_LOC}
