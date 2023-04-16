@@ -1,7 +1,6 @@
 #!/bin/bash
 #set -x
 
-SERIES_NICKNAME="_unset_"
 JOB_PARAMS_PATH=${RLGIN_BATCH_PARAMS}/job-params.txt
 let LINE_NUMBER=${BATCH_TASK_INDEX}+1
 export JOB_PARAMS=`head -"${LINE_NUMBER}" "${JOB_PARAMS_PATH}" | tail -1`
