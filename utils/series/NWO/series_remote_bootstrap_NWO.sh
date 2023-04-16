@@ -34,7 +34,7 @@ git clone "${REMOTE_REPO_URL}"
 SERIES_SCRIPTS_SOURCE_DIR=rlgin/utils/series
 
 echo "     ****** ${CURRENT_SCRIPT_NAME}: getting bootstrapping ${SERIES_NICKNAME} @ ${REMOTE_HOSTS} ******"
-echo ${SERIES_SCRIPTS_SOURCE_DIR}/series_remote_bootstrap "${REMOTE_HOSTS}"  "${SERIES_NICKNAME}"  "${SERIES_INDEXES}" "${SERIES_PARAMS_SPEC}"
+echo ${SERIES_SCRIPTS_SOURCE_DIR}/series_remote_bootstrap.sh "${REMOTE_HOSTS}"  "${SERIES_NICKNAME}"  "${SERIES_INDEXES}" "${SERIES_PARAMS_SPEC}"
 ${SERIES_SCRIPTS_SOURCE_DIR}/series_remote_bootstrap.sh "${REMOTE_HOSTS}"  "${SERIES_NICKNAME}" "${SERIES_INDEXES}" "${SERIES_PARAMS_SPEC}" | tee "${BOOTSTRAP_LOG}"
 
 
