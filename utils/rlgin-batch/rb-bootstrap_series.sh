@@ -1,5 +1,5 @@
 #!/bin/bash
-set -x
+#set -x
 
 export SERIES_NICKNAME="${1:-${RLGIN_BATCH_JP_SERIES_NICKNAME}}"
 export PARAMS_SPEC="${2:-${RLGIN_BATCH_JP_PARAMS_SPEC}}"
@@ -59,7 +59,7 @@ mkdir -p "${TARGET_PATH}"
 cd "${TARGET_PATH}"
 
 echo "**** copying in git repo "
-cp -r ${RLGIN_BATCH_LOCAL_REPO} ${LOCAL_REPO}
+cp -r ${RLGIN_BATCH_LOCAL_REPO} ${LOCAL_REPO#}
 
 echo "**** CREATING LOGS DIRECTORY"
 mkdir -p ${LOG_LOC}
