@@ -34,7 +34,7 @@ then
     exit 22
 fi
 
-TARGET_PATH="${TRAINING_GROUND}"/"${SERIES_NICKNAME}"/"${SCRATCH_ID}"
+TARGET_PATH="${TRAINING_GROUND}"/"${SERIES_NICKNAME}${SCRATCH_ID}"
 if [[ -e "${TARGET_PATH}" ]]
 then
     echo "*********** WARNING ***********"
