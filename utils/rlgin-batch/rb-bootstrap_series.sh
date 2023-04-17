@@ -59,7 +59,14 @@ mkdir -p "${TARGET_PATH}"
 cd "${TARGET_PATH}"
 
 echo "**** copying in git repo "
-cp -r ${RLGIN_BATCH_LOCAL_REPO} ${LOCAL_REPO#}
+repoback=`pwd`
+TMPREPO=${TMPDIR}/rb-repo.zip
+cd ${RLGIN_BATCH_LOCAL_REPO}
+zip -r ${TMPREPO} * --exclude "*.git/*" 
+cd "${repoback}"
+mkdir -p ${LOCAL_REPO}
+cd ${LOCAL_REPO}
+unzip ${TMPREPO}
 
 echo "**** CREATING LOGS DIRECTORY"
 mkdir -p ${LOG_LOC}
