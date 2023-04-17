@@ -10,6 +10,7 @@ echo RLGIN NEW-MODEL scratch session started at "${TIMESTAMP}"
  
 MODEL_NICKNAME=${PWD##*/} 
 RUN_DIR=rlgin 
+LOCAL_REPO=rlgin
  
 echo changing directories to "${RUN_DIR}".... 
 cd "${RUN_DIR}" 
@@ -33,7 +34,16 @@ echo WEIGHTS_OUTPUT_FILE="${WEIGHTS_OUTPUT_FILE}"
 echo "-----------------------------" 
  
 echo updating code base.... 
-git pull 
+#git pull 
+repoback=`pwd`
+TMPREPO=${TMPDIR}/rb-repo.zip
+cd ${RLGIN_BATCH_LOCAL_REPO}
+git archive --format zip HEAD >  ${TMPREPO}
+cd "${repoback}"
+mkdir -p ${LOCAL_REPO}
+cd ${LOCAL_REPO}
+unzip ${TMPREPO}
+cd "${repoback}"
  
 echo getting "${MODEL_NICKNAME}"-specific params.... 
 cp ../ginDQNParameters.py.${MODEL_NICKNAME} ginDQNParameters.py 
