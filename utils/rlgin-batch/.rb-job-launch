@@ -1,0 +1,20 @@
+#!/bin/bash
+set -x
+
+## mock up Google BATCH env if running standalome
+if [[ X""X == XX ]]
+then
+	echo "BATCH_TASK_INDEX is not set, setting to 0"
+	export BATCH_TASK_INDEX=0
+fi
+
+## get latest scripts
+if [ -d ${RLGIN_BATCH_LOCAL_REPO} ]
+then
+	rm -rf ${RLGIN_BATCH_LOCAL_REPO}
+fi
+git clone ${RLGIN_BATCH_REPO_URL} ${RLGIN_BATCH_LOCAL_REPO}
+cp ${RLGIN_BATCH_LOCAL_REPO}/utils/rlgin-batch/*.sh . 
+
+## launch job
+./rb-job-run.sh

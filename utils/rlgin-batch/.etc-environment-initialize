@@ -1,0 +1,4 @@
+# >>> RLGIN_BATCH initialize >>>
+ENV=/home/edward_schwarz/.bashrc
+BASH_ENV=/home/edward_schwarz/.bashrc
+# <<< RLGIN BATCH initialize <<<

@@ -37,15 +37,20 @@ echo LOGFILE="${LOGFILE}"
 echo WEIGHTS_OUTPUT_FILE="${WEIGHTS_OUTPUT_FILE}" 
 echo "-----------------------------" 
  
-echo updating code base.... 
 #git pull 
-repoback=`pwd`
-TMPREPO=${TMPDIR}/rb-repo.zip
-cd ${RLGIN_BATCH_LOCAL_REPO}
-git archive --format zip HEAD >  ${TMPREPO}
-cd "${repoback}"
-unzip -o ${TMPREPO}
-cd "${repoback}"
+if [[ -d ${RLGIN_BATCH_LOCAL_REPO} ]]
+then
+	echo updating code base.... 
+	repoback=`pwd`
+	TMPREPO=${TMPDIR}/rb-repo.zip
+	cd ${RLGIN_BATCH_LOCAL_REPO}
+	git archive --format zip HEAD >  ${TMPREPO}
+	cd "${repoback}"
+	unzip -o ${TMPREPO}
+	cd "${repoback}"
+else
+	echo ${RLGIN_BATCH_LOCAL_REPO} not fouund, skipping update of code base.... 
+fi
  
 echo getting "${MODEL_NICKNAME}"-specific params.... 
 cp ../ginDQNParameters.py.${MODEL_NICKNAME} ginDQNParameters.py 
