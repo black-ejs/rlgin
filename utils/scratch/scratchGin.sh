@@ -13,6 +13,10 @@ RUN_DIR=rlgin
 LOCAL_REPO=rlgin
  
 echo changing directories to "${RUN_DIR}".... 
+if [ ! -d ${RUN_DIR} ]
+then
+	mkdir -p ${RUN_DIR}
+fi
 cd "${RUN_DIR}" 
 echo "current working directory = {$PWD}" 
  
@@ -40,8 +44,6 @@ TMPREPO=${TMPDIR}/rb-repo.zip
 cd ${RLGIN_BATCH_LOCAL_REPO}
 git archive --format zip HEAD >  ${TMPREPO}
 cd "${repoback}"
-mkdir -p ${LOCAL_REPO}
-cd ${LOCAL_REPO}
 unzip ${TMPREPO}
 cd "${repoback}"
  
