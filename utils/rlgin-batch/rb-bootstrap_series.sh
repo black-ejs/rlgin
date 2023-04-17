@@ -67,6 +67,7 @@ cd "${repoback}"
 mkdir -p ${LOCAL_REPO}
 cd ${LOCAL_REPO}
 unzip ${TMPREPO}
+cd "${TARGET_PATH}"
 
 echo "**** CREATING LOGS DIRECTORY"
 mkdir -p ${LOG_LOC}
