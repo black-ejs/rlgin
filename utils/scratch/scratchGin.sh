@@ -44,7 +44,7 @@ TMPREPO=${TMPDIR}/rb-repo.zip
 cd ${RLGIN_BATCH_LOCAL_REPO}
 git archive --format zip HEAD >  ${TMPREPO}
 cd "${repoback}"
-unzip ${TMPREPO}
+unzip -o ${TMPREPO}
 cd "${repoback}"
  
 echo getting "${MODEL_NICKNAME}"-specific params.... 
