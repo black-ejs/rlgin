@@ -1,3 +1,5 @@
+
+
 # >>> RLGIN_BATCH initialize >>>
 echo rlgin batch initialization
 export RLGIN_BATCH_EXECUTION_BUCKET='rb-series-shared-bucket-1'
@@ -11,9 +13,18 @@ export RLGIN_BATCH_PARAMS="${RLGIN_BATCH_SERIES_ROOT}"/projects/rlgin-batch/job-
 gfps=`ps -ef | grep gcsfuse | grep -v grep`
 if [[ X"${gfps}"X == XX  ]] 
 then
-	echo "rlgin-batch: mounting shared bucket"
-	gcsfuse --debug_fuse --debug_fs --debug_gcs --file-mode 744 "${RLGIN_BATCH_EXECUTION_BUCKET}" "${RLGIN_BATCH_SERIES_ROOT}"
-	# unmount with  
-	#   	fusermount -u "${RLGIN_BATCH_SERIES_ROOT}"
+        echo "ps looking for gcsfuse did not find it, gfps=${gfps}"
+        dev_contents=`ls ${RLGIN_BATCH_SERIES_ROOT}`
+        if [[ "X$(dev_contents}X" == XX ]]
+        then
+                echo "${RLGIN_BATCH_SERIES_ROOT} is empty"
+                echo "rlgin-batch: mounting shared bucket"
+                gcsfuse --debug_fuse --debug_fs --debug_gcs --file-mode 744 "${RLGIN_BATCH_EXECUTION_BUCKET}" "${RLGIN_BATCH_SERIES_ROOT}"
+                # unmount with  
+                #       fusermount -u "${RLGIN_BATCH_SERIES_ROOT}"
+        else
+                echo "${RLGIN_BATCH_SERIES_ROOT} is not empty:"
+                echo "${dev_contents}"
+        fi
 fi
 # <<< RLGIN BATCH initialize <<<
