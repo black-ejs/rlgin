@@ -15,7 +15,7 @@ if [[ X"${gfps}"X == XX  ]]
 then
         echo "ps looking for gcsfuse did not find it, gfps=${gfps}"
         dev_contents=`ls ${RLGIN_BATCH_SERIES_ROOT}`
-        if [[ "X$(dev_contents}X" == XX ]]
+        if [[ "X${dev_contents}X" == XX ]]
         then
                 echo "${RLGIN_BATCH_SERIES_ROOT} is empty"
                 echo "rlgin-batch: mounting shared bucket"
