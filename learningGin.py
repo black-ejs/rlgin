@@ -434,7 +434,7 @@ if __name__ == '__main__':
     finally:
         if not old_stdout == None:
             sys.stdout = old_stdout
-        if not old_stdout == None:
+        if not old_stderr == None:
             sys.stderr = old_stderr
         if not log == None:
             log.close()
