@@ -1,0 +1,7 @@
+gcloud compute instance-templates create rb-a-s50-template-1 \
+    --source-instance=rb-a-s50-vm-2 \
+    --source-instance-zone=SOURCE_INSTANCE_ZONE \
+    --configure-disk= \
+        device-name=SOURCE_DISK, \
+        instantiate-from=INSTANTIATE_OPTIONS, \
+        auto-delete=AUTO_DELETE
