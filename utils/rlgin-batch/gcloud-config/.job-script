@@ -41,12 +41,11 @@ fi
 mv ${RLGIN_BATCH_TMP_DIR}/.bashrc-initialize ${TARGET_SCRIPT}
 
 echo copying launch script to home directory
+echo cp ${TMPREPO}/${BOOTSTRAP_PATH}/.rb-job-launch /home/${RLGIN_BATCH_USER}/
 cp ${TMPREPO}/${BOOTSTRAP_PATH}/.rb-job-launch /home/${RLGIN_BATCH_USER}/
 
-
 echo before ----------
-echo pwd
-pwd
+echo pwd=`pwd`
 echo ls -latr /etc/environment
 ls -latr /etc/environment
 echo cat /etc/environment
@@ -58,7 +57,7 @@ cat /home/${RLGIN_BATCH_USER}/.bashrc
 echo ls -latr /home/${RLGIN_BATCH_USER}
 ls -latr /home/${RLGIN_BATCH_USER}/.bashrc
 
-su -l ${RLGIN_BATCH_USER} -c "./rb-job-launch "
+su -l ${RLGIN_BATCH_USER} -c "./rb-job-launch"
 
 id 
 whoami
