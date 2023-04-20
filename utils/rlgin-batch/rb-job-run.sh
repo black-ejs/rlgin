@@ -23,13 +23,21 @@ echo TRAIN_OR_SCRATCH="${TRAIN_OR_SCRATCH}"
 echo SCRATCH_DRIVER_ID="${SCRATCH_DRIVER_ID}"
 
 # make sure this machine is initialized for the work
-if [ ! -d ${RLGIN_BATCH_LOCAL_REPO} ]
+if [[ -d ${RLGIN_BATCH_LOCAL_REPO} ]]
 then
+    echo "########## ${CURRENT_SCRIPT_NAME}: local code repo found"
+else
     echo "########## ${CURRENT_SCRIPT_NAME}: establishing local code repo at ${RLGIN_BATCH_LOCAL_REPO}"
     git clone ${RLGIN_BATCH_REPO_URL} ${RLGIN_BATCH_LOCAL_REPO}
-else
-    echo "########## ${CURRENT_SCRIPT_NAME}: local code repo OK"
 fi
+echo "########## ${CURRENT_SCRIPT_NAME}: validating local code repo"
+if [[ "`ls -l ${RLGIN_BATCH_LOCAL_REPO}`" == *.git* ]]
+then
+    echo "########## ${CURRENT_SCRIPT_NAME}: local code repo OK"
+else
+    echo "########## ${CURRENT_SCRIPT_NAME}: local code repo NOT OK"
+fi
+
 echo "########## ${CURRENT_SCRIPT_NAME}: bootrapping for series ${SERIES_NICKNAME}" 
 ./rb-bootstrap_series.sh
 

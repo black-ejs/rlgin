@@ -14,7 +14,7 @@ echo TMPREPO="${TMPREPO}"
 echo updating code base.... 
 repoback=`pwd`
 echo "   +++ mkdir -p ${RLGIN_BATCH_TMP_BOOTSTRAP_DIR}"
-mkdir -p ${RLGIN_BATCH_TMPRLGIN_BATCH_TMP_BOOTSTRAP_DIR_DIR}
+mkdir -p ${RLGIN_BATCH_TMP_BOOTSTRAP_DIR}
 echo "   +++ git clone ${RLGIN_BATCH_REPO_URL} ${TMPREPO} 2>&1"
 git clone ${RLGIN_BATCH_REPO_URL} ${TMPREPO} 2>&1
 echo "   +++ cd ${repoback}"
