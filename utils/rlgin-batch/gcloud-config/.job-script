@@ -1,4 +1,4 @@
-~!/bin/bash
+#!/bin/bash
 set
 export JOB_TAG="${BATCH_JOB_ID}-t${BATCH_TASK_INDEX}"
 export RLGIN_BATCH_TMP_DIR=/var/tmp/${JOB_TAG}
@@ -63,5 +63,5 @@ su -l ${RLGIN_BATCH_USER} -c "./rb-job-launch "
 id 
 whoami
 
-sleep 600
+sleep 180
 
