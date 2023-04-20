@@ -29,10 +29,10 @@ sudo mv ${RLGIN_BATCH_TMP_DIR}/.etc-environment-initialize /etc/environment
 
 TARGET_SCRIPT=/home/${RLGIN_BATCH_USER}/.bashrc
 echo updating ${TARGET_SCRIPT}.... 
-echo ls -l /home
-ls -l /home
-echo ls -l /home/${RLGIN_BATCH_USER}
-ls -l /home/${RLGIN_BATCH_USER}
+echo -latr /home
+ls -latr /home
+echo ls -latr /home/${RLGIN_BATCH_USER}
+ls -latr /home/${RLGIN_BATCH_USER}
 cp ${TMPREPO}/${BOOTSTRAP_PATH}/.bashrc-initialize ${RLGIN_BATCH_TMP_DIR}
 if [[ -e ${TARGET_SCRIPT} ]]
 then
@@ -41,7 +41,7 @@ fi
 mv ${RLGIN_BATCH_TMP_DIR}/.bashrc-initialize ${TARGET_SCRIPT}
 
 echo copying launch script to home directory
-cp ${TMPREPO}/${BOOTSTRAP_PATH}/.rb_job_launch /home/${RLGIN_BATCH_USER}/
+cp ${TMPREPO}/${BOOTSTRAP_PATH}/.rb-job-launch /home/${RLGIN_BATCH_USER}/
 
 
 echo before ----------
