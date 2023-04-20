@@ -24,7 +24,7 @@ echo SCRATCH_DRIVER_ID="${SCRATCH_DRIVER_ID}"
 
 # make sure this machine is initialized for the work
 echo "########## ${CURRENT_SCRIPT_NAME}: establishing local code repo at ${RLGIN_BATCH_LOCAL_REPO}"
-git checkout ${RLGIN_BATCH_REPO_URL} ${RLGIN_BATCH_LOCAL_REPO}
+git clone ${RLGIN_BATCH_REPO_URL} ${RLGIN_BATCH_LOCAL_REPO}
 echo "########## ${CURRENT_SCRIPT_NAME}: bootrapping for series ${SERIES_NICKNAME}" 
 ./rb-bootstrap_series.sh
 
