@@ -1,7 +1,7 @@
 #!/bin/bash
 set
 export JOB_TAG="${BATCH_JOB_ID}-t${BATCH_TASK_INDEX}"
-export RLGIN_BATCH_TMP_DIR=/var/tmp/${JOB_TAG}
+export RLGIN_BATCH_TMP_DIR=/var/tmp/${JOB_TAG}-bootstrap
 export RLGIN_BATCH_REPO_URL='https://github.com/black-ejs/rlgin'
 export RLGIN_BATCH_USER="edward_schwarz"
 TMPREPO=${RLGIN_BATCH_TMP_DIR}/rlgin-bootstrap-repo

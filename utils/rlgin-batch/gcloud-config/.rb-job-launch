@@ -1,8 +1,8 @@
 #!/bin/bash
-set -x
+#set -x
 
 ## mock up Google BATCH env if running standalome
-if [[ X"BATCH_TASK_INDEX"X == XX ]]
+if [[ X"${BATCH_TASK_INDEX}"X == XX ]]
 then
 	echo "BATCH_TASK_INDEX is not set, setting to 0"
 	export BATCH_JOB_ID="rb-job-mockup"
@@ -10,7 +10,7 @@ then
 fi
 
 export RLGIN_BATCH_TASK_TAG="${BATCH_JOB_ID}-t${BATCH_TASK_INDEX}"
-export RLGIN_BATCH_TMPDIR=${TMPDIR}/${RLGIN_BATCH_TASK_TAG}"
+export RLGIN_BATCH_TMPDIR="${TMPDIR}/${RLGIN_BATCH_TASK_TAG}"
 
 ## get latest scripts
 TMPREPO=${RLGIN_BATCH_TMPDIR}/rlgin-batch-bootstrap-repo
