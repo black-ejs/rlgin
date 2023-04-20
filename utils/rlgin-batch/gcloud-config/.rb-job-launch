@@ -3,6 +3,11 @@ set -x
 
 set
 
+id
+whoami
+pwd
+ls -latr
+
 ## mock up Google BATCH env if running standalome
 if [[ X"${BATCH_TASK_INDEX}"X == XX ]]
 then

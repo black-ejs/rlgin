@@ -62,10 +62,18 @@ ls -latr /home/${RLGIN_BATCH_USER}/.rb-job-launch
 echo cat /home/${RLGIN_BATCH_USER}/.rb-job-launch
 cat /home/${RLGIN_BATCH_USER}/.rb-job-launch
 
+cmd="\
+export BATCH_JOBID=${BATCH_JOB_ID};\
+export BATCH_TASK_INDEX=${BATCH_TASK_INDEX};\
+export JOB_TAG=${JOB_TAG};\
+cd /home/${RLGIN_BATCH_USER};\
+./.rb-job-launch"
+
 echo "##########################################"
-echo "### calling su -l ${RLGIN_BATCH_USER} -c \"cd /home/${RLGIN_BATCH_USER}; pwd; ls -latr; .rb-job-launch\" ###"
+echo "### calling su -l ${cmd} ###"
 echo "##########################################"
-su -l ${RLGIN_BATCH_USER} -c "cd /home/${RLGIN_BATCH_USER}; pwd; ls -latr; ./.rb-job-launch"
+
+su -l ${RLGIN_BATCH_USER} -c ${cmd}
 
 id 
 whoami
