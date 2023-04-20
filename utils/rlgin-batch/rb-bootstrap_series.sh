@@ -62,7 +62,7 @@ cd "${TARGET_PATH}"
 
 echo "**** copying in git repo "
 repoback=`pwd`
-TMPREPO=${TMPDIR}/rb-repo.zip
+TMPREPO=${RLGIN_BATCH_TMPDIR}/rb-repo.zip
 rm -rf ${TMPREPO}
 cd ${RLGIN_BATCH_LOCAL_REPO}
 git archive --format zip HEAD >  ${TMPREPO}

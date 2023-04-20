@@ -42,7 +42,7 @@ if [[ -d ${RLGIN_BATCH_LOCAL_REPO} ]]
 then
 	echo updating code base.... 
 	repoback=`pwd`
-	TMPREPO=${TMPDIR}/rb-repo.zip
+	TMPREPO=${RLGIN_BATCH_TMPDIR}/rb-repo.zip
 	cd ${RLGIN_BATCH_LOCAL_REPO}
 	git archive --format zip HEAD >  ${TMPREPO}
 	cd "${repoback}"

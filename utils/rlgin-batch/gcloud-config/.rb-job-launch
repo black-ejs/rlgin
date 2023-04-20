@@ -18,15 +18,19 @@ fi
 
 export RLGIN_BATCH_TASK_TAG="${BATCH_JOB_ID}-t${BATCH_TASK_INDEX}"
 export RLGIN_BATCH_TMPDIR="${TMPDIR}/${RLGIN_BATCH_TASK_TAG}"
+if [ ! -d ${RLGIN_BATCH_TMPDIR} ]
+then
+	mkdir -p ${RLGIN_BATCH_TMPDIR}
+fi
 
 ## get latest scripts
 TMPREPO=${RLGIN_BATCH_TMPDIR}/rlgin-batch-bootstrap-repo
-if [ -d ${RLGIN_BATCH_TMPDIR} ]
+if [ -d ${TMPREPO} ]
 then
-	rm -rf ${RLGIN_BATCH_TMPDIR}
+	rm -rf ${TMPREPO}
 fi
-git clone ${RLGIN_BATCH_REPO_URL} ${RLGIN_BATCH_TMPDIR}
-cp ${RLGIN_BATCH_TMPDIR}/utils/rlgin-batch/*.sh . 
+git clone ${RLGIN_BATCH_REPO_URL} ${TMPREPO}
+cp ${TMPREPO}/utils/rlgin-batch/*.sh . 
 
 ## launch job
 ./rb-job-run.sh
