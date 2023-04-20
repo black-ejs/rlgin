@@ -31,11 +31,13 @@ else
     git clone ${RLGIN_BATCH_REPO_URL} ${RLGIN_BATCH_LOCAL_REPO}
 fi
 echo "########## ${CURRENT_SCRIPT_NAME}: validating local code repo"
-if [[ "`ls -l ${RLGIN_BATCH_LOCAL_REPO}`" == *.git* ]]
+if [[ "`ls -la ${RLGIN_BATCH_LOCAL_REPO}`" == *.git* ]]
 then
     echo "########## ${CURRENT_SCRIPT_NAME}: local code repo OK"
 else
     echo "########## ${CURRENT_SCRIPT_NAME}: local code repo NOT OK"
+    echo "########## ${CURRENT_SCRIPT_NAME}: local code repo contents"
+    ls -latr ${RLGIN_BATCH_LOCAL_REPO}
 fi
 
 echo "########## ${CURRENT_SCRIPT_NAME}: bootrapping for series ${SERIES_NICKNAME}" 
