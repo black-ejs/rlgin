@@ -46,7 +46,13 @@ then
 	cd ${RLGIN_BATCH_LOCAL_REPO}
 	git archive --format zip HEAD >  ${TMPREPO}
 	cd "${repoback}"
+	echo updating code base.... 
 	unzip -o ${TMPREPO}
+	echo waiting for the unzip to finish.... 
+	while [ ! X`ps -ef | grep unzip | grep -v grep`X == XX ]
+	do
+		sleep 3
+	done
 	cd "${repoback}"
 else
 	echo ${RLGIN_BATCH_LOCAL_REPO} not fouund, skipping update of code base.... 
