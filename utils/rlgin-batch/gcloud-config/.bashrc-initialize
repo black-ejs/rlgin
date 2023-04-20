@@ -26,7 +26,7 @@ then
                 if [ ! -d ${RLGIN_BATCH_SERIES_ROOT} ]
                 then
                         echo ~/dev should be removed, re-creating
-                        mkdir -p ${RLGIN_BATCH_SERIES_ROOT
+                        mkdir -p ${RLGIN_BATCH_SERIES_ROOT}
                 fi
         fi
         dev_contents=`ls ${RLGIN_BATCH_SERIES_ROOT}`
