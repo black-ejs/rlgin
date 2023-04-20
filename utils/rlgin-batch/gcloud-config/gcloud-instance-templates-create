@@ -1,0 +1,16 @@
+gcloud compute instance-templates create rb-a-s50-template-2 \
+ --project=rlgin-batch \
+--machine-type=e2-standard-2 \
+--network-interface=network-tier=PREMIUM,subnet=default \
+--metadata=^,@^framework=PyTorch:1.12,@shutdown-script=/opt/deeplearning/bin/shutdown_script.sh,@title=PyTorch/CUDA11.3.GPU,@version=107,@ssh-keys=edward_schwarz:ecdsa-sha2-nistp256\ AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBC78LmU1zOTnPgc8dX\+w856cz2b2BOB\+2Y\+7I6HNmPV4lTYeipiJ9t2om3Cd/ObagOLPBOH\+42Uq78/NPe7wpQA=\ google-ssh\ \{\"userName\":\"edward.schwarz@gmail.com\",\"expireOn\":\"2023-04-17T21:57:23\+0000\"\}$'\n'edward_schwarz:ssh-rsa\ AAAAB3NzaC1yc2EAAAADAQABAAABAGIbpvnxfuNJ2Y3p2yTExVVYhQU2citg1zInA0lI42ZAkilk9bVLCzsS\+lvqQLg0aFVyW\+K8aqrKAMzNHcdIF1ZBuCaCtTvfbtKVrGUvlWIh7VViUdXafQZX004Nl8Li1O75L\+sd\+yrSN4wtfbMLGO4XQdm50sBaVmpB/Vob16uEOWy8tLpy0A0HkODCZFIBk6oNy9vXNL37CCSLPu2zjgnF10oYo/7lpFFXaUL/0C09I\+SSYjsgcEnST4AQk9HODWNPpIPfEoTVV\+lAEEmujeptPywDuJ\+wsmkJRq10BXfW2kqfIJmqBd8Oky\+TKSVZa7o7wmowgzLjKUps/mY07Bc=\ google-ssh\ \{\"userName\":\"edward.schwarz@gmail.com\",\"expireOn\":\"2023-04-17T21:57:38\+0000\"\} \
+ --maintenance-policy=MIGRATE \
+--provisioning-model=STANDARD \
+--service-account=809187184434-compute@developer.gserviceaccount.com \
+--scopes=https://www.googleapis.com/auth/cloud-platform \
+--region=us-central1 \
+--tags=deeplearning-vm \
+--create-disk=auto-delete=yes,boot=yes,device-name=rb-a-s50-vm-2,image=projects/ml-images/global/images/c2-deeplearning-pytorch-1-12-cu113-v20230412-debian-10,mode=rw,size=50,type=pd-balanced \
+--no-shielded-secure-boot \
+--shielded-vtpm \
+--shielded-integrity-monitoring \
+--reservation-affinity=any 
