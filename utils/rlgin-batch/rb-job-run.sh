@@ -34,6 +34,8 @@ TARGET_DIRECTORY=${RLGIN_BATCH_SERIES_BASE}/${SERIES_NICKNAME}${SCRATCH_DRIVER_I
 echo TARGET_DIRECTORY=${TARGET_DIRECTORY}
 cd ${TARGET_DIRECTORY}
 echo "current directory=`pwd`"
+echo "contents of ${TARGET_DIRECTORY}:"
+ls -latr 
 
 # launch
 echo "########## ${CURRENT_SCRIPT_NAME}: launching scratchDriver.sh"
