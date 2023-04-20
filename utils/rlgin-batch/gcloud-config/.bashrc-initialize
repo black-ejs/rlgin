@@ -14,6 +14,21 @@ gfps=`ps -ef | grep gcsfuse | grep -v grep`
 if [[ X"${gfps}"X == XX  ]] 
 then
         echo "ps looking for gcsfuse did not find it, gfps=${gfps}"
+        if [ ! -d ${RLGIN_BATCH_SERIES_ROOT} ]
+        then
+                other_dev=`ls -latr ~ | grep dev` 
+                if [[ "X${other_dev}X" == XX ]]
+                then
+                        echo ~/dev is there but is not a directory
+                        echo dismounting
+                        fusermount -u "${RLGIN_BATCH_SERIES_ROOT}" 
+                fi
+                if [ ! -d ${RLGIN_BATCH_SERIES_ROOT} ]
+                then
+                        echo ~/dev should be removed, re-creating
+                        mkdir -p ${RLGIN_BATCH_SERIES_ROOT
+                fi
+        fi
         dev_contents=`ls ${RLGIN_BATCH_SERIES_ROOT}`
         if [[ "X${dev_contents}X" == XX ]]
         then
