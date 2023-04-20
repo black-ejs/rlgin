@@ -63,20 +63,21 @@ echo cat /home/${RLGIN_BATCH_USER}/.rb-job-launch
 cat /home/${RLGIN_BATCH_USER}/.rb-job-launch
 
 cmd="\
-export BATCH_JOBID=${BATCH_JOB_ID};\
+export BATCH_JOB_ID=${BATCH_JOB_ID};\
 export BATCH_TASK_INDEX=${BATCH_TASK_INDEX};\
 export JOB_TAG=${JOB_TAG};\
 cd /home/${RLGIN_BATCH_USER};\
 ./.rb-job-launch"
 
 echo "##########################################"
-echo "### calling su -l ${cmd} ###"
+echo "### calling su -l -c \""${cmd}"\" ###"
 echo "##########################################"
 
-su -l ${RLGIN_BATCH_USER} -c ${cmd}
+su -l ${RLGIN_BATCH_USER} -c "${cmd}"
 
+echo after  ----------
 id 
 whoami
 
-sleep 300
+# sleep 300
 
