@@ -1,5 +1,5 @@
 #!/bin/bash
-#set -x
+set -x
 
 ## mock up Google BATCH env if running standalome
 if [[ X"${BATCH_TASK_INDEX}"X == XX ]]
