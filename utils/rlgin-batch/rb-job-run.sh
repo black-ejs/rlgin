@@ -63,6 +63,7 @@ then
     echo "nohup ./scratchDriver.sh ${SCRATCH_DRIVER_ID} 2>&1 > scratchDriver.sh.out &"
     nohup ./scratchDriver.sh ${SCRATCH_DRIVER_ID} 2>&1 > scratchDriver.sh.out &
 elif [[ ${TRAIN_OR_SCRATCH} == "TRAIN" ]]
+then
     echo "########## ${CURRENT_SCRIPT_NAME}: launching trainDriver.sh"
     echo "nohup ./trainDriver.sh 1 ${TRAIN_GENERATIONS} 2>&1 > trainDriver.sh.out &"
     nohup ./trainDriver.sh 1 ${TRAIN_GENERATIONS} 2>&1 > trainDriver.sh.out &
