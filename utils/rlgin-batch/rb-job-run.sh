@@ -12,6 +12,8 @@ SERIES_NICKNAME="${1:-${RLGIN_BATCH_JP_SERIES_NICKNAME}}"
 PARAMS_SPEC="${2:-${RLGIN_BATCH_JP_PARAMS_SPEC}}"
 TRAIN_OR_SCRATCH="${3:-${RLGIN_BATCH_JP_SERIES_NICKNAME}}"
 SCRATCH_DRIVER_ID=${4:-${RLGIN_BATCH_JP_SCRATCH_DRIVER_ID}}
+WEIGHTS_SPEC=${5:-${RLGIN_BATCH_JP_WEIGHTS_SPEC}}
+TRAIN_GENERATIONS=${6:-${RLGIN_BATCH_JP_TRAIN_GENERATIONS}}
 
 ## report our job parameters
 echo "########## ${CURRENT_SCRIPT_NAME}: parameter review"
@@ -21,6 +23,8 @@ echo SERIES_NICKNAME="${SERIES_NICKNAME}"
 echo PARAMS_SPEC="${PARAMS_SPEC}"
 echo TRAIN_OR_SCRATCH="${TRAIN_OR_SCRATCH}"
 echo SCRATCH_DRIVER_ID="${SCRATCH_DRIVER_ID}"
+echo WEIGHTS_SPEC="${WEIGHTS_SPEC}"
+echo TRAIN_GENERATIONS="${TRAIN_GENERATIONS}"
 
 # make sure this machine is initialized for the work
 if [[ -d ${RLGIN_BATCH_LOCAL_REPO} ]]
@@ -53,9 +57,20 @@ echo "contents of ${TARGET_DIRECTORY}:"
 ls -latr 
 
 # launch
-echo "########## ${CURRENT_SCRIPT_NAME}: launching scratchDriver.sh"
-echo "nohup ./scratchDriver.sh ${SCRATCH_DRIVER_ID} 2>&1 > scratchDriver.sh.out &"
-nohup ./scratchDriver.sh ${SCRATCH_DRIVER_ID} 2>&1 > scratchDriver.sh.out &
+if [[ ${TRAIN_OR_SCRATCH} == "SCRATCH" ]]
+then
+    echo "########## ${CURRENT_SCRIPT_NAME}: launching scratchDriver.sh"
+    echo "nohup ./scratchDriver.sh ${SCRATCH_DRIVER_ID} 2>&1 > scratchDriver.sh.out &"
+    nohup ./scratchDriver.sh ${SCRATCH_DRIVER_ID} 2>&1 > scratchDriver.sh.out &
+elif [[ ${TRAIN_OR_SCRATCH} == "TRAIN" ]]
+    echo "########## ${CURRENT_SCRIPT_NAME}: launching trainDriver.sh"
+    echo "nohup ./trainDriver.sh 1 ${TRAIN_GENERATIONS} 2>&1 > trainDriver.sh.out &"
+    nohup ./trainDriver.sh 1 ${TRAIN_GENERATIONS} 2>&1 > trainDriver.sh.out &
+else
+    echo "########## ${CURRENT_SCRIPT_NAME}: ERROR - TRAIN_OR_SCRATCH=\"${TRAIN_OR_SCRATCH}\", no driver launched"
+    echo "########## ${CURRENT_SCRIPT_NAME}: task will clean up and exit"
+fi
+
 
 # wait for the dust to clear
 SECS_TO_WAIT=3
@@ -64,7 +79,7 @@ sleep ${SECS_TO_WAIT}
 
 # confirm launch 
 echo "########## ${CURRENT_SCRIPT_NAME}: confirming launch"
-ps -ef | grep "river.sh ${SCRATCH_DRIVER_ID}" 
+ps -ef | grep "river.sh [0-9]" 
 
 
 
