@@ -50,7 +50,7 @@ echo cp ${TMPREPO}/${BOOTSTRAP_PATH}/.rb-job-launch ${TARGET_SCRIPT}
 cp ${TMPREPO}/${BOOTSTRAP_PATH}/.rb-job-launch ${TARGET_SCRIPT}
 chown ${RLGIN_BATCH_USER}:${RLGIN_BATCH_USER} ${TARGET_SCRIPT}
 
-echo before ----------
+echo "--------------" PRE-LAUNCH CHECK "----------"
 echo pwd=`pwd`
 echo ls -latr /etc/environment
 ls -latr /etc/environment
@@ -69,6 +69,7 @@ cmd="\
 export BATCH_JOB_ID=${BATCH_JOB_ID};\
 export BATCH_TASK_INDEX=${BATCH_TASK_INDEX};\
 export JOB_TAG=${JOB_TAG};\
+export RLGIN_BATCH_JOB_PARAMS_PATH=${RLGIN_BATCH_JOB_PARAMS_PATH}\
 cd /home/${RLGIN_BATCH_USER};\
 ./.rb-job-launch"
 

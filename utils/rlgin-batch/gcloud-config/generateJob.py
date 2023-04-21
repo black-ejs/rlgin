@@ -2,7 +2,9 @@ import time
 from google.cloud import batch_v1
 
 
-def create_script_job_with_template(template_link: str, script: str) -> batch_v1.Job:
+def create_script_job_with_template(template_link: str, 
+                                    script: str, 
+                                    env: dict=None) -> batch_v1.Job:
     """
     This method shows how to create a sample Batch Job that will run
     a simple command on Cloud Compute instances created using a provided Template.
@@ -20,12 +22,18 @@ def create_script_job_with_template(template_link: str, script: str) -> batch_v1
     # Define what will be done as part of the job.
     task = batch_v1.TaskSpec()
     runnable = batch_v1.Runnable()
+
     runnable.script = batch_v1.Runnable.Script()
     runnable.script.text = script
     # You can also run a script from a file. Just remember, that needs to be a script that's
     # already on the VM that will be running the job. Using runnable.script.text and runnable.script.path is mutually
     # exclusive.
     # runnable.script.path = '/tmp/test.sh'
+
+    if env != None:
+        runnable.environment = batch_v1.Environment()
+        runnable.environment.variables = env
+
     task.runnables = [runnable]
 
     # We can specify what resources are requested by each task.
@@ -103,12 +111,15 @@ if __name__ == '__main__':
     job_name = "rb-job-"+f"{time.time()}".replace('.','-')[-9:]
     template_name = "rb-a-s50-template-2" 
     region = "us-central1"
+    params_path="RGZ"
+
+    env = {"RLGIN_BATCH_JOB_PARAMS_PATH":"RBZ"}
     with open("/Users/edward/Documents/dev/projects/rlgin/utils/rlgin-batch/gcloud-config/.job-script") as scriptfile:
         script = scriptfile.read()
      
     #job_id = f"projects/{project_id}/locations/{region}/jobs/job01"
     template_link = f"projects/{project_id}/global/instanceTemplates/{template_name}"
-    job = create_script_job_with_template(template_link, script)
+    job = create_script_job_with_template(template_link, script, env)
     dump(job,"-------- job")
 
     create_request = create_job_request(job,
