@@ -38,7 +38,7 @@ def create_script_job_with_template(template_link: str,
     if env != None:
         env_vars.update(env)
     runnable.environment = batch_v1.Environment()
-    runnable.environment.variables = env
+    runnable.environment.variables = env_vars
 
     task.runnables = [runnable]
 
@@ -116,7 +116,8 @@ if __name__ == '__main__':
     project_id='rlgin-batch'
     params_path="RBZ"
     env = {"RLGIN_BATCH_HELLO":"hello"}
-    job_name = f"rb-job-{params_path}-{time.time()}".replace('.','-')[-9:]
+    ts=f"{time.time()}".replace('.','-')[-9:]
+    job_name = f"rb-job-{params_path.lower()}-{ts}"
     template_name = "rb-a-s50-template-2" 
     region = "us-central1"
 
