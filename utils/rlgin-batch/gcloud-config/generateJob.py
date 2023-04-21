@@ -4,6 +4,7 @@ from google.cloud import batch_v1
 
 def create_script_job_with_template(template_link: str, 
                                     script: str, 
+                                    params_path: str=None,
                                     env: dict=None) -> batch_v1.Job:
     """
     This method shows how to create a sample Batch Job that will run
@@ -30,16 +31,21 @@ def create_script_job_with_template(template_link: str,
     # exclusive.
     # runnable.script.path = '/tmp/test.sh'
 
+    env_vars = {}
+    if params_path == None:
+        params_path = "."
+    env_vars["RLGIN_BATCH_JOB_PARAMS_PATH"] = params_path
     if env != None:
-        runnable.environment = batch_v1.Environment()
-        runnable.environment.variables = env
+        env_vars.update(env)
+    runnable.environment = batch_v1.Environment()
+    runnable.environment.variables = env
 
     task.runnables = [runnable]
 
     # We can specify what resources are requested by each task.
     resources = batch_v1.ComputeResource()
-    resources.cpu_milli = 1000  # in milliseconds per cpu-second. This means the task requires 2 whole CPUs.
-    resources.memory_mib = 4000 
+    resources.cpu_milli =  2000  # in ms per cpu-second. 1000 means the task requires 1 whole vCPU
+    resources.memory_mib = 1000 
     task.compute_resource = resources
 
     task.max_retry_count = 2
@@ -108,18 +114,18 @@ def dump(obj,label:str=None):
 if __name__ == '__main__':
 
     project_id='rlgin-batch'
-    job_name = "rb-job-"+f"{time.time()}".replace('.','-')[-9:]
+    params_path="RBZ"
+    env = {"RLGIN_BATCH_HELLO":"hello"}
+    job_name = f"rb-job-{params_path}-{time.time()}".replace('.','-')[-9:]
     template_name = "rb-a-s50-template-2" 
     region = "us-central1"
-    params_path="RGZ"
 
-    env = {"RLGIN_BATCH_JOB_PARAMS_PATH":"RBZ"}
     with open("/Users/edward/Documents/dev/projects/rlgin/utils/rlgin-batch/gcloud-config/.job-script") as scriptfile:
         script = scriptfile.read()
      
     #job_id = f"projects/{project_id}/locations/{region}/jobs/job01"
     template_link = f"projects/{project_id}/global/instanceTemplates/{template_name}"
-    job = create_script_job_with_template(template_link, script, env)
+    job = create_script_job_with_template(template_link, script, params_path, env)
     dump(job,"-------- job")
 
     create_request = create_job_request(job,
