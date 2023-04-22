@@ -1,21 +1,28 @@
 #!/bin/bash
+echo "******************************************** "
+echo "****  rlgin-batch job ${BATCH_JOB_ID} task ${BATCH_TASK_INDEX} "
+echo "******************************************** "
+echo "environment at job invocation:"
 set
-export JOB_TAG="${BATCH_JOB_ID}-t${BATCH_TASK_INDEX}"
-# backoff to avoid races
-let sleepsecs=${BATCH_TASK_INDEX}+1
+
+# backoff to avoid race conditions, 
+# especially over work with shared images in the bucket
+let sleepsecs=${BATCH_TASK_INDEX}*5
+echo sleeping ${sleepsecs} because I am BATCH_TASK_INDEX=${BATCH_TASK_INDEX}
 sleep ${sleepsecs}
-export RLGIN_BATCH_TMP_BOOTSTRAP_DIR=/var/tmp/${JOB_TAG}-bootstrap
-export RLGIN_BATCH_REPO_URL='https://github.com/black-ejs/rlgin'
+
+export JOB_TAG="${BATCH_JOB_ID}-t${BATCH_TASK_INDEX}"
 export RLGIN_BATCH_USER="edward_schwarz"
-TMPREPO=${RLGIN_BATCH_TMP_BOOTSTRAP_DIR}/rlgin-bootstrap-repo
-BOOTSTRAP_PATH=utils/rlgin-batch/gcloud-config
+export RLGIN_BATCH_TMP_BOOTSTRAP_DIR=/var/tmp/${JOB_TAG}-bootstrap
 echo JOB_TAG="${JOB_TAG}"
 echo RLGIN_BATCH_TMP_BOOTSTRAP_DIR="${RLGIN_BATCH_TMP_BOOTSTRAP_DIR}"
-echo RLGIN_BATCH_REPO_URL="${RLGIN_BATCH_REPO_URL}"
-echo TMPREPO="${TMPREPO}"
 
 echo updating code base.... 
+export RLGIN_BATCH_REPO_URL='https://github.com/black-ejs/rlgin'
+TMPREPO=${RLGIN_BATCH_TMP_BOOTSTRAP_DIR}/rlgin-bootstrap-repo
 repoback=`pwd`
+echo RLGIN_BATCH_REPO_URL="${RLGIN_BATCH_REPO_URL}"
+echo TMPREPO="${TMPREPO}"
 echo "   +++ mkdir -p ${RLGIN_BATCH_TMP_BOOTSTRAP_DIR}"
 mkdir -p ${RLGIN_BATCH_TMP_BOOTSTRAP_DIR}
 echo "   +++ git clone ${RLGIN_BATCH_REPO_URL} ${TMPREPO} 2>&1"
@@ -25,8 +32,11 @@ cd "${repoback}"
 echo "   +++ ls -latr ${TMPREPO}"
 ls -latr ${TMPREPO}
 
+BOOTSTRAP_SCRIPTS_PATH=utils/rlgin-batch/gcloud-config
+echo copying bootstrap scripts from ${BOOTSTRAP_SCRIPTS_PATH}
+
 echo updating /etc/environment.... 
-cp ${TMPREPO}/${BOOTSTRAP_PATH}/.etc-environment-initialize ${RLGIN_BATCH_TMP_BOOTSTRAP_DIR}
+cp ${TMPREPO}/${BOOTSTRAP_SCRIPTS_PATH}/.etc-environment-initialize ${RLGIN_BATCH_TMP_BOOTSTRAP_DIR}
 cat /etc/environment >> ${RLGIN_BATCH_TMP_BOOTSTRAP_DIR}/.etc-environment-initialize
 sudo mv ${RLGIN_BATCH_TMP_BOOTSTRAP_DIR}/.etc-environment-initialize /etc/environment
 
@@ -36,7 +46,7 @@ echo -latr /home
 ls -latr /home
 echo ls -latr /home/${RLGIN_BATCH_USER}
 ls -latr /home/${RLGIN_BATCH_USER}
-cp ${TMPREPO}/${BOOTSTRAP_PATH}/.bashrc-initialize ${RLGIN_BATCH_TMP_BOOTSTRAP_DIR}
+cp ${TMPREPO}/${BOOTSTRAP_SCRIPTS_PATH}/.bashrc-initialize ${RLGIN_BATCH_TMP_BOOTSTRAP_DIR}
 if [[ -e ${TARGET_SCRIPT} ]]
 then
     cat ${TARGET_SCRIPT} >> ${RLGIN_BATCH_TMP_BOOTSTRAP_DIR}/.bashrc-initialize
@@ -46,8 +56,8 @@ chown ${RLGIN_BATCH_USER}:${RLGIN_BATCH_USER} ${TARGET_SCRIPT}
 
 echo copying launch script to home directory
 TARGET_SCRIPT=/home/${RLGIN_BATCH_USER}/.rb-job-launch
-echo cp ${TMPREPO}/${BOOTSTRAP_PATH}/.rb-job-launch ${TARGET_SCRIPT}
-cp ${TMPREPO}/${BOOTSTRAP_PATH}/.rb-job-launch ${TARGET_SCRIPT}
+echo cp ${TMPREPO}/${BOOTSTRAP_SCRIPTS_PATH}/.rb-job-launch ${TARGET_SCRIPT}
+cp ${TMPREPO}/${BOOTSTRAP_SCRIPTS_PATH}/.rb-job-launch ${TARGET_SCRIPT}
 chown ${RLGIN_BATCH_USER}:${RLGIN_BATCH_USER} ${TARGET_SCRIPT}
 
 echo "--------------" PRE-LAUNCH CHECK "----------"

@@ -1,5 +1,5 @@
 #!/bin/bash
-set -x
+#set -x
 
 CURRENT_SCRIPT_NAME="`basename ${0}`"
 CURRENT_SCRIPT_SOURCE_DIR="`dirname ${0}`"
@@ -14,6 +14,8 @@ TRAIN_OR_SCRATCH="${3:-${RLGIN_BATCH_JP_TRAIN_OR_SCRATCH}}"
 SCRATCH_DRIVER_ID=${4:-${RLGIN_BATCH_JP_SCRATCH_DRIVER_ID}}
 WEIGHTS_SPEC=${5:-${RLGIN_BATCH_JP_WEIGHTS_SPEC}}
 TRAIN_GENERATIONS=${6:-${RLGIN_BATCH_JP_TRAIN_GENERATIONS}}
+SCRATCH_DRIVER_START=${7:-${RLGIN_BATCH_JP_SCRATCH_DRIVER_START}}
+SCRATCH_DRIVER_END=${8:-${RLGIN_BATCH_JP_SCRATCH_DRIVER_END}}
 
 ## report our job parameters
 echo "########## ${CURRENT_SCRIPT_NAME}: parameter review"
@@ -25,6 +27,8 @@ echo TRAIN_OR_SCRATCH="${TRAIN_OR_SCRATCH}"
 echo SCRATCH_DRIVER_ID="${SCRATCH_DRIVER_ID}"
 echo WEIGHTS_SPEC="${WEIGHTS_SPEC}"
 echo TRAIN_GENERATIONS="${TRAIN_GENERATIONS}"
+echo SCRATCH_DRIVER_START="${SCRATCH_DRIVER_START}"
+echo SCRATCH_DRIVER_END="${SCRATCH_DRIVER_END}"
 
 # make sure this machine is initialized for the work
 if [[ -d ${RLGIN_BATCH_LOCAL_REPO} ]]
@@ -61,7 +65,7 @@ if [[ ${TRAIN_OR_SCRATCH} == "SCRATCH" ]]
 then
     echo "########## ${CURRENT_SCRIPT_NAME}: launching scratchDriver.sh"
     echo "nohup ./scratchDriver.sh ${SCRATCH_DRIVER_ID} 2>&1 > scratchDriver.sh.out &"
-    nohup ./scratchDriver.sh ${SCRATCH_DRIVER_ID} 2>&1 > scratchDriver.sh.out &
+    nohup ./scratchDriver.sh ${SCRATCH_DRIVER_ID} ${SCRATCH_DRIVER_START} ${SCRATCH_DRIVER_END} 2>&1 > scratchDriver.sh.out &
 elif [[ ${TRAIN_OR_SCRATCH} == "TRAIN" ]]
 then
     echo "########## ${CURRENT_SCRIPT_NAME}: launching trainDriver.sh"

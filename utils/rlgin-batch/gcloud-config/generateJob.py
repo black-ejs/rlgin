@@ -54,7 +54,7 @@ def create_script_job_with_template(template_link: str,
     # Tasks are grouped inside a job using TaskGroups.
     # Currently, it's possible to have only one task group.
     group = batch_v1.TaskGroup()
-    group.task_count = 2
+    group.task_count = 4
     group.task_spec = task
 
     # Policies are used to define on what kind of virtual machines the tasks will run on.

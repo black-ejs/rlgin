@@ -1,6 +1,6 @@
-##!/usr/bin/bash
-## run a test cycle, this script is usually invoked with "nohup" or the equivalent
-## place your desired weights into "${RUN_DIR}/${PROCESS_WEIGHTS_PATH}.0
+#!/usr/bin/bash
+# run a training cycle, this script is usually invoked with "nohup" or the equivalent
+# place your desired weights into "${RUN_DIR}/${PROCESS_WEIGHTS_PATH}.0
 
 TIMESTAMP=`date -u +%Y-%m-%d_%H-%M-%S`
 echo '#####################################################'
@@ -35,8 +35,8 @@ echo "-----------------------------"
 echo copying input weights....
 cp "${INPUT_WEIGHTS}" "${PROCESS_WEIGHTS_PATH}"
 
-echo updating code base....
-git pull
+#echo updating code base....
+#git pull
 echo getting "${MODEL_NICKNAME}"-specific params....
 cp ../ginDQNParameters.py."${MODEL_NICKNAME}" ginDQNParameters.py
 echo cleaning up fram any previous runs...
