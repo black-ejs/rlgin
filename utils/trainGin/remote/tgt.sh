@@ -36,15 +36,17 @@ cat "${OUTPUT1}" | awk '
 				total_time=total_time+hand_time; } 
 			/ing[.][.]/ { 
 				phase=$0;} 
-			/r.*[34]-vm|r.*plate-|r.*[abcd]-vm/ { 
-				if (total_time>0 && hands_done ==0) { 
+			/r.*[34]-vm|r.*plate-|rb-job-.*-0|r.*[abcd]-vm/ { 
+				if (total_time>0 && hands_done==0 && hand_count>0) { 
 					avg=int(total_time/hand_count); 
 					tdo=int((5000-hand_count)*avg/36000)/100;  
 					too=""; 
 					if (tdo>0) {
 						too="" tdo " hrs to turnover";} 
 					print hand_count " hands " int(total_time/hand_count) "ms avg  " too " " lpath;} 
-				ppath=substr($0,34); print ppath; lpath=substr(ppath,index(ppath,"rlgin/logs/")+11); 
+				ppath=substr($0,34); 
+				print ppath; 
+				lpath=substr(ppath,index(ppath,"rlgin/logs/")+11); 
 				hands_done = 0; total_time=0;} 
 			/winMap/{ 
 				if (hand_count>0 && hands_done ==0) {print hand_count " hands  " int(total_time/hand_count) " ms avg";} 
@@ -111,11 +113,15 @@ cat "${FINAL_OUTPUT}" |  awk '
 				prev_model = model;  
 			} 
 		    END{ 
+			if (ii >0 && igen>0 && base<0 && basegen >0) {
 				print "runs=" ii "  delta=" delta  \
 					"  avg=" delta/ii " on " base/ii " =" (((delta+base)/base)-1)*100"%" \
 					"  gen=" tgen/igen " on " basegen/igen " =" (((tgen+basegen)/basegen)-1)*100"%" 
-				print "     runsi=" iii "  deltai=" deltai  "  avg=" deltai/iii  \
-					" on " basei/iii " =" (((deltai+basei)/basei)-1)*100"%" 
+				if (iii > 0) {
+					print "     runsi=" iii "  deltai=" deltai  "  avg=" deltai/iii  \
+						" on " basei/iii " =" (((deltai+basei)/basei)-1)*100"%" 
+					}
+				}
 			} 
 		'
 
