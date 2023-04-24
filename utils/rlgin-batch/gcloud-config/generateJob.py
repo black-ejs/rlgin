@@ -1,9 +1,12 @@
 import time
+import json
+import sys
 from google.cloud import batch_v1
 
 
 def create_script_job_with_template(template_link: str, 
                                     script: str, 
+                                    num_tasks: int,
                                     params_path: str=None,
                                     env: dict=None) -> batch_v1.Job:
     """
@@ -18,8 +21,6 @@ def create_script_job_with_template(template_link: str,
     Returns:
         A job object representing the job created.
     """
-    client = batch_v1.BatchServiceClient()
-
     # Define what will be done as part of the job.
     task = batch_v1.TaskSpec()
     runnable = batch_v1.Runnable()
@@ -54,8 +55,9 @@ def create_script_job_with_template(template_link: str,
     # Tasks are grouped inside a job using TaskGroups.
     # Currently, it's possible to have only one task group.
     group = batch_v1.TaskGroup()
-    group.task_count = 4
+    group.task_count = num_tasks
     group.task_spec = task
+    group.parallelism = 4
 
     # Policies are used to define on what kind of virtual machines the tasks will run on.
     # In this case, we tell the system to use an instance template that defines all the
@@ -100,7 +102,40 @@ def create_job_request(job: batch_v1.Job,
 
 def submit_job_request(create_request: batch_v1.CreateJobRequest) -> batch_v1.Job:
     client = batch_v1.BatchServiceClient()
+
     return client.create_job(create_request)
+
+def create_standard_job_request(params_path: str, 
+                                num_tasks: int,
+                                env: dict=None, 
+                                region:str="us-central1") -> batch_v1.CreateJobRequest:
+    # project_id='rlgin-batch'
+    #template_name = "rb-a-s50-template-2" 
+    project_id = "rlgin-batch-384320"
+    template_name = "rb-t-s50-template-1" 
+    ts=f"{time.time()}".replace('.','-')[-9:]
+    job_name = f"rb-job-{params_path.lower()}-{ts}"
+
+    inline_script_loc="/Users/edward/Documents/dev/projects/rlgin/utils/rlgin-batch/gcloud-config"
+    inline_script=".job-script"
+    with open(f"{inline_script_loc}/{inline_script}") as scriptfile:
+        script = scriptfile.read()
+     
+    #job_id = f"projects/{project_id}/locations/{region}/jobs/job01"
+    template_link = f"projects/{project_id}/global/instanceTemplates/{template_name}"
+    job = create_script_job_with_template(template_link, 
+                                          script, 
+                                          num_tasks,
+                                          params_path, 
+                                          env)
+    dump(job,"-------- job before request")
+
+    create_request = create_job_request(job,
+                                        project_id,
+                                        region,
+                                        job_name)
+    dump(create_request,"-------- create_request")
+    return create_request
 
 def dump(obj,label:str=None):
     if not label==None:
@@ -108,32 +143,24 @@ def dump(obj,label:str=None):
 
     for att in dir(obj):
         if not "__" in att:
-            print (f"{att}: {getattr(obj,att)}")
+            print (f"\"{att}\": {getattr(obj,att)}")
+
+def to_json(obj):
+    json.dumps(obj,indent=4)
 
 ## #############################################
 if __name__ == '__main__':
 
-    project_id='rlgin-batch'
-    params_path="RBZ"
+    #params_path="CYA"
+    #num_tasks = 20
+    params_path="rb-test-1"
+    num_tasks = 1
+    regions=["us-central1"]
+
     env = {"RLGIN_BATCH_HELLO":"hello"}
-    ts=f"{time.time()}".replace('.','-')[-9:]
-    job_name = f"rb-job-{params_path.lower()}-{ts}"
-    template_name = "rb-a-s50-template-2" 
-    region = "us-central1"
-
-    with open("/Users/edward/Documents/dev/projects/rlgin/utils/rlgin-batch/gcloud-config/.job-script") as scriptfile:
-        script = scriptfile.read()
-     
-    #job_id = f"projects/{project_id}/locations/{region}/jobs/job01"
-    template_link = f"projects/{project_id}/global/instanceTemplates/{template_name}"
-    job = create_script_job_with_template(template_link, script, params_path, env)
-    dump(job,"-------- job")
-
-    create_request = create_job_request(job,
-                                        "rlgin-batch",
-                                        "us-central1",
-                                        job_name)
-    dump(create_request,"-------- create_request")
+    create_request = create_standard_job_request(params_path, 
+                                                num_tasks,
+                                                env)
 
     submitted = submit_job_request(create_request)
     dump(submitted,"-------- submitted")
