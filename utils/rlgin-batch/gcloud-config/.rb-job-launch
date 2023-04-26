@@ -1,6 +1,11 @@
 #!/bin/bash
 #set -x
 
+CURRENT_SCRIPT_NAME="`basename ${0}`"
+CURRENT_SCRIPT_SOURCE_DIR="`dirname ${0}`"
+CURRENT_SCRIPT_ORIGINAL_EXECUTION_DIR=`pwd`
+
+echo "## ## ## ## ## ${CURRENT_SCRIPT_NAME} invoked"
 set
 
 id
@@ -11,26 +16,29 @@ ls -latr
 ## mock up Google BATCH env if running standalome
 if [[ X"${BATCH_TASK_INDEX}"X == XX ]]
 then
-	echo "BATCH_TASK_INDEX is not set, setting to 0"
+	echo "## ## ## ## ## ${CURRENT_SCRIPT_NAME}: BATCH_TASK_INDEX is not set, setting to 0"
 	export BATCH_JOB_ID="rb-job-mockup"
 	export BATCH_TASK_INDEX=0
 fi
 
 export RLGIN_BATCH_TASK_TAG="${BATCH_JOB_ID}-t${BATCH_TASK_INDEX}"
 export RLGIN_BATCH_TMPDIR="${TMPDIR}/${RLGIN_BATCH_TASK_TAG}"
+echo "## ## ## ## ## ${CURRENT_SCRIPT_NAME}: creating ${RLGIN_BATCH_TMPDIR}"
 if [ ! -d ${RLGIN_BATCH_TMPDIR} ]
 then
 	mkdir -p ${RLGIN_BATCH_TMPDIR}
 fi
 
-## get latest scripts
 TMPREPO=${RLGIN_BATCH_TMPDIR}/rlgin-batch-bootstrap-repo
 if [ -d ${TMPREPO} ]
 then
+	echo "## ## ## ## ## ${CURRENT_SCRIPT_NAME}: ${TMPREPO} exists, removing it"
 	rm -rf ${TMPREPO}
 fi
+echo "## ## ## ## ## ${CURRENT_SCRIPT_NAME}: get latest scripts from source repo" 
 git clone ${RLGIN_BATCH_REPO_URL} ${TMPREPO}
 cp ${TMPREPO}/utils/rlgin-batch/*.sh . 
 
 ## launch job
+echo "## ## ## ## ## ${CURRENT_SCRIPT_NAME}: invoking ./rb-job-run.sh" 
 ./rb-job-run.sh

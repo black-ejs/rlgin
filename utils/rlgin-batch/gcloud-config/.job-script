@@ -44,6 +44,22 @@ TARGET_SCRIPT=/home/${RLGIN_BATCH_USER}/.bashrc
 echo updating ${TARGET_SCRIPT}.... 
 echo -latr /home
 ls -latr /home
+if [ ! -e /home/${RLGIN_BATCH_USER} ]
+then
+    echo "### /home/${RLGIN_BATCH_USER} not found, attempting to force user creation"
+    echo "   +++ mkdir -p /home/${RLGIN_BATCH_USER}"
+    mkdir -p /home/${RLGIN_BATCH_USER}
+    echo "   +++ chown ${RLGIN_BATCH_USER}:${RLGIN_BATCH_USER} /home/${RLGIN_BATCH_USER}"
+    chown ${RLGIN_BATCH_USER}:${RLGIN_BATCH_USER} /home/${RLGIN_BATCH_USER}
+    echo "   +++ ls -latr /home/${RLGIN_BATCH_USER}"
+    ls -latr /home/${RLGIN_BATCH_USER}
+    echo "   +++ su -${RLGIN_BATCH_USER} -c \"id; whoami; pwd; ls -latr; exit\""
+    su - ${RLGIN_BATCH_USER} -c "id; whoami; pwd; ls -latr; exit" 
+    #echo "   +++ ssh ${RLGIN_BATCH_USER}@localhost \"exit\""
+    #ssh ${RLGIN_BATCH_USER}@localhost "exit"
+    echo "   +++ ls -latr /home/${RLGIN_BATCH_USER}"
+    ls -latr /home/${RLGIN_BATCH_USER}
+fi
 echo ls -latr /home/${RLGIN_BATCH_USER}
 ls -latr /home/${RLGIN_BATCH_USER}
 cp ${TMPREPO}/${BOOTSTRAP_SCRIPTS_PATH}/.bashrc-initialize ${RLGIN_BATCH_TMP_BOOTSTRAP_DIR}
