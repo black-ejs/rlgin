@@ -12,7 +12,7 @@ echo sleeping ${sleepsecs} because I am BATCH_TASK_INDEX=${BATCH_TASK_INDEX}
 sleep ${sleepsecs}
 
 export JOB_TAG="${BATCH_JOB_ID}-t${BATCH_TASK_INDEX}"
-export RLGIN_BATCH_USER="edward_schwarz"
+export RLGIN_BATCH_USER="edward_schwarz_tonigooddog_com"
 export RLGIN_BATCH_TMP_BOOTSTRAP_DIR=/var/tmp/${JOB_TAG}-bootstrap
 echo JOB_TAG="${JOB_TAG}"
 echo RLGIN_BATCH_TMP_BOOTSTRAP_DIR="${RLGIN_BATCH_TMP_BOOTSTRAP_DIR}"

@@ -112,7 +112,7 @@ def create_standard_job_request(params_path: str,
     # project_id='rlgin-batch'
     #template_name = "rb-a-s50-template-2" 
     project_id = "rlgin-batch-384320"
-    template_name = "rb-t-s50-template-1" 
+    template_name = "rb-t-s50-template-4" 
     ts=f"{time.time()}".replace('.','-')[-9:]
     job_name = f"rb-job-{params_path.lower()}-{ts}"
 
