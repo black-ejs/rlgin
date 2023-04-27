@@ -375,20 +375,42 @@ def print_psinfo(prefix=""):
         f"psinfo={process.memory_info().rss}/{process.memory_percent():1.2f}%")
 
 ## #############################################
+## #############################################
+## #############################################
+import importlib
+def import_parameters(parameters_file:str) -> dict:
+    parameters_file=os.path.expanduser(parameters_file)
+    elements=parameters_file.split("/")
+    module_name=elements[-1]
+    print(f"importing params from: {module_name}")
+    p=importlib.import_module(module_name)
+    params = p.define_parameters()
+    #params = parameters_file.define_parameters()
+    return params
+
+## #############################################
 if __name__ == '__main__':
 
     # Set options 
     parser = argparse.ArgumentParser()
     parser.add_argument("--episodes", nargs='?', type=int, default=-1)
-    parser.add_argument("--logfile", nargs='?', type=str, default=None)
+    parser.add_argument("--params_module", nargs='?', type=str, default=None)
     parser.add_argument("--name_scenario", nargs='?', type=str, default=None)
+    parser.add_argument("--logfile", nargs='?', type=str, default=None)
+    parser.add_argument("--weightsfile_1", nargs='?', type=str, default=None)
+    parser.add_argument("--weightsfile_2", nargs='?', type=str, default=None)
     parser.add_argument("--generation", nargs='?', type=int, default=-1)
     parser.add_argument("--max_memory", nargs='?', type=int, default=-1)
     # parser.add_argument("--display", nargs='?', type=distutils.util.strtobool, default=True)
     args = parser.parse_args()
     print("learningGin: args ", args)
 
-    params = ginDQNParameters.define_parameters()
+    if (args.params_module == None):
+        print("using default parameters")
+        params = ginDQNParameters.define_parameters()
+    else:
+        params = import_parameters(args.params_module)
+
     params['display'] = True
 
     if args.episodes != -1:
@@ -397,17 +419,31 @@ if __name__ == '__main__':
         params['name_scenario'] = args.name_scenario
     if not (args.logfile == None):
         params['log_path'] = args.logfile        
+    if not (args.weightsfile_1 == None):
+        if 'nn' in params['player1']:
+            weightsfile=os.path.expanduser(args.weightsfile_1)
+            params['player1']['nn']['weights_path']  = weightsfile
+        else:
+            print("*** WARNING, --weightsfile_1 specificed but player1 is not a neural net ")
+    if not (args.weightsfile_2 == None):
+        if 'nn' in params['player2']:
+            weightsfile=os.path.expanduser(args.weightsfile_2)
+            params['player2']['nn']['weights_path']  = weightsfile
+        else:
+            print("*** WARNING, --weightsfile_2 specificed but player2 is not a neural net ")
     if args.generation != -1:
         params['generation'] = args.generation
     if args.max_memory != -1:
         params["max_python_memory"] = args.max_memory
 
     old_stdout = None
+    old_stderr = None
     log = None
     try:
             
         if 'log_path' in params:
             log_path = params['log_path']
+            log_path = os.path.expanduser(log_path)
             if len(log_path)>0:
                 log = open(log_path, "w")
                 if log.writable:
@@ -438,5 +474,4 @@ if __name__ == '__main__':
             sys.stderr = old_stderr
         if not log == None:
             log.close()
-
 
