@@ -78,7 +78,8 @@ echo "#### ${CURRENT_SCRIPT_NAME} launching scratchGin process..."
 python learningGin.py  \
 	--name_scenario "${NAME_SCENARIO}" \
 	--logfile "${LOGFILE}" \
-	--params_module ${PARAMS_MODULE} 
+	--params_module ${PARAMS_MODULE} \
+	--weightsfile_2 ${WEIGHTSPATH}/${WEIGHTSROOT}
 echo "#### ${CURRENT_SCRIPT_NAME} scratchGin process completed"
  
 echo "#### ${CURRENT_SCRIPT_NAME} capturing weights to ${WEIGHTS_OUTPUT_FILE} ..."
