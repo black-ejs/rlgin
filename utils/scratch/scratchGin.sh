@@ -68,6 +68,7 @@ conda activate
 echo 
 
 echo "#### ${CURRENT_SCRIPT_NAME} switching to execution directory ..."
+cd ${RUN_DIR}
 pwd
 
 echo "#### ${CURRENT_SCRIPT_NAME} launching scratchGin process..."
