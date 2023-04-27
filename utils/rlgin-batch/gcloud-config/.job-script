@@ -42,7 +42,7 @@ sudo mv ${RLGIN_BATCH_TMP_BOOTSTRAP_DIR}/.etc-environment-initialize /etc/enviro
 
 TARGET_SCRIPT=/home/${RLGIN_BATCH_USER}/.bashrc
 echo updating ${TARGET_SCRIPT}.... 
-echo -latr /home
+echo ls -latr /home
 ls -latr /home
 if [ ! -e /home/${RLGIN_BATCH_USER} ]
 then

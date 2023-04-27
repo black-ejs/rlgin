@@ -84,7 +84,7 @@ python learningGin.py  \
 echo "#### ${CURRENT_SCRIPT_NAME} scratchGin process completed"
  
 echo "#### ${CURRENT_SCRIPT_NAME} capturing weights to ${WEIGHTS_OUTPUT_FILE} ..."
-[ -e ${WEIGHTSFILE_2}.post_training ] && cp ${WEIGHTSFILE_2}.post_training "${WEIGHTS_OUTPUT_FILE}" 
+[ -e ${WEIGHTSFILE_2}.post_training ] && mv ${WEIGHTSFILE_2}.post_training "${WEIGHTS_OUTPUT_FILE}" 
  
 cd ${CURRENT_SCRIPT_ORIGINAL_EXECUTION_DIR}
 
