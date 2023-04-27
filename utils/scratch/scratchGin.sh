@@ -52,7 +52,7 @@ else
 fi
  
 echo "#### ${CURRENT_SCRIPT_NAME} cleaning up fram any previous runs..."
-#[ -e ${WEIGHTSPATH}/*.h5.post_training ] && rm ${WEIGHTSPATH}/*.post_training 
+[ -e ${WEIGHTSPATH}/*.h5.post_training ] && rm ${WEIGHTSPATH}/*.h5.post_training 
  
 echo "#### ${CURRENT_SCRIPT_NAME} checking python..."
 which python
