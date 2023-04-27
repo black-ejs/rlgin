@@ -40,7 +40,7 @@ then
 	mkdir -p ${RUN_DIR}/params
 fi
 PARAMS_SOURCE=${PARAMS_LOC}/ginDQNParameters.py.${MODEL_NICKNAME}
-PARAMS_MODULE=params/ginDQNParameters.${MODEL_NICKNAME}
+PARAMS_MODULE=params/ginDQNParameters_${MODEL_NICKNAME}_${SCRATCH_ID}
 PARAMS_TARGET=${LOCAL_REPO}/${PARAMS_MODULE}.py
 if [[ -d ${RLGIN_BATCH_LOCAL_REPO} ]]
 then
@@ -75,7 +75,7 @@ echo "#### ${CURRENT_SCRIPT_NAME} launching scratchGin process..."
 python learningGin.py  \
 	--name_scenario "${NAME_SCENARIO}" \
 	--logfile "${LOGFILE}" \
-	--params_module=${PARAMS_MODULE} 
+	--params_module ${PARAMS_MODULE} 
 echo "#### ${CURRENT_SCRIPT_NAME} scratchGin process completed"
  
 echo "#### ${CURRENT_SCRIPT_NAME} capturing weights to ${WEIGHTS_OUTPUT_FILE} ..."
