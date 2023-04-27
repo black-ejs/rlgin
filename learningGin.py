@@ -379,13 +379,22 @@ def print_psinfo(prefix=""):
 ## #############################################
 import importlib
 def import_parameters(parameters_file:str) -> dict:
+    package_name = ""
     parameters_file=os.path.expanduser(parameters_file)
-    elements=parameters_file.split("/")
-    module_name=elements[-1]
-    print(f"importing params from: {module_name}")
+    module_name=parameters_file.replace("/",".")
+    #elements=parameters_file.split("/")
+    #module_name=elements[-1]
+    #if len(elements) > 0:
+    #   for e in elements:
+    #       if len(package_name)>0:
+    #           package_name+='.'
+    #       package_name+=e
+    if package_name == "":
+        print(f"importing params from: {module_name}")
+    else:
+        print(f"importing params from: {module_name} in package {package_name}")
     p=importlib.import_module(module_name)
     params = p.define_parameters()
-    #params = parameters_file.define_parameters()
     return params
 
 ## #############################################
