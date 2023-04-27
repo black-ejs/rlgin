@@ -1,6 +1,18 @@
 #!/bin/bash
 #set -x
 
+CURRENT_SCRIPT_NAME="`basename ${0}`"
+CURRENT_SCRIPT_SOURCE_DIR="`dirname ${0}`"
+CURRENT_SCRIPT_ORIGINAL_EXECUTION_DIR=`pwd`
+
+echo "########### ${CURRENT_SCRIPT_NAME} ############"
+if [[ X"${JOB_PARAMETERS}"X == XX ]]
+then
+    echo "#### ${CURRENT_SCRIPT_NAME}: fetching job paramaters ##########"
+    source ${CURRENT_SCRIPT_SOURCE_DIR}/rb-fetch-job-params.sh
+    echo $JOB_PARAMETERS
+fi
+
 export SERIES_NICKNAME="${1:-${RLGIN_BATCH_JP_SERIES_NICKNAME}}"
 export PARAMS_SPEC="${2:-${RLGIN_BATCH_JP_PARAMS_SPEC}}"
 export TRAIN_OR_SCRATCH="${3:-${RLGIN_BATCH_JP_TRAIN_OR_SCRATCH}}"
@@ -15,21 +27,13 @@ echo SCRATCH_DRIVER_ID="${SCRATCH_DRIVER_ID}"
 echo WEIGHTS_SPEC="${WEIGHTS_SPEC}"
 echo TRAIN_GENERATIONS="${TRAIN_GENERATIONS}"
 
-CURRENT_SCRIPT_NAME="`basename ${0}`"
-CURRENT_SCRIPT_SOURCE_DIR="`dirname ${0}`"
-CURRENT_SCRIPT_ORIGINAL_EXECUTION_DIR=`pwd`
 UPDATING="FALSE"
 
-REMOTE_REPO_URL=${RLGIN_BATCH_REPO_URL}
 TRAINING_GROUND=${RLGIN_BATCH_SERIES_BASE}
-EXECUTION_DIR=rlgin
-LOCAL_REPO=${EXECUTION_DIR}
-LOG_LOC=${EXECUTION_DIR}/logs 
-WEIGHTS_LOC=${EXECUTION_DIR}/weights
+LOCAL_REPO=${RLGIN_BATCH_REPO_URL}
+LOG_LOC=logs 
+WEIGHTS_LOC=weights
 SCRIPTS_LOC=${LOCAL_REPO}/utils
-
-source ${CURRENT_SCRIPT_SOURCE_DIR}/rb-fetch-job-params.sh
-echo $JOB_PARAMETERS
 
 if [[ "X""${SERIES_NICKNAME}""X" == "XX" ]]
 then
@@ -74,18 +78,6 @@ then
     echo "**** CREATING WEIGHTS DIRECTORY"
     mkdir -p ${WEIGHTS_LOC}
 fi
-
-echo "**** copying in git repo "
-repoback=`pwd`
-TMPREPO=${RLGIN_BATCH_TMPDIR}/rb-repo.zip
-rm -rf ${TMPREPO}
-cd ${RLGIN_BATCH_LOCAL_REPO}
-git archive --format zip HEAD >  ${TMPREPO}
-cd "${repoback}"
-mkdir -p ${LOCAL_REPO}
-cd ${LOCAL_REPO}
-unzip ${TMPREPO}
-cd "${TARGET_PATH}"
 
 echo "**** COPYING PARAMETER TEMPLATE"
 TARGET_PARAMETERS_FILENAME=ginDQNParameters.py.${SERIES_NICKNAME}${SCRATCH_DRIVER_ID}
