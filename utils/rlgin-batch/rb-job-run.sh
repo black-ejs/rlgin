@@ -65,7 +65,7 @@ if [[ ${TRAIN_OR_SCRATCH} == "SCRATCH" ]]
 then
     echo "########## ${CURRENT_SCRIPT_NAME}: launching scratchDriver.sh"
     echo "nohup ./scratchDriver.sh ${SCRATCH_DRIVER_ID} 2>&1 > scratchDriver.sh.out &"
-    nohup ./scratchDriver.sh ${SCRATCH_DRIVER_ID} ${SCRATCH_DRIVER_START} ${SCRATCH_DRIVER_END} 2>&1 > scratchDriver.sh.out &
+    nohup ./scratchDriver.sh ${SCRATCH_DRIVER_ID} ${SCRATCH_DRIVER_START} ${SCRATCH_DRIVER_END} 2>&1 > scratchDriver.sh.out.${SERIES_NICKNAME},].${SCRATCH_DRIVER_ID} &
 elif [[ ${TRAIN_OR_SCRATCH} == "TRAIN" ]]
 then
     echo "########## ${CURRENT_SCRIPT_NAME}: launching trainDriver.sh"
