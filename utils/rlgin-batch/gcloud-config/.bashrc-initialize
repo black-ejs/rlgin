@@ -33,7 +33,7 @@ then
         then
                 echo "${RLGIN_BATCH_SERIES_ROOT} is empty"
                 echo "rlgin-batch: mounting shared bucket"
-                gcsfuse --debug_fuse --debug_fs --debug_gcs --file-mode 744 "${RLGIN_BATCH_EXECUTION_BUCKET}" "${RLGIN_BATCH_SERIES_ROOT}"
+                gcsfuse --debug_fuse --debug_fs --debug_gcs --stat-cache-ttl 0 --type-cache-ttl 0 --file-mode 744 "${RLGIN_BATCH_EXECUTION_BUCKET}" "${RLGIN_BATCH_SERIES_ROOT}"
                 # unmount with  
                 #       fusermount -u "${RLGIN_BATCH_SERIES_ROOT}"
         else
