@@ -70,6 +70,8 @@ echo
 echo "#### ${CURRENT_SCRIPT_NAME} switching to execution directory ..."
 cd ${RUN_DIR}
 pwd
+ls -latr
+ls -latr params
 
 echo "#### ${CURRENT_SCRIPT_NAME} launching scratchGin process..."
 python learningGin.py  \
