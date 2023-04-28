@@ -49,8 +49,8 @@ then
 	mkdir -p ${RUN_DIR}/params
 fi
 PARAMS_SOURCE=${PARAMS_LOC}/ginDQNParameters.py.${MODEL_NICKNAME}
-FIXUP=`echo ${SCRATCH_ID} | awk '{p=$0; gsub("[.]","_",p); print p;}'`
-PARAMS_MODULE=params/ginDQNParameters_${MODEL_NICKNAME}_${FIXUP}
+FIXUP=`echo ${MODEL_NICKNAME} | awk '{p=$0; gsub("[.]","_",p); print p;}'`
+PARAMS_MODULE=params/ginDQNParameters_${FIXUP}
 PARAMS_TARGET=${LOCAL_REPO}/${PARAMS_MODULE}.py
 if [[ -d ${RLGIN_BATCH_LOCAL_REPO} ]]
 then
