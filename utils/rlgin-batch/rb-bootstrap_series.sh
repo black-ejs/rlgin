@@ -66,18 +66,15 @@ then
     exit 23
 fi
 
-if [[ ${UPDATING} == "FALSE" ]]
-then
-    echo "**** CREATING TARGET DIRECTORY ${TARGET_PATH}"
-    mkdir -p "${TARGET_PATH}"
-    cd "${TARGET_PATH}"
+echo "**** CONFIRMING TARGET DIRECTORY ${TARGET_PATH}"
+mkdir -p "${TARGET_PATH}"
+cd "${TARGET_PATH}"
     
-    echo "**** CREATING LOGS DIRECTORY"
-    mkdir -p ${LOG_LOC}
+echo "**** CREATING LOGS DIRECTORY"
+mkdir -p ${LOG_LOC}
 
-    echo "**** CREATING WEIGHTS DIRECTORY"
-    mkdir -p ${WEIGHTS_LOC}
-fi
+echo "**** CREATING WEIGHTS DIRECTORY"
+mkdir -p ${WEIGHTS_LOC}
 
 echo "**** COPYING PARAMETER TEMPLATE"
 TARGET_PARAMETERS_FILENAME=ginDQNParameters.py.${SERIES_NICKNAME}${SCRATCH_DRIVER_ID}
