@@ -4,28 +4,30 @@ CURRENT_SCRIPT_NAME="`basename ${0}`"
 CURRENT_SCRIPT_DIR="`dirname ${0}`"
 
 FINAL_OUTPUT="${CURRENT_SCRIPT_DIR}"/"${CURRENT_SCRIPT_NAME}".out
-ALL_OUTPUT_FILES="${FINAL_OUTPUT}*"
-rm ${ALL_OUTPUT_FILES}
-
 OUTPUT1="${CURRENT_SCRIPT_DIR}"/"${CURRENT_SCRIPT_NAME}".out.1
+rm ${FINAL_OUTPUT}
+rm ${OUTPUT1}
 
-TRAINING_GROUND_TARGETS=`~/training_ground_targets.sh`
+TRAINING_GROUND_TARGETS=${1:-~/training_ground_targets.txt}
+REMOTE_USERID="edward_schwarz_tonigooddog_com"
 
-for PROJECT in ${TRAINING_GROUND_TARGETS}
+echo "checking targets from ${TRAINING_GROUND_TARGETS}"
+
+for PROJECT in `grep -v "^[#]" ${TRAINING_GROUND_TARGETS}`
 do
         LEARNDIR=`echo "${PROJECT}" | cut -d@ -f1`
         HOST=`echo "${PROJECT}" | cut -d@ -f2`
         echo ----XXX---- ${LEARNDIR} " " @${HOST}
-        DRIVER_DIR=/home/edward_schwarz/dev/projects/training_ground/${LEARNDIR}
-        LOGS=${DRIVER_DIR}/rlgin/logs
+        DRIVER_DIR=/home/${REMOTE_USERID}/dev/projects/training_ground/${LEARNDIR}
+        LOGS=${DRIVER_DIR}/logs
 
-        ~/gcmd.sh \
-        "for logfile in \`ls -tr ${LOGS}\`; \
-         do \
-             logfile=${LOGS}/\${logfile}; \
-             echo \${logfile} @${HOST}; \
-             egrep -v ' turn | bench ' \${logfile}; \
-         done;"  \
+		~/gcmd.sh \
+		"DD=\`ps -ef | grep learningGin | grep -v grep | awk \"{print \\\\\\\$13}\"\`; \
+		for logfile in \${DD}; \
+        do \
+        	echo \${logfile} @${HOST}; \
+        	egrep -v ' turn | bench ' \${logfile}; \
+        done"  \
          ${HOST} >> "${OUTPUT1}"
 done
 
@@ -36,7 +38,7 @@ cat "${OUTPUT1}" | awk '
 				total_time=total_time+hand_time; } 
 			/ing[.][.]/ { 
 				phase=$0;} 
-			/r.*[34]-vm|r.*plate-|rb-job-.*-0|r.*[abcd]-vm/ { 
+			/r.*[34]-vm|r.*plate-| [@]rb-job-.*/ { 
 				if (total_time>0 && hands_done==0 && hand_count>0) { 
 					avg=int(total_time/hand_count); 
 					tdo=int((5000-hand_count)*avg/36000)/100;  
@@ -46,7 +48,7 @@ cat "${OUTPUT1}" | awk '
 					print hand_count " hands " int(total_time/hand_count) "ms avg  " too " " lpath;} 
 				ppath=substr($0,34); 
 				print ppath; 
-				lpath=substr(ppath,index(ppath,"rlgin/logs/")+11); 
+				lpath=substr(ppath,index(ppath,"logs/")+5); 
 				hands_done = 0; total_time=0;} 
 			/winMap/{ 
 				if (hand_count>0 && hands_done ==0) {print hand_count " hands  " int(total_time/hand_count) " ms avg";} 

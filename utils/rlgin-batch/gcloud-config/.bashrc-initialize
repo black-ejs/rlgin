@@ -1,5 +1,4 @@
 
-
 # >>> RLGIN_BATCH initialize >>>
 echo rlgin batch initialization
 export RLGIN_BATCH_EXECUTION_BUCKET='rb-t-shared-bucket-1'

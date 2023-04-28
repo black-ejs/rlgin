@@ -7,6 +7,7 @@ from google.cloud import batch_v1
 def create_script_job_with_template(template_link: str, 
                                     script: str, 
                                     num_tasks: int,
+                                    parallelism: int,
                                     params_path: str=None,
                                     env: dict=None) -> batch_v1.Job:
     """
@@ -57,7 +58,7 @@ def create_script_job_with_template(template_link: str,
     group = batch_v1.TaskGroup()
     group.task_count = num_tasks
     group.task_spec = task
-    group.parallelism = 4
+    group.parallelism = parallelism
 
     # Policies are used to define on what kind of virtual machines the tasks will run on.
     # In this case, we tell the system to use an instance template that defines all the
@@ -107,10 +108,11 @@ def submit_job_request(create_request: batch_v1.CreateJobRequest) -> batch_v1.Jo
 
 def create_standard_job_request(params_path: str, 
                                 num_tasks: int,
+                                parallelism: int=4,
                                 env: dict=None, 
                                 region:str="us-central1") -> batch_v1.CreateJobRequest:
     # project_id='rlgin-batch'
-    #template_name = "rb-a-s50-template-2" 
+    # template_name = "rb-a-s50-template-2" 
     project_id = "rlgin-batch-384320"
     template_name = "rb-t-s50-template-4" 
 
@@ -122,11 +124,11 @@ def create_standard_job_request(params_path: str,
     with open(f"{inline_script_loc}/{inline_script}") as scriptfile:
         script = scriptfile.read()
      
-    #job_id = f"projects/{project_id}/locations/{region}/jobs/job01"
     template_link = f"projects/{project_id}/global/instanceTemplates/{template_name}"
     job = create_script_job_with_template(template_link, 
                                           script, 
                                           num_tasks,
+                                          parallelism,
                                           params_path, 
                                           env)
     dump(job,"-------- job before request")
@@ -152,16 +154,17 @@ def to_json(obj):
 ## #############################################
 if __name__ == '__main__':
 
-    #params_path="CYA"
-    #num_tasks = 20
-    params_path="rb-test-1"
-    num_tasks = 20
-    regions=["us-central1"]
-
+    params_path="CYB"
+    num_tasks = 20    
+    parallelism = 10
+    region="us-central1"
     env = {"RLGIN_BATCH_HELLO":"hello"}
+
     create_request = create_standard_job_request(params_path, 
                                                 num_tasks,
-                                                env)
+                                                parallelism,
+                                                env,
+                                                region)
 
     submitted = submit_job_request(create_request)
     dump(submitted,"-------- submitted")

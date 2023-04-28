@@ -10,14 +10,15 @@ rm ${ALL_OUTPUT_FILES}
 OUTPUT1="${CURRENT_SCRIPT_DIR}"/"${CURRENT_SCRIPT_NAME}".out.1
 
 TRAINING_GROUND_TARGETS=`~/training_ground_targets.sh`
+REMOTE_USERID=edward_schwarz_tonigooddog_com
 
 for PROJECT in ${TRAINING_GROUND_TARGETS}
 do
         LEARNDIR=`echo "${PROJECT}" | cut -d@ -f1`
         HOST=`echo "${PROJECT}" | cut -d@ -f2`
         echo --------- ${LEARNDIR} " " @${HOST}
-        DRIVER_DIR=/home/edward_schwarz/dev/projects/training_ground/${LEARNDIR}
-        LOGS=${DRIVER_DIR}/rlgin/logs
+        DRIVER_DIR=/home/${REMOTE_USERID}/dev/projects/training_ground/${LEARNDIR}
+        LOGS=${DRIVER_DIR}/logs
 
         ~/gcmd.sh \
        	 "echo --------- ${LEARNDIR} ' ' @${HOST}; \
