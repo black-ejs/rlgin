@@ -64,7 +64,7 @@ python learningGin.py \
             --name_scenario "${NAME_SCENARIO}" \
             --logfile "${LOGFILE}" \
         	--params_module ${PARAMS_MODULE} \
-            --werightsfile_2 "${PROCESS_WEIGHTS_PATH}" \
+            --weightsfile_2 "${PROCESS_WEIGHTS_PATH}" \
             --generation "${OUTPUT_GENERATION_NUMBER}"
 echo training process completed at `date -u +%Y-%m-%d_%H-%M-%S`
 

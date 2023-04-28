@@ -122,6 +122,9 @@ def create_standard_job_request(params_path: str,
 
     ts=f"{time.time()}".replace('.','-')[-9:]
     job_name = f"rb-job-{params_path.lower()}-{ts}"
+    job_name = job_name.replace('.','-')
+    job_name = job_name.replace('_','-')
+    job_name = job_name.replace('/','-')
 
     inline_script_loc="/Users/edward/Documents/dev/projects/rlgin/utils/rlgin-batch/gcloud-config"
     inline_script=".job-script"
@@ -194,5 +197,5 @@ if __name__ == '__main__':
                                                 env,
                                                 region)
 
-    #submitted = submit_job_request(create_request)
-    #dump(submitted,"-------- submitted")
+    submitted = submit_job_request(create_request)
+    dump(submitted,"-------- submitted")
