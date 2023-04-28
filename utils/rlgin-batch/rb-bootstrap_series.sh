@@ -91,8 +91,6 @@ cp ${SCRIPTS_LOC}/scratch/scratchGin.sh .
 chmod a+x ./scratchGin.sh
 cp ${SCRIPTS_LOC}/scratch/scratchDriver.sh .
 chmod a+x ./scratchDriver.sh
-cp ${SCRIPTS_LOC}/scratch/testWeights.sh .
-chmod a+x ./testWeights.sh
 
 echo "  ********* ${CURRENT_SCRIPT_NAME}: obtaining PARAMS for ${SERIES_NICKNAME} ***********"
 cp ${PARAMS_FILE} ${TARGET_PARAMETERS_FILENAME}
@@ -100,10 +98,10 @@ cp ${PARAMS_FILE} ${TARGET_PARAMETERS_FILENAME}
 if [[ "${TRAIN_OR_SCRATCH}" == "TRAIN" ]]
 then
     WEIGHTS_SPEC_FILENAME=`basename ${WEIGHTS_SPEC}`
-    TARGET_WEIGHTS_PATH=${WEIGHTS_LOC}/${WEIGHTS_SPEC_FILENAME}
     WEIGHTS_FILE="${RLGIN_BATCH_PARAMS}/${RLGIN_BATCH_JOB_PARAMS_PATH}/${WEIGHTS_SPEC}"
     echo "  ********* ${CURRENT_SCRIPT_NAME}: obtaining WEIGHTS from ${WEIGHTS_SPEC} ***********"
-    cp ${WEIGHTS_FILE} ${TARGET_WEIGHTS_PATH}
+    echo WEIGHTS_SPEC_FILENAME=${WEIGHTS_SPEC_FILENAME}  WEIGHTS_FILE=${WEIGHTS_FILE} 
+    cp ${WEIGHTS_FILE} ${WEIGHTS_LOC}/${WEIGHTS_SPEC_FILENAME}
     cp ${WEIGHTS_FILE} ${WEIGHTS_LOC}/weights.h5.0
 fi
 
