@@ -367,6 +367,7 @@ def run_train_test(params):
         if test_runs > 0:
             for test_run in range(test_runs):
                 print("Testing...")
+                print(f"test run: {test_run+1} of {test_runs}")
                 if 'test_epsiodes' in params:
                     params['episodes'] = params['test_episodes']
                 stats = run(params)  
