@@ -1,9 +1,10 @@
 import time
 import json
-import sys
+import argparse
+
 from google.cloud import batch_v1
 
-
+# ###################################
 def create_script_job_with_template(template_link: str, 
                                     script: str, 
                                     num_tasks: int,
@@ -79,6 +80,7 @@ def create_script_job_with_template(template_link: str,
     return job
 
 
+# ###################################
 def create_job_request(job: batch_v1.Job, 
                        project_id: str, 
                        region: str, 
@@ -101,11 +103,13 @@ def create_job_request(job: batch_v1.Job,
 
     return create_request
 
+# ###################################
 def submit_job_request(create_request: batch_v1.CreateJobRequest) -> batch_v1.Job:
     client = batch_v1.BatchServiceClient()
 
     return client.create_job(create_request)
 
+# ###################################
 def create_standard_job_request(params_path: str, 
                                 num_tasks: int,
                                 parallelism: int=4,
@@ -140,6 +144,7 @@ def create_standard_job_request(params_path: str,
     dump(create_request,"-------- create_request")
     return create_request
 
+# ###################################
 def dump(obj,label:str=None):
     if not label==None:
         print(label)
@@ -152,13 +157,36 @@ def to_json(obj):
     json.dumps(obj,indent=4)
 
 ## #############################################
+## #############################################
+## #############################################
+## #############################################
+## #############################################
 if __name__ == '__main__':
 
-    params_path="CYB"
-    num_tasks = 20    
-    parallelism = 10
-    region="us-central1"
-    env = {"RLGIN_BATCH_HELLO":"hello"}
+    # Set options 
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--params_path", nargs='?', type=str, default=None)
+    parser.add_argument("--num_tasks", nargs='?', type=int, default=1)
+    parser.add_argument("--parallelism", nargs='?', type=int, default=1)
+    parser.add_argument("--region", nargs='?', type=str, default="us-central1")
+    parser.add_argument("--env", nargs='?', type=str, default=None)
+    parser.add_argument("--script", nargs='?', type=str, default=None)
+    args = parser.parse_args()
+    print("generateJob: args ", args)
+
+    if (args.params_path == None):
+        print(("  please supply a path to the folder containing the\n" 
+               "  job-parameters.txt file using the --params_path option.\n" 
+               "  path is relative to ~/dev/projects/rlgin-batch/job-parameters\n" 
+               "  this value will be passed to the script as environment var RLGIN_BATCH_JOB_PARAMS_PATH"))
+        exit()
+
+    params_path=args.params_path
+    num_tasks = args.num_tasks
+    parallelism = args.parallelism
+    region=args.region
+    env = args.env
+    #env = {"RLGIN_BATCH_HELLO":"hello"}
 
     create_request = create_standard_job_request(params_path, 
                                                 num_tasks,
@@ -166,5 +194,5 @@ if __name__ == '__main__':
                                                 env,
                                                 region)
 
-    submitted = submit_job_request(create_request)
-    dump(submitted,"-------- submitted")
+    #submitted = submit_job_request(create_request)
+    #dump(submitted,"-------- submitted")

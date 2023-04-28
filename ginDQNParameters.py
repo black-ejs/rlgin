@@ -6,6 +6,7 @@ def define_parameters():
     params = dict()
 
     params['episodes'] = 5                # gin hands
+    # params['test_runs'] = 5
 
     epsilon_decay_percent = 3   # 3% of hands
     epsilon_episodes = (epsilon_decay_percent/100)*params['episodes']

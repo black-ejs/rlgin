@@ -361,11 +361,16 @@ def run_train_test(params):
                 params[p]['nn']['load_weights'] = True 
                 do_test = True
     if do_test:
-        print("Testing...")
-        if 'test_epsiodes' in params:
-            params['episodes'] = params['test_episodes']
-        stats = run(params)  
-        print_stats(stats)
+        test_runs=1
+        if 'test_runs' in params:
+            test_runs=max(int(params['test_runs']),0)
+        if test_runs > 0:
+            for test_run in range(test_runs):
+                print("Testing...")
+                if 'test_epsiodes' in params:
+                    params['episodes'] = params['test_episodes']
+                stats = run(params)  
+                print_stats(stats)
 
     print(f"****** learningGin execution took {time.time() - start_time} seconds at {datetime.datetime.now()}")
 
