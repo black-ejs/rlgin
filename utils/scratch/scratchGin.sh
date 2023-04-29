@@ -1,6 +1,6 @@
 #!/usr/bin/bash 
 ## this script is usually invoked with "nohup" or the equivalent 
-set -x
+#set -x
  
 SCRATCH_ID=${1:-0}  
 CURRENT_SCRIPT_NAME="`basename ${0}`"
