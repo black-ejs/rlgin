@@ -23,6 +23,16 @@ cd "${RUN_DIR}"
 echo "current working directory = {$PWD}"
 
 echo "############# ${CURRENT_SCRIPT_NAME} locating latest-generation weights...."
+IGN=`ls ${PROCESS_WEIGHTS_PATH}.*`
+echo IGN=${IGN}
+IGN=`ls ${PROCESS_WEIGHTS_PATH}.* | grep "[.][0-9]*$"`
+echo IGN=${IGN}
+IGN=`ls ${PROCESS_WEIGHTS_PATH}.* | grep "[.][0-9]*$" | cut -d. -f3`
+echo IGN=${IGN}
+IGN=`ls ${PROCESS_WEIGHTS_PATH}.* | grep "[.][0-9]*$" | cut -d. -f3 | sort -n`
+echo IGN=${IGN}
+IGN=`ls ${PROCESS_WEIGHTS_PATH}.* | grep "[.][0-9]*$" | cut -d. -f3 | sort -n | tail -1`
+echo IGN=${IGN}
 INPUT_GENERATION_NUMBER=`ls ${PROCESS_WEIGHTS_PATH}.* | grep "[.][0-9]*$" | cut -d. -f3 | sort -n | tail -1`
 INPUT_WEIGHTS="${PROCESS_WEIGHTS_PATH}.${INPUT_GENERATION_NUMBER}"
 OUTPUT_GENERATION_NUMBER=$((INPUT_GENERATION_NUMBER+1))
@@ -45,23 +55,13 @@ cp "${INPUT_WEIGHTS}" "${PROCESS_WEIGHTS_PATH}"
 
 echo "############# ${CURRENT_SCRIPT_NAME} getting "${MODEL_NICKNAME}"-specific params...."
 mkdir -p ${RUN_DIR}/params
-echo "HELLO" > ${RUN_DIR}/params/HELLO
 PARAMS_SOURCE=${PARAMS_LOC}/ginDQNParameters.py.${MODEL_NICKNAME}
 FIXUP=`echo ${MODEL_NICKNAME} | awk '{p=$0; gsub("[.]","_",p); print p;}'`
 PARAMS_MODULE=params/ginDQNParameters_${FIXUP}
 PARAMS_TARGET=${RUN_DIR}/${PARAMS_MODULE}.py
 if [[ -d ${RUN_DIR} ]]
 then
-    echo ls ${PARAMS_SOURCE}
-    ls ${PARAMS_SOURCE}
-    echo "cp ${PARAMS_SOURCE} ${PARAMS_TARGET}"
 	cp ${PARAMS_SOURCE} ${PARAMS_TARGET} 
-    echo "ls -latr ${RUN_DIR}"
-    ls -latr ${RUN_DIR}
-    echo ls -latr ${RUN_DIR}/params
-    ls -latr ${RUN_DIR}/params
-    echo ls ${PARAMS_TARGET}
-    ls ${PARAMS_TARGET}
 else
 	echo "#### ${CURRENT_SCRIPT_NAME} ${RUN_DIR} not found, this could be a problem...."
 fi
