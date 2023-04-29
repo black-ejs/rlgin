@@ -51,7 +51,12 @@ PARAMS_MODULE=params/ginDQNParameters_${FIXUP}
 PARAMS_TARGET=${RUN_DIR}/${PARAMS_MODULE}.py
 if [[ -d ${RUN_DIR} ]]
 then
+    echo "cp ${PARAMS_LOC}/ginDQNParameters.py.${MODEL_NICKNAME} ${PARAMS_TARGET}"
 	cp ${PARAMS_LOC}/ginDQNParameters.py.${MODEL_NICKNAME} ${PARAMS_TARGET} 
+    echo "ls -latr ${RUN_DIR}"
+    ls -latr ${RUN_DIR}
+    echo "ls -latr ${RUN_DIR}/params"
+    "ls -latr ${RUN_DIR}/params"
 else
 	echo "#### ${CURRENT_SCRIPT_NAME} ${RUN_DIR} not found, this could be a problem...."
 fi
