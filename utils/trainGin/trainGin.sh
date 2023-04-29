@@ -48,12 +48,12 @@ mkdir -p ${RUN_DIR}/params
 PARAMS_SOURCE=${PARAMS_LOC}/ginDQNParameters.py.${MODEL_NICKNAME}
 FIXUP=`echo ${MODEL_NICKNAME} | awk '{p=$0; gsub("[.]","_",p); print p;}'`
 PARAMS_MODULE=params/ginDQNParameters_${FIXUP}
-PARAMS_TARGET=${LOCAL_REPO}/${PARAMS_MODULE}.py
-if [[ -d ${RLGIN_BATCH_LOCAL_REPO} ]]
+PARAMS_TARGET=${RUN_DIR}/${PARAMS_MODULE}.py
+if [[ -d ${RUN_DIR} ]]
 then
 	cp ${PARAMS_LOC}/ginDQNParameters.py.${MODEL_NICKNAME} ${PARAMS_TARGET} 
 else
-	echo "#### ${CURRENT_SCRIPT_NAME} ${RLGIN_BATCH_LOCAL_REPO} not found, this could be a problem...."
+	echo "#### ${CURRENT_SCRIPT_NAME} ${RUN_DIR} not found, this could be a problem...."
 fi
 
 echo "############# ${CURRENT_SCRIPT_NAME} launching training process at `date -u +%Y-%m-%d_%H-%M-%S` ..."
