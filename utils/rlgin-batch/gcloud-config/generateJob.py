@@ -138,13 +138,12 @@ def create_standard_job_request(params_path: str,
                                           parallelism,
                                           params_path, 
                                           env)
-    dump(job,"-------- job before request")
+    #dump(job,"-------- job before request")
 
     create_request = create_job_request(job,
                                         project_id,
                                         region,
                                         job_name)
-    dump(create_request,"-------- create_request")
     return create_request
 
 # ###################################
@@ -195,6 +194,7 @@ if __name__ == '__main__':
                                                 num_tasks,
                                                 parallelism,
                                                 env,
+    #dump(create_request,"-------- create_request")
                                                 region)
 
     submitted = submit_job_request(create_request)

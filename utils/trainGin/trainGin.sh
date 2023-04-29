@@ -44,10 +44,7 @@ echo "############# ${CURRENT_SCRIPT_NAME} copying input weights...."
 cp "${INPUT_WEIGHTS}" "${PROCESS_WEIGHTS_PATH}"
 
 echo "############# ${CURRENT_SCRIPT_NAME} getting "${MODEL_NICKNAME}"-specific params...."
-if [ ! -d ${RUN_DIR}/params ]
-then
-	mkdir -p ${RUN_DIR}/params
-fi
+mkdir -p ${RUN_DIR}/params
 PARAMS_SOURCE=${PARAMS_LOC}/ginDQNParameters.py.${MODEL_NICKNAME}
 FIXUP=`echo ${MODEL_NICKNAME} | awk '{p=$0; gsub("[.]","_",p); print p;}'`
 PARAMS_MODULE=params/ginDQNParameters_${FIXUP}
@@ -56,7 +53,7 @@ if [[ -d ${RLGIN_BATCH_LOCAL_REPO} ]]
 then
 	cp ${PARAMS_LOC}/ginDQNParameters.py.${MODEL_NICKNAME} ${PARAMS_TARGET} 
 else
-	echo "#### ${CURRENT_SCRIPT_NAME} ${RLGIN_BATCH_LOCAL_REPO} not fouund, this could be a problem...."
+	echo "#### ${CURRENT_SCRIPT_NAME} ${RLGIN_BATCH_LOCAL_REPO} not found, this could be a problem...."
 fi
 
 echo "############# ${CURRENT_SCRIPT_NAME} launching training process at `date -u +%Y-%m-%d_%H-%M-%S` ..."
