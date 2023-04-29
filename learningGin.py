@@ -102,16 +102,14 @@ class learningPlayer:
         if self.is_nn_player():
             self.ginDQN.replay_new(self.ginDQN.memory, self.params['nn']['batch_size'])
 
-    def save_weights(self):
+    def save_weights(self, weights_file:str=None):
+        if weights_file==None:
+            weights_file =  self.params['nn']['weights_path']
         if self.is_nn_player():
-            posttrain_weights = self.ginDQN.state_dict()
-            self.params['nn']['weights_path'] += ".post_training"
-            torch.save(posttrain_weights, self.params['nn']['weights_path'])
-            print(f"weights saved to {self.params['nn']['weights_path']}")
-            if not self.pretrain_weights==None:
-                count_diffs = ginDQN.ginDQNStrategy.compare_weights(self.pretrain_weights, posttrain_weights)
-                if count_diffs == 0:
-                    print(f"** WARNING: {self.name}'s weights appear unchanged after training **")
+            weights_to_save = self.ginDQN.state_dict()
+            torch.save(weights_to_save,weights_file)
+            print(f"weights saved to {weights_file}")
+            return weights_to_save
 
 ## #############################################
 def display(counter_hands, hand_duration, ginhand:(gin.GinHand), log_decisions):
@@ -316,7 +314,12 @@ def run(params):
     total_reward = []
     for p in nn_players:
         if p.ginDQN.params['train']:
-                p.save_weights()
+                p.ginDQN.params['weights_path'] += ".post_training"
+                posttrain_weights = p.save_weights()
+                if not (p.pretrain_weights==None or posttrain_weights==None):
+                    count_diffs = ginDQN.ginDQNStrategy.compare_weights(p.pretrain_weights, posttrain_weights)
+                    if count_diffs == 0:
+                        print(f"** WARNING: {p.name}'s weights appear unchanged after training **")
         total_reward.append((p.name,p.total_reward))
 
     mean_durations, stdev_durations = get_mean_stdev(durations)
@@ -338,11 +341,13 @@ def run(params):
     return stats
 
 ## #############################################
-def run_train_test(params):
-    start_time = time.time()
-    print(f"****** learningGin execution at {datetime.datetime.now()} ")
-    print(f"params: {params}")
+def run_pretest(params):
+    ## pretest
+    return run_test(params, True)
 
+## #############################################
+def run_train(params):
+    ## train
     do_train = False
     for p in ('player1', 'player2'):
         if ('nn' in params[p]) and ('train' in params[p]['nn']):
@@ -351,29 +356,59 @@ def run_train_test(params):
         print("Training...")
         stats = run(params) 
         print_stats(stats)
+    
+## #############################################
+def run_test(params,is_pretest:bool=False):
+
+    ## test or pre-test
+    if is_pretest:
+        key="pretest"
+        status="Pretest"
+    else:
+        key="test"
+        status="Test"
 
     do_test = False
+    do_train = False # just a snaity check for pretrain
+    test_params = copy.deepcopy(params)
     for p in ('player1', 'player2'):
-        if ('nn' in params[p]) and ('test' in params[p]['nn']):
-            test_param = params[p]['nn']['test']
+        if ('nn' in params[p]) and (key in params[p]['nn']):
+            test_param = params[p]['nn'][key]
             if test_param:
-                params[p]['nn']['train'] = False
-                params[p]['nn']['load_weights'] = True 
+                test_params[p]['nn']['train'] = False
+                test_params[p]['nn']['load_weights'] = True 
                 do_test = True
+                if params[p]['nn']['train']:
+                    do_train=True
+                
     if do_test:
+        if is_pretest and (not do_train):
+            print(f"****** WARNING pretesting was requested, but no models are to be trained")
         test_runs=1
         if 'test_runs' in params:
             test_runs=max(int(params['test_runs']),0)
         if test_runs > 0:
             for test_run in range(test_runs):
-                print("Testing...")
-                print(f"test run: {test_run+1} of {test_runs}")
+                print(f"{status}ing...")
+                print(f"{status.lower()} run: {test_run+1} of {test_runs}")
                 if 'test_epsiodes' in params:
-                    params['episodes'] = params['test_episodes']
-                stats = run(params)  
+                    test_params['episodes'] = params['test_episodes']
+                stats = run(test_params)  
                 print_stats(stats)
 
-    print(f"****** learningGin execution took {time.time() - start_time} seconds at {datetime.datetime.now()}")
+## #############################################
+def run_train_test(params):
+    start_time = time.time()
+    print(f"****** learningGin execution at {datetime.datetime.now()} ")
+    print(f"params: {params}")
+
+    run_pretest(params)
+
+    run_train(params)
+
+    run_test(params)
+
+    print(f"****** learningGin execution took {int(time.time()) - start_time} seconds at {datetime.datetime.now()}")
 
 def print_psinfo(prefix=""):
     process = psutil.Process(os.getpid())

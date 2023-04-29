@@ -6,7 +6,7 @@ def define_parameters():
     params = dict()
 
     params['episodes'] = 5                # gin hands
-    # params['test_runs'] = 5
+    params['test_runs'] = 5
 
     epsilon_decay_percent = 3   # 3% of hands
     epsilon_episodes = (epsilon_decay_percent/100)*params['episodes']
@@ -37,7 +37,8 @@ def define_parameters():
     params['player2']['nn']['layer_sizes'] = [400, 200, 40]   # 'hidden'/interior layers - per bayesDqn.py April 2022
     params['player2']['nn']['train'] = True
     params['player2']['nn']['test'] = True
-    params['player2']['nn']["load_weights"] = False   # False if starting from scratch, True if re-training 
+    params['player2']['nn']['pretest'] = params['player2']['nn']['train']
+    params['player2']['nn']["load_weights"] = True   # False if starting from scratch, True if re-training 
     params['player2']['nn']['weights_path'] = "weights/weights." + params['player2']['strategy']  + ".h5"
     params['player2']['nn']['use_cheat_rewards'] = False
 
@@ -48,7 +49,7 @@ def define_parameters():
     # logging 
     params['timestamp'] = timestamp
     # params['log_path'] = "logs/learningGin_log." + timestamp + ".txt"
-    params['log_path'] = ""
+    params['log_path'] = "logs/tt"
     params["display"] = True
     params["log_decisions"] = False
 
