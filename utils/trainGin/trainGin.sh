@@ -23,7 +23,7 @@ cd "${RUN_DIR}"
 echo "current working directory = {$PWD}"
 
 echo "############# ${CURRENT_SCRIPT_NAME} locating latest-generation weights...."
-INPUT_GENERATION_NUMBER=`ls ${PROCESS_WEIGHTS_PATH}.* | grep "[0-9]$" | cut -d. -f3 | sort -n | tail -1`
+INPUT_GENERATION_NUMBER=`ls ${PROCESS_WEIGHTS_PATH}.* | grep "[.][0-9]*$" | cut -d. -f3 | sort -n | tail -1`
 INPUT_WEIGHTS="${PROCESS_WEIGHTS_PATH}.${INPUT_GENERATION_NUMBER}"
 OUTPUT_GENERATION_NUMBER=$((INPUT_GENERATION_NUMBER+1))
 OUTPUT_WEIGHTS="${PROCESS_WEIGHTS_PATH}.${OUTPUT_GENERATION_NUMBER}"
