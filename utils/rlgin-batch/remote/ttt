@@ -1,7 +1,20 @@
 echo; 
 echo "##### TRAINING GROUND TARGETS at `date` #####"; 
 ~/tgt.sh | tail -2; 
-grep turno ~/tgt.sh.out; 
+grep turno ~/tgt.sh.out | awk '{
+	ii=index($0,"Gin_")+4; 
+	id=substr($0,ii); 
+	split(id,aa,"[.]"); 
+	id=aa[1] "." aa[2] "." aa[3]; 
+
+	ii=index($0,"over") +4; 
+	tover=substr($0,1,ii); 
+	
+	ii=index($0,"@"); 
+	host=substr($0,ii); 
+
+	print tover " " id " " host
+}'
 
 echo ; 
 echo "##### TIMINGS #####"; 

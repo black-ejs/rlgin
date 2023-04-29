@@ -35,7 +35,8 @@ do
 	if [[ "${ALREADY_DONE}"} == *" ${LEARNDIR} "* ]]
 	then
 		# already processed this guy
-		echo "skipping ${LEARNDIR} @${HOST}"
+		# echo "skipping ${LEARNDIR} @${HOST}"
+		dummy=dummy
 	else
 		ALREADY_DONE="${ALREADY_DONE} ${LEARNDIR} "	
 		~/gcmd.sh \
@@ -133,15 +134,16 @@ cat "${FINAL_OUTPUT}" |  awk '
 		prev_model = model;  
 	} 
 	END{ 
-	if (ii >0 && igen>0 && base<0 && basegen >0) {
-		print "runs=" ii "  delta=" delta  \
-			"  avg=" delta/ii " on " base/ii " =" (((delta+base)/base)-1)*100"%" \
-			"  gen=" tgen/igen " on " basegen/igen " =" (((tgen+basegen)/basegen)-1)*100"%" 
-		if (iii > 0) {
-			print "     runsi=" iii "  deltai=" deltai  "  avg=" deltai/iii  \
-				" on " basei/iii " =" (((deltai+basei)/basei)-1)*100"%" 
+		if (ii >0 && igen>0 && base>0 && basegen >0) {
+			print "runs=" ii "  delta=" delta  \
+				"  avg=" delta/ii " on " base/ii " =" (((delta+base)/base)-1)*100"%" \
+				"  gen=" tgen/igen " on " basegen/igen " =" (((tgen+basegen)/basegen)-1)*100"%" 
+			if (iii > 0) {
+				print "     runsi=" iii "  deltai=" deltai  "  avg=" deltai/iii  \
+					" on " basei/iii " =" (((deltai+basei)/basei)-1)*100"%" 
+				}
 			}
-		}
+		else {print "ii=" ii " igen=" igen " base=" base " basegen=" basegen}
 	} 
 	'
 
