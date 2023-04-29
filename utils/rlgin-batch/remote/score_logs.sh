@@ -16,8 +16,10 @@ tmpfile=score_logs.tmp.$$
 	${remote_host} \
       | awk '
 	/Gin_.*[.]202[0-9]-/ {
+		if (length(fn)>0) {
+			print tot " " fn;
+		}
 		tot=0; 
-		cc=0; 
 		p=split($0,aa,"/"); 
 		fn=aa[p]; 
 	}
@@ -25,10 +27,11 @@ tmpfile=score_logs.tmp.$$
 		w=$5;
 		w=substr(w,1,length(w)-1); 
 		tot=tot+w; 
-		if (cc==1) {
+	}
+	END {
+		if (length(fn)>0) {
 			print tot " " fn;
 		}
-		cc=1;
 	}
 	'  \
  | sort -n
