@@ -13,7 +13,7 @@ echo RLGIN TRAINING session started at "${TIMESTAMP}"
 MODEL_NICKNAME=${PWD##*/}
 CONTROL_DIR=${PWD}
 RUN_DIR=${RLGIN_BATCH_LOCAL_REPO}
-PARAMS_LOC=${CONTROL_DIR}/params
+PARAMS_LOC=${CONTROL_DIR}
 WEIGHTS_DIR=${CONTROL_DIR}/weights
 LOGS_DIR=${CONTROL_DIR}/logs
 PROCESS_WEIGHTS_PATH=${WEIGHTS_DIR}/weights.h5
@@ -51,8 +51,8 @@ PARAMS_MODULE=params/ginDQNParameters_${FIXUP}
 PARAMS_TARGET=${RUN_DIR}/${PARAMS_MODULE}.py
 if [[ -d ${RUN_DIR} ]]
 then
-    echo "cp ${PARAMS_LOC}/ginDQNParameters.py.${MODEL_NICKNAME} ${PARAMS_TARGET}"
-	cp ${PARAMS_LOC}/ginDQNParameters.py.${MODEL_NICKNAME} ${PARAMS_TARGET} 
+    echo "cp ${PARAMS_SOURCE} ${PARAMS_TARGET}"
+	cp ${PARAMS_SOURCE} ${PARAMS_TARGET} 
     echo "ls -latr ${RUN_DIR}"
     ls -latr ${RUN_DIR}
     echo "ls -latr ${RUN_DIR}/params"
