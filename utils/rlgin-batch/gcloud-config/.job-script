@@ -101,8 +101,8 @@ cat /home/${RLGIN_BATCH_USER}/.assure-mounts.sh
 echo ls -latr /home/${RLGIN_BATCH_USER}/.rb-job-launch
 ls -latr /home/${RLGIN_BATCH_USER}/.rb-job-launch
 
-echo invoking /home/${RLGIN_BATCH_USER}/.bashrc
-/home/${RLGIN_BATCH_USER}/.bashrc
+echo sourcing /home/${RLGIN_BATCH_USER}/.bashrc
+source /home/${RLGIN_BATCH_USER}/.bashrc
 
 cmd="\
 export BATCH_JOB_ID=${BATCH_JOB_ID};\
