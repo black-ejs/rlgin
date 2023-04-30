@@ -14,7 +14,12 @@ export RLGIN_BATCH_PARAMS="${RLGIN_BATCH_SERIES_ROOT}"/projects/rlgin-batch/job-
 	fi
 } || { 
 	export DNE="DO_NOT_ENTER"
-	~/.assure_mounts.sh 
+	ls -latr ~
+	ls -latr ~/.assure_mounts.sh 
+	if [[ -e ~/.assure_mounts.sh ]]
+	then
+		~/.assure_mounts.sh 
+	fi
 	export DNE=""
 }
 # <<< RLGIN BATCH initialize <<<
