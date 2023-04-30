@@ -8,7 +8,9 @@ set
 # backoff to avoid race conditions, 
 # especially over work with shared images in the bucket
 let sleepsecs=${BATCH_TASK_INDEX}*5
-echo sleeping ${sleepsecs} because I am BATCH_TASK_INDEX=${BATCH_TASK_INDEX}
+echo "******************************************** "
+echo sleeping ${sleepsecs} seconds -- I am BATCH_TASK_INDEX=${BATCH_TASK_INDEX}
+echo "******************************************** "
 sleep ${sleepsecs}
 
 export JOB_TAG="${BATCH_JOB_ID}-t${BATCH_TASK_INDEX}"
@@ -40,8 +42,6 @@ cp ${TMPREPO}/${BOOTSTRAP_SCRIPTS_PATH}/.etc-environment-initialize ${RLGIN_BATC
 cat /etc/environment >> ${RLGIN_BATCH_TMP_BOOTSTRAP_DIR}/.etc-environment-initialize
 sudo mv ${RLGIN_BATCH_TMP_BOOTSTRAP_DIR}/.etc-environment-initialize /etc/environment
 
-TARGET_SCRIPT=/home/${RLGIN_BATCH_USER}/.bashrc
-echo updating ${TARGET_SCRIPT}.... 
 echo ls -latr /home
 ls -latr /home
 if [ ! -e /home/${RLGIN_BATCH_USER} ]
@@ -62,6 +62,15 @@ then
 fi
 echo ls -latr /home/${RLGIN_BATCH_USER}
 ls -latr /home/${RLGIN_BATCH_USER}
+
+TARGET_SCRIPT=/home/${RLGIN_BATCH_USER}/.assure-mounts.sh
+echo copying ${TARGET_SCRIPT} to home directory
+echo cp ${TMPREPO}/${BOOTSTRAP_SCRIPTS_PATH}/.assure-mounts.sh ${TARGET_SCRIPT}
+cp ${TMPREPO}/${BOOTSTRAP_SCRIPTS_PATH}/.assure-mounts.sh ${TARGET_SCRIPT}
+chown ${RLGIN_BATCH_USER}:${RLGIN_BATCH_USER} ${TARGET_SCRIPT}
+
+TARGET_SCRIPT=/home/${RLGIN_BATCH_USER}/.bashrc
+echo updating ${TARGET_SCRIPT}.... 
 cp ${TMPREPO}/${BOOTSTRAP_SCRIPTS_PATH}/.bashrc-initialize ${RLGIN_BATCH_TMP_BOOTSTRAP_DIR}
 if [[ -e ${TARGET_SCRIPT} ]]
 then
@@ -80,16 +89,12 @@ echo "--------------" PRE-LAUNCH CHECK "----------"
 echo pwd=`pwd`
 echo ls -latr /etc/environment
 ls -latr /etc/environment
-echo cat /etc/environment
-cat /etc/environment
 echo ls -latr /home/${RLGIN_BATCH_USER}/.bashrc
 ls -latr /home/${RLGIN_BATCH_USER}/.bashrc
-echo cat /home/${RLGIN_BATCH_USER}/.bashrc
-cat /home/${RLGIN_BATCH_USER}/.bashrc
+echo ls -latr /home/${RLGIN_BATCH_USER}/.assure-mounts.sh
+ls -latr /home/${RLGIN_BATCH_USER}/.assure-mounts.sh
 echo ls -latr /home/${RLGIN_BATCH_USER}/.rb-job-launch
 ls -latr /home/${RLGIN_BATCH_USER}/.rb-job-launch
-echo cat /home/${RLGIN_BATCH_USER}/.rb-job-launch
-cat /home/${RLGIN_BATCH_USER}/.rb-job-launch
 
 cmd="\
 export BATCH_JOB_ID=${BATCH_JOB_ID};\
