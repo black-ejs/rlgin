@@ -9,7 +9,7 @@ def create_script_job_with_template(template_link: str,
                                     script: str, 
                                     num_tasks: int,
                                     parallelism: int,
-                                    params_path: str=None,
+                                    params_path: str,
                                     env: dict=None) -> batch_v1.Job:
     """
     This method shows how to create a sample Batch Job that will run
@@ -112,13 +112,13 @@ def submit_job_request(create_request: batch_v1.CreateJobRequest) -> batch_v1.Jo
 # ###################################
 def create_standard_job_request(params_path: str, 
                                 num_tasks: int,
-                                parallelism: int=4,
-                                env: dict=None, 
-                                region:str="us-central1") -> batch_v1.CreateJobRequest:
+                                parallelism: int,
+                                env: dict, 
+                                region:str,
+                                template_name:str) -> batch_v1.CreateJobRequest:
     # project_id='rlgin-batch'
     # template_name = "rb-a-s50-template-2" 
     project_id = "rlgin-batch-384320"
-    template_name = "rb-t-s50-template-4" 
 
     ts=f"{time.time()}".replace('.','-')[-9:]
     job_name = f"rb-job-{params_path.lower()}-{ts}"
@@ -171,6 +171,7 @@ if __name__ == '__main__':
     parser.add_argument("--num_tasks", nargs='?', type=int, default=1)
     parser.add_argument("--parallelism", nargs='?', type=int, default=1)
     parser.add_argument("--region", nargs='?', type=str, default="us-central1")
+    parser.add_argument("--template", nargs='?', type=str, default="rb-t-s50-template-4")
     parser.add_argument("--env", nargs='?', type=str, default=None)
     parser.add_argument("--script", nargs='?', type=str, default=None)
     args = parser.parse_args()
@@ -188,6 +189,7 @@ if __name__ == '__main__':
     parallelism = args.parallelism
     region=args.region
     env = args.env
+    template = args.template
     #env = {"RLGIN_BATCH_HELLO":"hello"}
 
     create_request = create_standard_job_request(params_path, 
@@ -195,7 +197,8 @@ if __name__ == '__main__':
                                                 parallelism,
                                                 env,
     #dump(create_request,"-------- create_request")
-                                                region)
+                                                region,
+                                                template)
 
     submitted = submit_job_request(create_request)
     dump(submitted,"-------- submitted")
