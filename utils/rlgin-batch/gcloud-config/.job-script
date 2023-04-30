@@ -91,10 +91,18 @@ echo ls -latr /etc/environment
 ls -latr /etc/environment
 echo ls -latr /home/${RLGIN_BATCH_USER}/.bashrc
 ls -latr /home/${RLGIN_BATCH_USER}/.bashrc
+echo cat /home/${RLGIN_BATCH_USER}/.bashrc
+cat /home/${RLGIN_BATCH_USER}/.bashrc
 echo ls -latr /home/${RLGIN_BATCH_USER}/.assure-mounts.sh
 ls -latr /home/${RLGIN_BATCH_USER}/.assure-mounts.sh
+echo cat /home/${RLGIN_BATCH_USER}/.assure-mounts.sh
+cat /home/${RLGIN_BATCH_USER}/.assure-mounts.sh
+cat /home/${RLGIN_BATCH_USER}/.assure-mounts.sh
 echo ls -latr /home/${RLGIN_BATCH_USER}/.rb-job-launch
 ls -latr /home/${RLGIN_BATCH_USER}/.rb-job-launch
+
+echo invoking /home/${RLGIN_BATCH_USER}/.assure-mounts.sh
+/home/${RLGIN_BATCH_USER}/.assure-mounts.sh verbose
 
 cmd="\
 export BATCH_JOB_ID=${BATCH_JOB_ID};\
@@ -105,10 +113,11 @@ cd /home/${RLGIN_BATCH_USER};\
 ./.rb-job-launch"
 
 echo "##########################################"
-echo "### calling su -l -c \""${cmd}"\" ###"
+#echo "### calling su -l -c \""${cmd}"\" ###"
+echo "### invoking \""${cmd}"\" ###"
 echo "##########################################"
-
-su -l ${RLGIN_BATCH_USER} -c "${cmd}"
+#su -l ${RLGIN_BATCH_USER} -c "${cmd}"
+${cmd}
 
 echo after  ----------
 id 
