@@ -1,7 +1,7 @@
 
 # >>> RLGIN_BATCH initialize >>>
 # echo rlgin batch initialization
-export RLGIN_BATCH_EXECUTION_BUCKET='rb-t-shared-bucket-2-test'
+export RLGIN_BATCH_EXECUTION_BUCKET='rb-t-shared-bucket-1'
 export RLGIN_BATCH_REPO_URL='https://github.com/black-ejs/rlgin'
 export RLGIN_BATCH_LOCAL_REPO=~/rlgin-local-repo
 export RLGIN_BATCH_SERIES_ROOT=~/dev
