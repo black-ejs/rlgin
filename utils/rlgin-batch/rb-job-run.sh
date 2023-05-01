@@ -36,7 +36,7 @@ then
     echo "########## ${CURRENT_SCRIPT_NAME}: local code repo found"
 else
     echo "########## ${CURRENT_SCRIPT_NAME}: establishing local code repo at ${RLGIN_BATCH_LOCAL_REPO}"
-    git clone ${RLGIN_BATCH_REPO_URL} ${RLGIN_BATCH_LOCAL_REPO}
+    git clone -q ${RLGIN_BATCH_REPO_URL} ${RLGIN_BATCH_LOCAL_REPO}
 fi
 echo "########## ${CURRENT_SCRIPT_NAME}: validating local code repo"
 if [[ "`ls -la ${RLGIN_BATCH_LOCAL_REPO}`" == *.git* ]]

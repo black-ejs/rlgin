@@ -27,8 +27,8 @@ echo RLGIN_BATCH_REPO_URL="${RLGIN_BATCH_REPO_URL}"
 echo TMPREPO="${TMPREPO}"
 echo "   +++ mkdir -p ${RLGIN_BATCH_TMP_BOOTSTRAP_DIR}"
 mkdir -p ${RLGIN_BATCH_TMP_BOOTSTRAP_DIR}
-echo "   +++ git clone ${RLGIN_BATCH_REPO_URL} ${TMPREPO} 2>&1"
-git clone ${RLGIN_BATCH_REPO_URL} ${TMPREPO} 2>&1
+echo "   +++ git clone -q ${RLGIN_BATCH_REPO_URL} ${TMPREPO} 2>&1"
+git clone -q ${RLGIN_BATCH_REPO_URL} ${TMPREPO} 2>&1
 echo "   +++ cd ${repoback}"
 cd "${repoback}"
 echo "   +++ ls -latr ${TMPREPO}"
@@ -95,9 +95,6 @@ echo cat /home/${RLGIN_BATCH_USER}/.bashrc
 cat /home/${RLGIN_BATCH_USER}/.bashrc
 echo ls -latr /home/${RLGIN_BATCH_USER}/.assure-mounts.sh
 ls -latr /home/${RLGIN_BATCH_USER}/.assure-mounts.sh
-echo cat /home/${RLGIN_BATCH_USER}/.assure-mounts.sh
-cat /home/${RLGIN_BATCH_USER}/.assure-mounts.sh
-cat /home/${RLGIN_BATCH_USER}/.assure-mounts.sh
 echo ls -latr /home/${RLGIN_BATCH_USER}/.rb-job-launch
 ls -latr /home/${RLGIN_BATCH_USER}/.rb-job-launch
 

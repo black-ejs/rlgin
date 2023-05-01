@@ -36,7 +36,7 @@ then
 	rm -rf ${TMPREPO}
 fi
 echo "## ## ## ## ## ${CURRENT_SCRIPT_NAME}: get latest scripts from source repo" 
-git clone ${RLGIN_BATCH_REPO_URL} ${TMPREPO}
+git clone -q ${RLGIN_BATCH_REPO_URL} ${TMPREPO}
 cp ${TMPREPO}/utils/rlgin-batch/*.sh . 
 
 ## launch job
