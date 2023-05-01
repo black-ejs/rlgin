@@ -18,10 +18,10 @@ export RLGIN_BATCH_PARAMS="${RLGIN_BATCH_SERIES_ROOT}"/projects/rlgin-batch/job-
 	set -x
 	export DNE="DO_NOT_ENTER"
 	ls -latr /home/edward_schwarz_tonigooddog_com
-	ls -latr /home/edward_schwarz_tonigooddog_com/.assure_mounts.sh 
-	if [[ -e ${RLGIN_BATCH_HOME}/.assure_mounts.sh ]]
+	ls -latr /home/edward_schwarz_tonigooddog_com/.assure-mounts.sh 
+	if [[ -e ${RLGIN_BATCH_HOME}/.assure-mounts.sh ]]
 	then
-		${RLGIN_BATCH_HOME}/.assure_mounts.sh 
+		${RLGIN_BATCH_HOME}/.assure-mounts.sh 
 	fi
 	export DNE=""
 	set -x
