@@ -5,6 +5,7 @@ verbose=0
 if [[ "X$1X" == "XverboseX" ]]
 then
     verbose=1
+    set -x
 fi
 
 ## must see the mount
