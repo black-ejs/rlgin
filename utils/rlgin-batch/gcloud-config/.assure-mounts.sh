@@ -11,7 +11,7 @@ fi
 BAD_MOUNT=0
 rbsr_basename=`basename ${RLGIN_BATCH_SERIES_ROOT}`
 ls_rbsr=`ls -l ~ 2>/dev/null | grep ${rbsr_basename}`
-if [[ "'${ls_rbsr}'" == *?* ]]
+if [[ "${ls_rbsr}" == *?* ]]
 then 
     BAD_MOUNT=1
 fi	
