@@ -38,6 +38,7 @@ def create_script_job_with_template(template_link: str,
     if params_path == None:
         params_path = "."
     env_vars["RLGIN_BATCH_JOB_PARAMS_PATH"] = params_path
+    env_vars["RLGIN_BATCH_JOB_SCRIPT"] = params_path
     if env != None:
         env_vars.update(env)
     runnable.environment = batch_v1.Environment()
@@ -79,7 +80,6 @@ def create_script_job_with_template(template_link: str,
 
     return job
 
-
 # ###################################
 def create_job_request(job: batch_v1.Job, 
                        project_id: str, 
@@ -110,11 +110,33 @@ def submit_job_request(create_request: batch_v1.CreateJobRequest) -> batch_v1.Jo
     return client.create_job(create_request)
 
 # ###################################
+def create_boot_script(run_script:str) -> str:
+    inline_script_loc="/Users/edward/Documents/dev/projects/rlgin/utils/rlgin-batch/gcloud-config"
+    inline_script=".job-script"
+    with open(f"{inline_script_loc}/{inline_script}") as scriptfile:
+        boot_script = scriptfile.read()
+
+    
+    if run_script == None:
+        run_script = ""
+        
+    boot_script += "\n"
+    boot_script += "\n#>>> created by job generator\n"
+    boot_script += "\nrb-run-job() {\n" + run_script + "\n}\n"
+    boot_script += "\nexport -f rb-run-job\n"
+    boot_script += "\n#>>> end created by job generator\n"
+    boot_script += "\n"
+    
+    return boot_script
+        
+
+# ###################################
 def create_standard_job_request(params_path: str, 
                                 num_tasks: int,
                                 parallelism: int,
                                 env: dict, 
                                 region:str,
+                                script:str,
                                 template_name:str) -> batch_v1.CreateJobRequest:
     # project_id='rlgin-batch'
     # template_name = "rb-a-s50-template-2" 
@@ -126,14 +148,11 @@ def create_standard_job_request(params_path: str,
     job_name = job_name.replace('_','-')
     job_name = job_name.replace('/','-')
 
-    inline_script_loc="/Users/edward/Documents/dev/projects/rlgin/utils/rlgin-batch/gcloud-config"
-    inline_script=".job-script"
-    with open(f"{inline_script_loc}/{inline_script}") as scriptfile:
-        script = scriptfile.read()
+    boot_script = create_boot_script(script)
      
     template_link = f"projects/{project_id}/global/instanceTemplates/{template_name}"
     job = create_script_job_with_template(template_link, 
-                                          script, 
+                                          boot_script, 
                                           num_tasks,
                                           parallelism,
                                           params_path, 
@@ -173,7 +192,7 @@ if __name__ == '__main__':
     parser.add_argument("--region", nargs='?', type=str, default="us-central1")
     parser.add_argument("--template", nargs='?', type=str, default="rb-t-s50-template-4")
     parser.add_argument("--env", nargs='?', type=str, default=None)
-    parser.add_argument("--script", nargs='?', type=str, default=None)
+    parser.add_argument("--script", nargs='?', type=str, default="./rb-run-param-job.sh")
     parser.add_argument("--max_duration", nargs='?', type=int, default=360000)
     args = parser.parse_args()
     print("generateJob: args ", args)
@@ -191,15 +210,18 @@ if __name__ == '__main__':
     region=args.region
     env = args.env
     template = args.template
+    script = args.script
     #env = {"RLGIN_BATCH_HELLO":"hello"}
 
     create_request = create_standard_job_request(params_path, 
                                                 num_tasks,
                                                 parallelism,
                                                 env,
-    #dump(create_request,"-------- create_request")
                                                 region,
+                                                script,
                                                 template)
-
+    
+    dump(create_request,"-------- create_request")
+    
     submitted = submit_job_request(create_request)
     dump(submitted,"-------- submitted")
