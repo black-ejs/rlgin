@@ -2,7 +2,7 @@
 #set -x
 
 echo "### ### ### assuring parameter access..."
-~/.assure_mounts.sh verbose
+~/.assure-mounts.sh verbose
 
 # LOCATE PARAMS
 if [[ X"${RLGIN_BATCH_JOB_PARAMS_PATH}"X == XX ]]
