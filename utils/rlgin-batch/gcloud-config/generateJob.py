@@ -52,7 +52,7 @@ def create_script_job_with_template(template_link: str,
     task.compute_resource = resources
 
     task.max_retry_count = 2
-    task.max_run_duration = "3600s"
+    task.max_run_duration = "360000s"  # 100 hrs
 
     # Tasks are grouped inside a job using TaskGroups.
     # Currently, it's possible to have only one task group.
@@ -174,6 +174,7 @@ if __name__ == '__main__':
     parser.add_argument("--template", nargs='?', type=str, default="rb-t-s50-template-4")
     parser.add_argument("--env", nargs='?', type=str, default=None)
     parser.add_argument("--script", nargs='?', type=str, default=None)
+    parser.add_argument("--max_duration", nargs='?', type=int, default=360000)
     args = parser.parse_args()
     print("generateJob: args ", args)
 
