@@ -40,11 +40,6 @@ git clone -q ${RLGIN_BATCH_REPO_URL} ${TMPREPO}
 cp ${TMPREPO}/utils/rlgin-batch/*.sh . 
 
 ## launch job
-RB_JOB_SCRIPT="rb-run-job()"
-echo "## ## ## ## ## ${CURRENT_SCRIPT_NAME}: invoking ${RB_JOB_SCRIPT}" 
-${RB_JOB_SCRIPT}
+echo "## ## ## ## ## ${CURRENT_SCRIPT_NAME}: invoking ${RLGIN_BATCH_JOB_SCRIPT}" 
+${RLGIN_BATCH_JOB_SCRIPT}
 
-# ######################################
-# job generation will create code 
-# for rb-run-job() function rb-run-job()
-# ######################################

@@ -98,11 +98,17 @@ ls -latr /home/${RLGIN_BATCH_USER}/.assure-mounts.sh
 echo ls -latr /home/${RLGIN_BATCH_USER}/.rb-job-launch
 ls -latr /home/${RLGIN_BATCH_USER}/.rb-job-launch
 
+JOB_SCRIPT=rb-save-run-script()
+if [ ! -e "${RLGIN_BATCH_JOB_SCRIPT}"]
+    JOB_SCRIPT=./rb-run-param-job.sh # bail-out default
+fi
+
 cmd="\
 export BATCH_JOB_ID=${BATCH_JOB_ID};\
 export BATCH_TASK_INDEX=${BATCH_TASK_INDEX};\
 export JOB_TAG=${JOB_TAG};\
 export RLGIN_BATCH_JOB_PARAMS_PATH=${RLGIN_BATCH_JOB_PARAMS_PATH};\
+export RLGIN_BATCH_JOB_SCRIPT=${RLGIN_BATCH_JOB_SCRIPT}
 cd /home/${RLGIN_BATCH_USER};\
 ./.rb-job-launch"
 
