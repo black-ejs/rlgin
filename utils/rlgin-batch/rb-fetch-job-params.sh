@@ -9,7 +9,10 @@ echo ls -l ~/dev
 ls -l ~/dev
 echo ls -l ~/dev/projects
 ls -l ~/dev/projects
-pp=/home/edward_schwarz_tonigooddog_com/dev/projects/rlgin-batch/job-params/CYB/job-params.txt
+ls -l /home/edward_schwarz_tonigooddog_com/dev/projects/rlgin-batch
+ls -l /home/edward_schwarz_tonigooddog_com/dev/projects/rlgin-batch/job-params
+ls -l /home/edward_schwarz_tonigooddog_com/dev/projects/rlgin-batch/job-params/CYB
+   pp=/home/edward_schwarz_tonigooddog_com/dev/projects/rlgin-batch/job-params/CYB/job-params.txt
 echo "pp=" ${pp}
 echo ls -l ${pp}
 ls -l ${pp}
