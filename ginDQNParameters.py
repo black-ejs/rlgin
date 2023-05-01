@@ -49,7 +49,7 @@ def define_parameters():
     # logging 
     params['timestamp'] = timestamp
     # params['log_path'] = "logs/learningGin_log." + timestamp + ".txt"
-    params['log_path'] = "logs/tt"
+    params['log_path'] = ""
     params["display"] = True
     params["log_decisions"] = False
 
