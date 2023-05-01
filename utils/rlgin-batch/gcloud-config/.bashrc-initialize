@@ -1,8 +1,6 @@
 
 # >>> RLGIN_BATCH initialize >>>
 # echo rlgin batch initialization
-export RLGIN_BATCH_USER=edward_schwarz_tonigooddog_com
-export RLGIN_BATCH_HOME=/home/${RLGIN_BATCH_USER}
 export RLGIN_BATCH_EXECUTION_BUCKET='rb-t-shared-bucket-2-test'
 export RLGIN_BATCH_REPO_URL='https://github.com/black-ejs/rlgin'
 export RLGIN_BATCH_LOCAL_REPO=~/rlgin-local-repo
@@ -13,17 +11,15 @@ export RLGIN_BATCH_PARAMS="${RLGIN_BATCH_SERIES_ROOT}"/projects/rlgin-batch/job-
 	if [[ X"$DNE"X == "XX" ]]
 	then
 		ls_out=`ls -l ${RLGIN_BATCH_SERIES_BASE} 2>&1`
+	else
+		ls_out=""
 	fi
 } || { 
 	set -x
 	export DNE="DO_NOT_ENTER"
-	ls -latr /home/edward_schwarz_tonigooddog_com
-	ls -latr /home/edward_schwarz_tonigooddog_com/.assure-mounts.sh 
-	if [[ -e ${RLGIN_BATCH_HOME}/.assure-mounts.sh ]]
+	if [[ -e ~/.assure-mounts.sh ]]
 	then
-		${RLGIN_BATCH_HOME}/.assure-mounts.sh 
+		~/.assure-mounts.sh 
 	fi
-	export DNE=""
-	set -x
 }
 # <<< RLGIN BATCH initialize <<<

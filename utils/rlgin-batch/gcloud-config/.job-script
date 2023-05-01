@@ -101,9 +101,6 @@ cat /home/${RLGIN_BATCH_USER}/.assure-mounts.sh
 echo ls -latr /home/${RLGIN_BATCH_USER}/.rb-job-launch
 ls -latr /home/${RLGIN_BATCH_USER}/.rb-job-launch
 
-echo sourcing /home/${RLGIN_BATCH_USER}/.bashrc
-source /home/${RLGIN_BATCH_USER}/.bashrc
-
 cmd="\
 export BATCH_JOB_ID=${BATCH_JOB_ID};\
 export BATCH_TASK_INDEX=${BATCH_TASK_INDEX};\
@@ -113,11 +110,9 @@ cd /home/${RLGIN_BATCH_USER};\
 ./.rb-job-launch"
 
 echo "##########################################"
-#echo "### calling su -l -c \""${cmd}"\" ###"
-echo "### invoking \""${cmd}"\" ###"
+echo "### calling su -l -c \""${cmd}"\" ###"
 echo "##########################################"
-#su -l ${RLGIN_BATCH_USER} -c "${cmd}"
-${cmd}
+su -l ${RLGIN_BATCH_USER} -c "${cmd}"
 
 echo after  ----------
 id 
