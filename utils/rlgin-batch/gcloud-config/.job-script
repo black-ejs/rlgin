@@ -100,6 +100,7 @@ ls -latr /home/${RLGIN_BATCH_USER}/.rb-job-launch
 
 JOB_SCRIPT=rb-save-run-script
 if [ ! -e "${RLGIN_BATCH_JOB_SCRIPT}"]
+then
     JOB_SCRIPT=./rb-run-param-job.sh # bail-out default
 fi
 
