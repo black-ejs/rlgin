@@ -72,6 +72,6 @@ echo "############# ${CURRENT_SCRIPT_NAME} comparing output and input weights...
 if cmp "${INPUT_WEIGHTS}" "${OUTPUT_WEIGHTS}"; then echo "*** WARNING: NO DIFFERENCE BETWEEN ${INPUT_WEIGHTS} and ${OUTPUT_WEIGHTS}"; fi
 
 cd ${CONTROL_DIR}
-ENDTIME=`date -u +%Y-%m-%d_%H%M%S` 
+ENDTIME=`date -u +%Y-%m-%d_%H-%M-%S`
 echo "############# ${CURRENT_SCRIPT_NAME} completed at ${ENDTIME} ##################"
 
