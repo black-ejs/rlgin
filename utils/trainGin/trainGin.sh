@@ -57,11 +57,11 @@ else
 	echo "#### ${CURRENT_SCRIPT_NAME} ${RUN_DIR} not found, this could be a problem...."
 fi
 
-CMD_ARGS='--name_scenario "${NAME_SCENARIO}" \
-            --logfile "${LOGFILE}"  \
-        	--params_module "${PARAMS_MODULE}" \
-            --weights_path_2 "${PROCESS_WEIGHTS_PATH}" \
-            --generation "${OUTPUT_GENERATION_NUMBER}"'
+CMD_ARGS="--name_scenario ${NAME_SCENARIO} \
+            --logfile ${LOGFILE}  \
+        	--params_module ${PARAMS_MODULE} \
+            --weights_path_2 ${PROCESS_WEIGHTS_PATH} \
+            --generation ${OUTPUT_GENERATION_NUMBER}"
 
 echo "############# ${CURRENT_SCRIPT_NAME} checking for parameter overrides...."
 if [[ X${RLGIN_BATCH_JP_LEARNING_RATE}X == XX ]]
