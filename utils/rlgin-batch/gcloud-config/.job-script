@@ -94,7 +94,7 @@ if [ ! -e "${RLGIN_BATCH_JOB_SCRIPT}" ]
 then
     RLGIN_BATCH_JOB_SCRIPT=./rb-run-param-job.sh # bail-out default
 fi
-echo "  +++ post-validatt: launch script is: \"${RLGIN_BATCH_JOB_SCRIPT}\""
+echo "  +++ post-validate: launch script is: \"${RLGIN_BATCH_JOB_SCRIPT}\""
 
 echo "--------------" PRE-LAUNCH CHECK "----------"
 echo pwd=`pwd`

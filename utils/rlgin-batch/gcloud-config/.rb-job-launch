@@ -6,12 +6,11 @@ CURRENT_SCRIPT_SOURCE_DIR="`dirname ${0}`"
 CURRENT_SCRIPT_ORIGINAL_EXECUTION_DIR=`pwd`
 
 echo "## ## ## ## ## ${CURRENT_SCRIPT_NAME} invoked"
-set
-
-id
-whoami
-pwd
-ls -latr
+#set
+#id
+#whoami
+#pwd
+#ls -latr
 
 ## mock up Google BATCH env if running standalome
 if [[ X"${BATCH_TASK_INDEX}"X == XX ]]
@@ -23,6 +22,7 @@ fi
 
 export RLGIN_BATCH_TASK_TAG="${BATCH_JOB_ID}-t${BATCH_TASK_INDEX}"
 export RLGIN_BATCH_TMPDIR="${TMPDIR}/${RLGIN_BATCH_TASK_TAG}"
+
 echo "## ## ## ## ## ${CURRENT_SCRIPT_NAME}: creating ${RLGIN_BATCH_TMPDIR}"
 if [ ! -d ${RLGIN_BATCH_TMPDIR} ]
 then
