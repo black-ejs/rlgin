@@ -60,7 +60,7 @@ fi
 CMD_ARGS='--name_scenario "${NAME_SCENARIO}" \
             --logfile "${LOGFILE}"  \
         	--params_module "${PARAMS_MODULE}" \
-            --weight_path_2 "${PROCESS_WEIGHTS_PATH}" \
+            --weights_path_2 "${PROCESS_WEIGHTS_PATH}" \
             --generation "${OUTPUT_GENERATION_NUMBER}"'
 
 echo "############# ${CURRENT_SCRIPT_NAME} checking for parameter overrides...."
