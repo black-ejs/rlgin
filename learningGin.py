@@ -447,11 +447,14 @@ if __name__ == '__main__':
     parser.add_argument("--params_module", nargs='?', type=str, default=None)
     parser.add_argument("--name_scenario", nargs='?', type=str, default=None)
     parser.add_argument("--logfile", nargs='?', type=str, default=None)
-    parser.add_argument("--weightsfile_1", nargs='?', type=str, default=None)
-    parser.add_argument("--weightsfile_2", nargs='?', type=str, default=None)
+    parser.add_argument("--weights_path_1", nargs='?', type=str, default=None)
+    parser.add_argument("--weights_path_2", nargs='?', type=str, default=None)
+    parser.add_argument("--learning_rate_1", nargs='?', type=float, default=None)
+    parser.add_argument("--learning_rate_2", nargs='?', type=float, default=None)
+    parser.add_argument("--gamma_1", nargs='?', type=float, default=None)
+    parser.add_argument("--gamma_2", nargs='?', type=float, default=None)
     parser.add_argument("--generation", nargs='?', type=int, default=-1)
     parser.add_argument("--max_memory", nargs='?', type=int, default=-1)
-    # parser.add_argument("--display", nargs='?', type=distutils.util.strtobool, default=True)
     args = parser.parse_args()
     print("learningGin: args ", args)
 
@@ -469,18 +472,20 @@ if __name__ == '__main__':
         params['name_scenario'] = args.name_scenario
     if not (args.logfile == None):
         params['log_path'] = args.logfile        
-    if not (args.weightsfile_1 == None):
-        if 'nn' in params['player1']:
-            weightsfile=os.path.expanduser(args.weightsfile_1)
-            params['player1']['nn']['weights_path']  = weightsfile
-        else:
-            print("*** WARNING, --weightsfile_1 specificed but player1 is not a neural net ")
-    if not (args.weightsfile_2 == None):
-        if 'nn' in params['player2']:
-            weightsfile=os.path.expanduser(args.weightsfile_2)
-            params['player2']['nn']['weights_path']  = weightsfile
-        else:
-            print("*** WARNING, --weightsfile_2 specificed but player2 is not a neural net ")
+    for player_index in ("1","2"):
+        player_key="player" + player_index
+        for key_root in ("weights_path", "gamma", "learning_rate"):
+            params_key=key_root
+            args_key=f"{key_root}_{player_index}"
+            argvars = vars(args)
+            if (args_key in argvars) and (not (argvars[args_key] == None)):
+                param_val = argvars[args_key]
+                if isinstance(param_val,str):
+                    param_val=os.path.expanduser(param_val)
+                if 'nn' in params[player_key]:
+                    params[player_key]['nn'][params_key]  = param_val
+                else:
+                    print(f"*** WARNING, --{args_key} specified but {player_key} is not a neural net ")
     if args.generation != -1:
         params['generation'] = args.generation
     if args.max_memory != -1:

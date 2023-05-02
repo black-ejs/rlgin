@@ -23,7 +23,8 @@ cd "${RUN_DIR}"
 echo "current working directory = {$PWD}"
 
 echo "############# ${CURRENT_SCRIPT_NAME} locating latest-generation weights...."
-INPUT_GENERATION_NUMBER=`ls ${PROCESS_WEIGHTS_PATH}.* | grep "[.][0-9]*$" | awk '{p=split($0,aa,"[.]"); print aa[p]}' | sort -n | tail -1`
+INPUT_GENERATION_NUMBER=`ls ${PROCESS_WEIGHTS_PATH}.* | grep "[.][0-9]*$" \
+            | awk '{p=split($0,aa,"[.]"); print aa[p]}' | sort -n | tail -1`
 INPUT_WEIGHTS="${PROCESS_WEIGHTS_PATH}.${INPUT_GENERATION_NUMBER}"
 OUTPUT_GENERATION_NUMBER=$((INPUT_GENERATION_NUMBER+1))
 OUTPUT_WEIGHTS="${PROCESS_WEIGHTS_PATH}.${OUTPUT_GENERATION_NUMBER}"
@@ -56,13 +57,24 @@ else
 	echo "#### ${CURRENT_SCRIPT_NAME} ${RUN_DIR} not found, this could be a problem...."
 fi
 
+CMD_ARGS='--name_scenario "${NAME_SCENARIO}" \
+            --logfile "${LOGFILE}"  \
+        	--params_module "${PARAMS_MODULE}" \
+            --weight_path_2 "${PROCESS_WEIGHTS_PATH}" \
+            --generation "${OUTPUT_GENERATION_NUMBER}"'
+
+echo "############# ${CURRENT_SCRIPT_NAME} checking for parameter overrides...."
+if [ ! -z ${RLGIN_BATCH_JP_LEARNING_RATE} ]
+then
+    CMD_ARGS="${CMD_ARGS}""  --learning_rate_2 ${RLGIN_BATCH_JP_LEARNING_RATE}"
+fi
+if [ ! -z ${RLGIN_BATCH_JP_GAMMA} ]
+then
+    CMD_ARGS="${CMD_ARGS}""  --gamma_2 ${RLGIN_BATCH_JP_LEARNING_RATE}"
+fi
+
 echo "############# ${CURRENT_SCRIPT_NAME} launching training process at `date -u +%Y-%m-%d_%H-%M-%S` ..."
-python learningGin.py \
-            --name_scenario "${NAME_SCENARIO}" \
-            --logfile "${LOGFILE}" \
-        	--params_module ${PARAMS_MODULE} \
-            --weightsfile_2 "${PROCESS_WEIGHTS_PATH}" \
-            --generation "${OUTPUT_GENERATION_NUMBER}"
+python learningGin.py ${CMD_ARGS}
 echo training process completed at `date -u +%Y-%m-%d_%H-%M-%S`
 
 echo "############# ${CURRENT_SCRIPT_NAME} capturing post-training weights..."

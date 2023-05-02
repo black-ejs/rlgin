@@ -25,7 +25,7 @@ CONSOLE_OUTPUT="${LOGPATH}/${LOGROOT}.${TIMESTAMP}.sysout"
 WEIGHTSPATH="$(pwd)/weights" 
 WEIGHTSROOT="${LOGROOT}" 
 WEIGHTS_OUTPUT_FILE="${WEIGHTSPATH}/${WEIGHTSROOT}.${TIMESTAMP}.h5" 
-WEIGHTSFILE_2="${WEIGHTSPATH}/${WEIGHTSROOT}.h5" 
+WEIGHTS_PATH_2="${WEIGHTSPATH}/${WEIGHTSROOT}.h5" 
  
 echo "-----------------------------" 
 echo MODEL_NICKNAME="${MODEL_NICKNAME}" 
@@ -52,7 +52,7 @@ else
 fi
  
 echo "#### ${CURRENT_SCRIPT_NAME} cleaning up fram any previous runs..."
-[ -e ${WEIGHTSFILE_2}.post_training ] && rm ${WEIGHTSFILE_2}.h5.post_training 
+[ -e ${WEIGHTS_PATH_2}.post_training ] && rm ${WEIGHTS_PATH_2}.h5.post_training 
  
 echo "#### ${CURRENT_SCRIPT_NAME} checking python..."
 which python
@@ -80,11 +80,11 @@ python learningGin.py  \
 	--name_scenario "${NAME_SCENARIO}" \
 	--logfile "${LOGFILE}" \
 	--params_module ${PARAMS_MODULE} \
-	--weightsfile_2 ${WEIGHTSFILE_2}
+	--weights_path_2 ${WEIGHTS_PATH_2}
 echo "#### ${CURRENT_SCRIPT_NAME} scratchGin process completed"
  
 echo "#### ${CURRENT_SCRIPT_NAME} capturing weights to ${WEIGHTS_OUTPUT_FILE} ..."
-[ -e ${WEIGHTSFILE_2}.post_training ] && mv ${WEIGHTSFILE_2}.post_training "${WEIGHTS_OUTPUT_FILE}" 
+[ -e ${WEIGHTS_PAATH_2}.post_training ] && mv ${WEIGHTS_PATH_2}.post_training "${WEIGHTS_OUTPUT_FILE}" 
  
 cd ${CURRENT_SCRIPT_ORIGINAL_EXECUTION_DIR}
 

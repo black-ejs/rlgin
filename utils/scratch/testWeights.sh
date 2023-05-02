@@ -54,7 +54,7 @@ do
 	python learningGin.py \
 		--name_scenario "${NAME_SCENARIO}" \
 		--logfile "${LOGFILE}" \
-		--weightsfile_2="${INPUT_WEIGHTS}"
+		--weights_path_2="${INPUT_WEIGHTS}"
 	TSSS=`date -u +%Y-%m-%d_%H-%M-%S`
 	echo weights testing  process completed at $TSSS
 
