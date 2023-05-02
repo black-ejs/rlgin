@@ -86,13 +86,14 @@ cp ${TMPREPO}/${BOOTSTRAP_SCRIPTS_PATH}/.rb-job-launch ${TARGET_SCRIPT}
 chown ${RLGIN_BATCH_USER}:${RLGIN_BATCH_USER} ${TARGET_SCRIPT}
 
 echo checking launch script
-JOB_SCRIPT=rb-save-run-script
 echo "  +++ pre-check: launch script is: \"${RLGIN_BATCH_JOB_SCRIPT}\""
+RLGIN_BATCH_JOB_SCRIPT=rb-save-run-script
+echo "  +++ pre-validate: launch script is: \"${RLGIN_BATCH_JOB_SCRIPT}\""
 if [ ! -e "${RLGIN_BATCH_JOB_SCRIPT}"]
 then
-    JOB_SCRIPT=./rb-run-param-job.sh # bail-out default
+    RLGIN_BATCH_JOB_SCRIPT=./rb-run-param-job.sh # bail-out default
 fi
-echo "  +++ post-check: launch script is: \"${RLGIN_BATCH_JOB_SCRIPT}\""
+echo "  +++ post-validatt: launch script is: \"${RLGIN_BATCH_JOB_SCRIPT}\""
 
 echo "--------------" PRE-LAUNCH CHECK "----------"
 echo pwd=`pwd`
