@@ -64,18 +64,20 @@ CMD_ARGS='--name_scenario "${NAME_SCENARIO}" \
             --generation "${OUTPUT_GENERATION_NUMBER}"'
 
 echo "############# ${CURRENT_SCRIPT_NAME} checking for parameter overrides...."
-if [ ! -z ${RLGIN_BATCH_JP_LEARNING_RATE} ]
+if [[ X${RLGIN_BATCH_JP_LEARNING_RATE}X == XX ]
 then
     CMD_ARGS="${CMD_ARGS}""  --learning_rate_2 ${RLGIN_BATCH_JP_LEARNING_RATE}"
 fi
-if [ ! -z ${RLGIN_BATCH_JP_GAMMA} ]
+if [[ X${RLGIN_BATCH_JP_GAMMA}X == XX ]
 then
-    CMD_ARGS="${CMD_ARGS}""  --gamma_2 ${RLGIN_BATCH_JP_LEARNING_RATE}"
+    CMD_ARGS="${CMD_ARGS}""  --gamma_2 ${RLGIN_BATCH_JP_GAMMA}"
 fi
 
 echo "############# ${CURRENT_SCRIPT_NAME} launching training process at `date -u +%Y-%m-%d_%H-%M-%S` ..."
+echo CMD_ARGS="${CMD_ARGS}"
+echo CMD_ARGS="${CMD_ARGS}" 1>%2
 python learningGin.py ${CMD_ARGS}
-echo training process completed at `date -u +%Y-%m-%d_%H-%M-%S`
+echo "############# ${CURRENT_SCRIPT_NAME} training process completed at `date -u +%Y-%m-%d_%H-%M-%S`"
 
 echo "############# ${CURRENT_SCRIPT_NAME} capturing post-training weights..."
 cp ${PROCESS_WEIGHTS_PATH}.post_training "${OUTPUT_WEIGHTS}"

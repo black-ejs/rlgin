@@ -231,7 +231,7 @@ if __name__ == '__main__':
                                                 args.vm_template,
                                                 args.project)
     
-    dump(create_request,"-------- create_request")
+    #dump(create_request,"-------- create_request")
     
     submitted = submit_job_request(create_request)
     dump(submitted,"-------- submitted")
