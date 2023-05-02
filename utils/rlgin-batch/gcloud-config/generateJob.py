@@ -118,11 +118,18 @@ def create_boot_script(run_script:str,
     run_script = run_script.replace("'","\'")
     saveto_path =  "/home/${RLGIN_BATCH_USER}/" +saveto_name
 
-    boot_script  =  ""
+    print(f"*************************** ")
+    print(f"*************************** ")
+    print(f"saveto_path={saveto_path}")
+    print(f"run_script=-->{run_script}<--")
+    print(f"*************************** ")
+    print(f"*************************** ")
+
+    boot_script  =  "#!/bin/bash\n"
     boot_script +=  "\n#>>> created by job generator\n"
     boot_script +=  "\nrb_save_run_script() {\n" 
-    boot_script += f"\necho saveto_path={saveto_path}\n"
-    boot_script += f"\necho run_script, fixed up, is: '->$'{run_script}'<-'\n" 
+    #boot_script += f"\necho saveto_path={saveto_path}\n"
+    #boot_script += f"\necho run_script, fixed up, is: '->$'{run_script}'<-'\n" 
     boot_script += f"\nexport RLGIN_BATCH_JOB_SCRIPT={saveto_path}"
     boot_script += f"\necho $'{run_script}' >> " + "${RLGIN_BATCH_JOB_SCRIPT}"
     boot_script +=  "\nchmod a+x ${RLGIN_BATCH_JOB_SCRIPT}"
@@ -146,10 +153,8 @@ def create_standard_job_request(params_path: str,
                                 env: dict, 
                                 region:str,
                                 script:str,
-                                template_name:str) -> batch_v1.CreateJobRequest:
-    # project_id='rlgin-batch'
-    # template_name = "rb-a-s50-template-2" 
-    project_id = "rlgin-batch-384320"
+                                template_name:str,
+                                project_id:str) -> batch_v1.CreateJobRequest:
 
     ts=f"{time.time()}".replace('.','-')[-9:]
     job_name = f"rb-job-{params_path.lower()}-{ts}"
@@ -199,9 +204,12 @@ if __name__ == '__main__':
     parser.add_argument("--num_tasks", nargs='?', type=int, default=1)
     parser.add_argument("--parallelism", nargs='?', type=int, default=1)
     parser.add_argument("--region", nargs='?', type=str, default="us-central1")
-    parser.add_argument("--template", nargs='?', type=str, default="rb-t-s50-template-4")
-    parser.add_argument("--env", nargs='?', type=str, default=None)
+    parser.add_argument("--vm_template", nargs='?', type=str, default="rb-t-s50-template-4")
     parser.add_argument("--script", nargs='?', type=str, default="./rb-run-param-job.sh")
+    parser.add_argument("--scriptfile", nargs='?', type=str, default=None)
+    parser.add_argument("--scriptraw", nargs='?', type=int, default=False) # run on raw vm
+    parser.add_argument("--env", nargs='?', type=str, default=None)
+    parser.add_argument("--project", nargs='?', type=str, default="rlgin-batch-384320")
     parser.add_argument("--max_duration", nargs='?', type=int, default=360000)
     args = parser.parse_args()
     print("generateJob: args ", args)
@@ -210,25 +218,18 @@ if __name__ == '__main__':
         print(("  please supply a path to the folder containing the\n" 
                "  job-parameters.txt file using the --params_path option.\n" 
                "  path is relative to ~/dev/projects/rlgin-batch/job-parameters\n" 
-               "  this value will be passed to the script as environment var RLGIN_BATCH_JOB_PARAMS_PATH"))
+               "  this value will be passed to the script\n"
+               "  as environment var RLGIN_BATCH_JOB_PARAMS_PATH"))
         exit()
 
-    params_path=args.params_path
-    num_tasks = args.num_tasks
-    parallelism = args.parallelism
-    region=args.region
-    env = args.env
-    template = args.template
-    script = args.script
-    #env = {"RLGIN_BATCH_HELLO":"hello"}
-
-    create_request = create_standard_job_request(params_path, 
-                                                num_tasks,
-                                                parallelism,
-                                                env,
-                                                region,
-                                                script,
-                                                template)
+    create_request = create_standard_job_request(args.params_path, 
+                                                args.num_tasks,
+                                                args.parallelism,
+                                                args.env,
+                                                args.region,
+                                                args.script,
+                                                args.vm_template,
+                                                args.project)
     
     dump(create_request,"-------- create_request")
     
