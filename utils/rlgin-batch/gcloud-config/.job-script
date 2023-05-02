@@ -85,6 +85,15 @@ echo cp ${TMPREPO}/${BOOTSTRAP_SCRIPTS_PATH}/.rb-job-launch ${TARGET_SCRIPT}
 cp ${TMPREPO}/${BOOTSTRAP_SCRIPTS_PATH}/.rb-job-launch ${TARGET_SCRIPT}
 chown ${RLGIN_BATCH_USER}:${RLGIN_BATCH_USER} ${TARGET_SCRIPT}
 
+echo checking launch script
+JOB_SCRIPT=rb-save-run-script
+echo "  +++ pre-check: launch script is: \"${${RLGIN_BATCH_JOB_SCRIPT}\"}"
+if [ ! -e "${RLGIN_BATCH_JOB_SCRIPT}"]
+then
+    JOB_SCRIPT=./rb-run-param-job.sh # bail-out default
+fi
+echo "  +++ launch script is: \"${${RLGIN_BATCH_JOB_SCRIPT}\"}"
+
 echo "--------------" PRE-LAUNCH CHECK "----------"
 echo pwd=`pwd`
 echo ls -latr /etc/environment
@@ -97,12 +106,6 @@ echo ls -latr /home/${RLGIN_BATCH_USER}/.assure-mounts.sh
 ls -latr /home/${RLGIN_BATCH_USER}/.assure-mounts.sh
 echo ls -latr /home/${RLGIN_BATCH_USER}/.rb-job-launch
 ls -latr /home/${RLGIN_BATCH_USER}/.rb-job-launch
-
-JOB_SCRIPT=rb-save-run-script
-if [ ! -e "${RLGIN_BATCH_JOB_SCRIPT}"]
-then
-    JOB_SCRIPT=./rb-run-param-job.sh # bail-out default
-fi
 
 cmd="\
 export BATCH_JOB_ID=${BATCH_JOB_ID};\
