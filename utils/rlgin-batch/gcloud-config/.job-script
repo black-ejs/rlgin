@@ -87,9 +87,10 @@ chown ${RLGIN_BATCH_USER}:${RLGIN_BATCH_USER} ${TARGET_SCRIPT}
 
 echo checking launch script
 echo "  +++ pre-check: launch script is: \"${RLGIN_BATCH_JOB_SCRIPT}\""
-RLGIN_BATCH_JOB_SCRIPT=rb-save-run-script
+echo "  +++ invoking rb-save-run-script"
+rb_save_run_script
 echo "  +++ pre-validate: launch script is: \"${RLGIN_BATCH_JOB_SCRIPT}\""
-if [ ! -e "${RLGIN_BATCH_JOB_SCRIPT}"]
+if [ ! -e "${RLGIN_BATCH_JOB_SCRIPT}" ]
 then
     RLGIN_BATCH_JOB_SCRIPT=./rb-run-param-job.sh # bail-out default
 fi
@@ -101,8 +102,8 @@ echo ls -latr /etc/environment
 ls -latr /etc/environment
 echo ls -latr /home/${RLGIN_BATCH_USER}/.bashrc
 ls -latr /home/${RLGIN_BATCH_USER}/.bashrc
-echo cat /home/${RLGIN_BATCH_USER}/.bashrc
-cat /home/${RLGIN_BATCH_USER}/.bashrc
+#echo cat /home/${RLGIN_BATCH_USER}/.bashrc
+#cat /home/${RLGIN_BATCH_USER}/.bashrc
 echo ls -latr /home/${RLGIN_BATCH_USER}/.assure-mounts.sh
 ls -latr /home/${RLGIN_BATCH_USER}/.assure-mounts.sh
 echo ls -latr /home/${RLGIN_BATCH_USER}/.rb-job-launch

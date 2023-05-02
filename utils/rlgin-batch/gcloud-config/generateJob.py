@@ -111,10 +111,6 @@ def submit_job_request(create_request: batch_v1.CreateJobRequest) -> batch_v1.Jo
 # ###################################
 def create_boot_script(run_script:str, 
                         saveto_name="rb-generated-script.sh") -> str:
-    inline_script_loc="/Users/edward/Documents/dev/projects/rlgin/utils/rlgin-batch/gcloud-config"
-    inline_script=".job-script"
-    with open(f"{inline_script_loc}/{inline_script}") as scriptfile:
-        boot_script = scriptfile.read()
 
     if run_script == None:
         run_script = ""
@@ -122,14 +118,23 @@ def create_boot_script(run_script:str,
     run_script = run_script.replace("'","\'")
     saveto_path =  "/home/${RLGIN_BATCH_USER}/" +saveto_name
 
-    boot_script +=  "\n"
+    boot_script  =  ""
     boot_script +=  "\n#>>> created by job generator\n"
-    boot_script +=  "\nrb-save-run-script() {\n" 
-    boot_script += f"\necho $'{run_script}' >> {saveto_path}"
+    boot_script +=  "\nrb_save_run_script() {\n" 
+    boot_script += f"\necho saveto_path={saveto_path}\n"
+    boot_script += f"\necho run_script, fixed up, is: '->$'{run_script}'<-'\n" 
     boot_script += f"\nexport RLGIN_BATCH_JOB_SCRIPT={saveto_path}"
+    boot_script += f"\necho $'{run_script}' >> " + "${RLGIN_BATCH_JOB_SCRIPT}"
+    boot_script +=  "\nchmod a+x ${RLGIN_BATCH_JOB_SCRIPT}"
+    boot_script +=  "\necho RLGIN_BATCH_JOB_SCRIPT=${RLGIN_BATCH_JOB_SCRIPT}"
     boot_script +=  "\n}\n"
     boot_script +=  "\n#>>> end created by job generator\n"
     boot_script +=  "\n"
+
+    inline_script_loc="/Users/edward/Documents/dev/projects/rlgin/utils/rlgin-batch/gcloud-config"
+    inline_script=".job-script"
+    with open(f"{inline_script_loc}/{inline_script}") as scriptfile:
+        boot_script += scriptfile.read()
     
     return boot_script
         
