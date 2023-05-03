@@ -77,7 +77,6 @@ fi
 
 echo "############# ${CURRENT_SCRIPT_NAME} launching training process at `date -u +%Y-%m-%d_%H-%M-%S` ..."
 echo CMD_ARGS="${CMD_ARGS}"
-echo CMD_ARGS="${CMD_ARGS}" 1>%2
 python learningGin.py ${CMD_ARGS}
 echo "############# ${CURRENT_SCRIPT_NAME} training process completed at `date -u +%Y-%m-%d_%H-%M-%S`"
 

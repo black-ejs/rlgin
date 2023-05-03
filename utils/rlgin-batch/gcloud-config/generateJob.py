@@ -47,8 +47,8 @@ def create_script_job_with_template(template_link: str,
 
     # We can specify what resources are requested by each task.
     resources = batch_v1.ComputeResource()
-    resources.cpu_milli =  2000  # in ms per cpu-second. 1000 means the task requires 1 whole vCPU
-    resources.memory_mib = 1000 
+    resources.cpu_milli =  1000  # in ms per cpu-second. 1000 means the task requires 1 whole vCPU
+    resources.memory_mib = 1500 
     task.compute_resource = resources
 
     task.max_retry_count = 2
@@ -117,13 +117,6 @@ def create_boot_script(run_script:str,
 
     run_script = run_script.replace("'","\'")
     saveto_path =  "/home/${RLGIN_BATCH_USER}/" +saveto_name
-
-    print(f"*************************** ")
-    print(f"*************************** ")
-    print(f"saveto_path={saveto_path}")
-    print(f"run_script=-->{run_script}<--")
-    print(f"*************************** ")
-    print(f"*************************** ")
 
     boot_script  =  "#!/bin/bash\n"
     boot_script +=  "\n#>>> created by job generator\n"
