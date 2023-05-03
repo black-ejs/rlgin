@@ -19,7 +19,7 @@ SCRATCH_DRIVER_END=${8:-${RLGIN_BATCH_JP_SCRATCH_DRIVER_END}}
 
 ## report our job parameters
 echo "########## ${CURRENT_SCRIPT_NAME}: parameter review"
-set | egrep "JOB|RLGIN_JP|TASK"
+set | egrep "JOB|RLGIN_BATCH_JP|TASK"
 echo BATCH_TASK_INDEX="${BATCH_TASK_INDEX}"
 echo SERIES_NICKNAME="${SERIES_NICKNAME}"
 echo PARAMS_SPEC="${PARAMS_SPEC}"

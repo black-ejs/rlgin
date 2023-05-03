@@ -64,6 +64,8 @@ CMD_ARGS="--name_scenario ${NAME_SCENARIO} \
             --generation ${OUTPUT_GENERATION_NUMBER}"
 
 echo "############# ${CURRENT_SCRIPT_NAME} checking for parameter overrides...."
+echo RLGIN_BATCH_JP_LEARNING_RATE=${RLGIN_BATCH_JP_LEARNING_RATE}
+echo RLGIN_BATCH_JP_GAMMA=${RLGIN_BATCH_JP_GAMMA}
 if [[ X${RLGIN_BATCH_JP_LEARNING_RATE}X == XX ]]
 then
     CMD_ARGS="${CMD_ARGS}""  --learning_rate_2 ${RLGIN_BATCH_JP_LEARNING_RATE}"
