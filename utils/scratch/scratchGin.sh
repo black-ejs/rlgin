@@ -16,7 +16,6 @@ MODEL_NICKNAME=${PWD##*/}
 CONTROL_DIR=${PWD}
 RUN_DIR=${RLGIN_BATCH_LOCAL_REPO}
 PARAMS_SOURCE_ROOT=${CONTROL_DIR}
-PARAMS_LOC=${CONTROL_DIR}
 WEIGHTS_DIR=${CONTROL_DIR}/weights
 LOGS_DIR=${CONTROL_DIR}/logs
  
@@ -48,7 +47,7 @@ echo "-----------------------------"
 echo MODEL_NICKNAME=${MODEL_NICKNAME}
 echo NAME_SCENARIO=${NAME_SCENARIO} 
 echo LOGFILE=${LOGFILE}
-echo PARAMS_LOC=${PARAMS_LOC}
+echo PARAMS_SOURCE_ROOT=${PARAMS_SOURCE_ROOT}
 echo INPUT_WEIGHTS=${INPUT_WEIGHTS}
 echo OUTPUT_WEIGHTS=${OUTPUT_WEIGHTS} 
 echo "-----------------------------" 
@@ -60,7 +59,7 @@ mkdir -p ${RUN_DIR}/params
 PARAMS_SOURCE=${PARAMS_SOURCE_ROOT}/ginDQNParameters.py.${MODEL_NICKNAME}
 FIXUP=`echo ${SCRATCH_ID} | awk '{p=$0; gsub("[.]","_",p); print p;}'`
 PARAMS_MODULE=params/ginDQNParameters_${MODEL_NICKNAME}_${FIXUP}
-PARAMS_TARGET=${PARAMS_LOC}/${PARAMS_MODULE}.py
+PARAMS_TARGET=${RUN_DIR}/${PARAMS_MODULE}.py
 cp ${PARAMS_SOURCE} ${PARAMS_TARGET} 
  
 echo "#### ${CURRENT_SCRIPT_NAME} cleaning up fram any previous runs..."
