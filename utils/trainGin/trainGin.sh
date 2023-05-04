@@ -1,6 +1,8 @@
 #!/usr/bin/bash
-# run a training cycle, this script is usually invoked with "nohup" or the equivalent
-# place your desired weights into "${RUN_DIR}/${PROCESS_WEIGHTS_PATH}.0
+# run a training cycle with the supplied params and weights
+## this script is usually invoked with "nohup" or the equivalent 
+#set -x
+
 
 CURRENT_SCRIPT_NAME="`basename ${0}`"
 CURRENT_SCRIPT_SOURCE_DIR="`dirname ${0}`"
@@ -13,32 +15,44 @@ echo RLGIN TRAINING session started at "${TIMESTAMP}"
 MODEL_NICKNAME=${PWD##*/}
 CONTROL_DIR=${PWD}
 RUN_DIR=${RLGIN_BATCH_LOCAL_REPO}
+PARAMS_SOURCE_ROOT=${CONTROL_DIR}
 PARAMS_LOC=${CONTROL_DIR}
 WEIGHTS_DIR=${CONTROL_DIR}/weights
 LOGS_DIR=${CONTROL_DIR}/logs
 PROCESS_WEIGHTS_PATH=${WEIGHTS_DIR}/weights.h5
 
 echo "############# ${CURRENT_SCRIPT_NAME} changing directories to ${RUN_DIR}...."
-cd "${RUN_DIR}"
-echo "current working directory = {$PWD}"
+if [[ -d ${RUN_DIR} ]]
+then
+    cd "${RUN_DIR}"
+    echo "current working directory = {$PWD}"
+else
+	echo "#### ${CURRENT_SCRIPT_NAME} code repo \"${RUN_DIR}\" not found"
+	echo "#### ${CURRENT_SCRIPT_NAME} exiting code 9"
+    ## should just make one -- TBD
+    exit 9
+fi
 
 echo "############# ${CURRENT_SCRIPT_NAME} locating latest-generation weights...."
 INPUT_GENERATION_NUMBER=`ls ${PROCESS_WEIGHTS_PATH}.* | grep "[.][0-9]*$" \
             | awk '{p=split($0,aa,"[.]"); print aa[p]}' | sort -n | tail -1`
-INPUT_WEIGHTS="${PROCESS_WEIGHTS_PATH}.${INPUT_GENERATION_NUMBER}"
 OUTPUT_GENERATION_NUMBER=$((INPUT_GENERATION_NUMBER+1))
-OUTPUT_WEIGHTS="${PROCESS_WEIGHTS_PATH}.${OUTPUT_GENERATION_NUMBER}"
+
+echo "#### ${CURRENT_SCRIPT_NAME} setting up logging and weights management...."
 NAME_SCENARIO="trainGin_${MODEL_NICKNAME}.${OUTPUT_GENERATION_NUMBER}"
 LOGFILE="${LOGS_DIR}/${NAME_SCENARIO}.${TIMESTAMP}.log"
+OUTPUT_WEIGHTS="${PROCESS_WEIGHTS_PATH}.${OUTPUT_GENERATION_NUMBER}"
+INPUT_WEIGHTS="${PROCESS_WEIGHTS_PATH}.${INPUT_GENERATION_NUMBER}"
 
 echo "-----------------------------"
 echo MODEL_NICKNAME=${MODEL_NICKNAME}
 echo NAME_SCENARIO=${NAME_SCENARIO}
-echo INPUT_WEIGHTS=${INPUT_WEIGHTS}
+echo LOGFILE=${LOGFILE}
+echo PARAMS_LOC={$PARAMS_LOC}
 echo INPUT_GENERATION_NUMBER=${INPUT_GENERATION_NUMBER}
 echo OUTPUT_GENERATION_NUMBER=${OUTPUT_GENERATION_NUMBER}
+echo INPUT_WEIGHTS=${INPUT_WEIGHTS}
 echo OUTPUT_WEIGHTS=${OUTPUT_WEIGHTS}
-echo LOGFILE=${LOGFILE}
 echo "-----------------------------"
 
 echo "############# ${CURRENT_SCRIPT_NAME} copying input weights...."
@@ -46,16 +60,26 @@ cp "${INPUT_WEIGHTS}" "${PROCESS_WEIGHTS_PATH}"
 
 echo "############# ${CURRENT_SCRIPT_NAME} getting "${MODEL_NICKNAME}"-specific params...."
 mkdir -p ${RUN_DIR}/params
-PARAMS_SOURCE=${PARAMS_LOC}/ginDQNParameters.py.${MODEL_NICKNAME}
+PARAMS_SOURCE=${PARAMS_SOURCE_ROOT}/ginDQNParameters.py.${MODEL_NICKNAME}
 FIXUP=`echo ${MODEL_NICKNAME} | awk '{p=$0; gsub("[.]","_",p); print p;}'`
 PARAMS_MODULE=params/ginDQNParameters_${FIXUP}
-PARAMS_TARGET=${RUN_DIR}/${PARAMS_MODULE}.py
-if [[ -d ${RUN_DIR} ]]
+PARAMS_TARGET=${PARAMS_LOC}/${PARAMS_MODULE}.py
+cp ${PARAMS_SOURCE} ${PARAMS_TARGET} 
+
+echo "#### ${CURRENT_SCRIPT_NAME} checking python..."
+which python
+python --version
+
+# 4/2023 conda broken in certain sub-shell situations, including ssh/nohup/&
+echo "#### ${CURRENT_SCRIPT_NAME} confirming conda"
+which conda
+if [[ -e "/opt/conda/etc/profile.d/conda.sh" ]]
 then
-	cp ${PARAMS_SOURCE} ${PARAMS_TARGET} 
-else
-	echo "#### ${CURRENT_SCRIPT_NAME} ${RUN_DIR} not found, this could be a problem...."
+	source /opt/conda/etc/profile.d/conda.sh
 fi
+conda activate
+
+echo 
 
 CMD_ARGS="--name_scenario ${NAME_SCENARIO} \
             --logfile ${LOGFILE}  \
@@ -80,13 +104,13 @@ echo CMD_ARGS="${CMD_ARGS}"
 python learningGin.py ${CMD_ARGS}
 echo "############# ${CURRENT_SCRIPT_NAME} training process completed at `date -u +%Y-%m-%d_%H-%M-%S`"
 
-echo "############# ${CURRENT_SCRIPT_NAME} capturing post-training weights..."
+echo "############# ${CURRENT_SCRIPT_NAME} capturing post-training weights to ${OUTPUT_WEIGHTS}"
 cp ${PROCESS_WEIGHTS_PATH}.post_training "${OUTPUT_WEIGHTS}"
 
 echo "############# ${CURRENT_SCRIPT_NAME} comparing output and input weights..."
 if cmp "${INPUT_WEIGHTS}" "${OUTPUT_WEIGHTS}"; then echo "*** WARNING: NO DIFFERENCE BETWEEN ${INPUT_WEIGHTS} and ${OUTPUT_WEIGHTS}"; fi
 
-cd ${CONTROL_DIR}
+cd ${CURRENT_SCRIPT_ORIGINAL_EXECUTION_DIR}
 ENDTIME=`date -u +%Y-%m-%d_%H-%M-%S`
 echo "############# ${CURRENT_SCRIPT_NAME} completed at ${ENDTIME} ##################"
 

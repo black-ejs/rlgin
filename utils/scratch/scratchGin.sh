@@ -1,4 +1,5 @@
 #!/usr/bin/bash 
+# create a model from scratch and train it, using the supplied params
 ## this script is usually invoked with "nohup" or the equivalent 
 #set -x
  
@@ -7,49 +8,60 @@ CURRENT_SCRIPT_NAME="`basename ${0}`"
 CURRENT_SCRIPT_SOURCE_DIR="`dirname ${0}`"
 CURRENT_SCRIPT_ORIGINAL_EXECUTION_DIR=`pwd`
 
-TIMESTAMP=`date -u +%Y-%m-%d_%H%M%S` 
+TIMESTAMP=`date -u +%Y-%m-%d_%H-%M-%S` 
 echo "#############   ${CURRENT_SCRIPT_NAME}  ####################"
 echo RLGIN NEW-MODEL scratch session started at "${TIMESTAMP}" 
  
 MODEL_NICKNAME=${PWD##*/} 
+CONTROL_DIR=${PWD}
 RUN_DIR=${RLGIN_BATCH_LOCAL_REPO}
-LOCAL_REPO=${RLGIN_BATCH_LOCAL_REPO}
-PARAMS_LOC=$(pwd)
+PARAMS_SOURCE_ROOT=${CONTROL_DIR}
+PARAMS_LOC=${CONTROL_DIR}
+WEIGHTS_DIR=${CONTROL_DIR}/weights
+LOGS_DIR=${CONTROL_DIR}/logs
  
+echo "############# ${CURRENT_SCRIPT_NAME} changing directories to ${RUN_DIR}...."
+if [[ -d ${RUN_DIR} ]]
+then
+    cd "${RUN_DIR}"
+    echo "current working directory = {$PWD}"
+else
+	echo "#### ${CURRENT_SCRIPT_NAME} code repo \"${RUN_DIR}\" not found"
+	echo "#### ${CURRENT_SCRIPT_NAME} exiting code 9"
+    ## should just make one -- TBD
+    exit 9
+fi
+
+
+
+
+
+
+
 echo "#### ${CURRENT_SCRIPT_NAME} setting up logging and weights management...."
-LOGPATH="$(pwd)/logs" 
 NAME_SCENARIO="scratchGin_${MODEL_NICKNAME}.${SCRATCH_ID}" 
-LOGROOT="${NAME_SCENARIO}" 
-LOGFILE="${LOGPATH}/${LOGROOT}.${TIMESTAMP}.log" 
-CONSOLE_OUTPUT="${LOGPATH}/${LOGROOT}.${TIMESTAMP}.sysout" 
-WEIGHTSPATH="$(pwd)/weights" 
-WEIGHTSROOT="${LOGROOT}" 
-WEIGHTS_OUTPUT_FILE="${WEIGHTSPATH}/${WEIGHTSROOT}.${TIMESTAMP}.h5" 
-WEIGHTS_PATH_2="${WEIGHTSPATH}/${WEIGHTSROOT}.h5" 
+LOGFILE="${LOGS_DIR}/${NAME_SCENARIO}.${TIMESTAMP}.log" 
+OUTPUT_WEIGHTS="${WEIGHTS_DIR}/${NAME_SCENARIO}.${TIMESTAMP}.h5" 
+INPUT_WEIGHTS="${WEIGHTS_DIR}/${NAME_SCENARIO}.h5" 
  
 echo "-----------------------------" 
-echo MODEL_NICKNAME="${MODEL_NICKNAME}" 
-echo NAME_SCENARIO="${NAME_SCENARIO}" 
-echo LOGFILE="${LOGFILE}" 
-echo WEIGHTS_OUTPUT_FILE="${WEIGHTS_OUTPUT_FILE}" 
-echo PARAMS_LOC="${PARAMS_LOC}" 
+echo MODEL_NICKNAME=${MODEL_NICKNAME}
+echo NAME_SCENARIO=${NAME_SCENARIO} 
+echo LOGFILE=${LOGFILE}
+echo PARAMS_LOC=${PARAMS_LOC}
+echo INPUT_WEIGHTS=${INPUT_WEIGHTS}
+echo OUTPUT_WEIGHTS=${OUTPUT_WEIGHTS} 
 echo "-----------------------------" 
   
+
+
 echo "#### ${CURRENT_SCRIPT_NAME} getting ${MODEL_NICKNAME}-specific params...."
-if [ ! -d ${RUN_DIR}/params ]
-then
-	mkdir -p ${RUN_DIR}/params
-fi
-PARAMS_SOURCE=${PARAMS_LOC}/ginDQNParameters.py.${MODEL_NICKNAME}
+mkdir -p ${RUN_DIR}/params
+PARAMS_SOURCE=${PARAMS_SOURCE_ROOT}/ginDQNParameters.py.${MODEL_NICKNAME}
 FIXUP=`echo ${SCRATCH_ID} | awk '{p=$0; gsub("[.]","_",p); print p;}'`
 PARAMS_MODULE=params/ginDQNParameters_${MODEL_NICKNAME}_${FIXUP}
-PARAMS_TARGET=${LOCAL_REPO}/${PARAMS_MODULE}.py
-if [[ -d ${RLGIN_BATCH_LOCAL_REPO} ]]
-then
-	cp ${PARAMS_LOC}/ginDQNParameters.py.${MODEL_NICKNAME} ${PARAMS_TARGET} 
-else
-	echo "#### ${CURRENT_SCRIPT_NAME} ${RLGIN_BATCH_LOCAL_REPO} not fouund, this could be a problem...."
-fi
+PARAMS_TARGET=${PARAMS_LOC}/${PARAMS_MODULE}.py
+cp ${PARAMS_SOURCE} ${PARAMS_TARGET} 
  
 echo "#### ${CURRENT_SCRIPT_NAME} cleaning up fram any previous runs..."
 [ -e ${WEIGHTS_PATH_2}.post_training ] && rm ${WEIGHTS_PATH_2}.h5.post_training 
@@ -69,28 +81,35 @@ conda activate
 
 echo 
 
-echo "#### ${CURRENT_SCRIPT_NAME} switching to execution directory ..."
-cd ${RUN_DIR}
-pwd
-ls -latr
-ls -latr params
+
+CMD_ARGS="--name_scenario ${NAME_SCENARIO} \
+            --logfile ${LOGFILE}  \
+        	--params_module ${PARAMS_MODULE} \
+            --weights_path_2 ${WEIGHTS_DIR}/${NAME_SCENARIO}.h5"
+
+echo "############# ${CURRENT_SCRIPT_NAME} checking for parameter overrides...."
+echo RLGIN_BATCH_JP_LEARNING_RATE=${RLGIN_BATCH_JP_LEARNING_RATE}
+echo RLGIN_BATCH_JP_GAMMA=${RLGIN_BATCH_JP_GAMMA}
+if [[ X${RLGIN_BATCH_JP_LEARNING_RATE}X != XX ]]
+then
+    CMD_ARGS="${CMD_ARGS}""  --learning_rate_2 ${RLGIN_BATCH_JP_LEARNING_RATE}"
+fi
+if [[ X${RLGIN_BATCH_JP_GAMMA}X != XX ]]
+then
+    CMD_ARGS="${CMD_ARGS}""  --gamma_2 ${RLGIN_BATCH_JP_GAMMA}"
+fi
 
 echo "#### ${CURRENT_SCRIPT_NAME} launching scratchGin process..."
-python learningGin.py  \
-	--name_scenario "${NAME_SCENARIO}" \
-	--logfile "${LOGFILE}" \
-	--params_module ${PARAMS_MODULE} \
-	--weights_path_2 ${WEIGHTS_PATH_2}
+echo CMD_ARGS="${CMD_ARGS}"
+python learningGin.py ${CMD_ARGS}
 echo "#### ${CURRENT_SCRIPT_NAME} scratchGin process completed"
  
-echo "#### ${CURRENT_SCRIPT_NAME} capturing weights to ${WEIGHTS_OUTPUT_FILE} ..."
-[ -e ${WEIGHTS_PAATH_2}.post_training ] && mv ${WEIGHTS_PATH_2}.post_training "${WEIGHTS_OUTPUT_FILE}" 
+echo "#### ${CURRENT_SCRIPT_NAME} capturing post-training weights to ${OUTPUT_WEIGHTS}"
+[ -e ${WEIGHTS_PATH_2}.post_training ] && mv ${WEIGHTS_PATH_2}.post_training "${OUTPUT_WEIGHTS}" 
  
 cd ${CURRENT_SCRIPT_ORIGINAL_EXECUTION_DIR}
-
-TIMESTAMP=`date -u +%Y-%m-%d_%H%M%S` 
-
-echo "#############  ${CURRENT_SCRIPT_NAME} complete at ${TIMESTAMP} ##############"
+ENDTIME=`date -u +%Y-%m-%d_%H-%M-%S` 
+echo "############# ${CURRENT_SCRIPT_NAME} completed at ${ENDTIME} ##################"
 
 
 
