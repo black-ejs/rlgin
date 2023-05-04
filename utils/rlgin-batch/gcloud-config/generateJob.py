@@ -116,7 +116,7 @@ def create_boot_script(run_script:str,
         run_script = ""
 
     run_script = run_script.replace("'","\'")
-    saveto_path =  "/home/${RLGIN_BATCH_USER}/" +saveto_name
+    saveto_path =  "/home/${RLGIN_BATCH_USER}/" +saveto_name +"_${BATCH_TASK_INDEX}"
 
     boot_script  =  "#!/bin/bash\n"
     boot_script +=  "\n#>>> created by job generator\n"

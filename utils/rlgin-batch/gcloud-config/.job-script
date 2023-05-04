@@ -108,6 +108,8 @@ echo ls -latr /home/${RLGIN_BATCH_USER}/.assure-mounts.sh
 ls -latr /home/${RLGIN_BATCH_USER}/.assure-mounts.sh
 echo ls -latr /home/${RLGIN_BATCH_USER}/.rb-job-launch
 ls -latr /home/${RLGIN_BATCH_USER}/.rb-job-launch
+echo ls -latr /home/${RLGIN_BATCH_USER}
+ls -latr /home/${RLGIN_BATCH_USER}
 
 cmd="\
 export BATCH_JOB_ID=${BATCH_JOB_ID};\
