@@ -1,14 +1,14 @@
 #!/usr/bin/bash 
 # create a model from scratch and train it, using the supplied params
 ## this script is usually invoked with "nohup" or the equivalent 
-#set -x  
+set -x  
  
-SCRATCH_ID=${1:-0}  
-CONTROL_DIR=${2:-$PWD}
-MODEL_NICKNAME=`basename ${CONTROL_DIR}`
 CURRENT_SCRIPT_NAME="`basename ${0}`"
 CURRENT_SCRIPT_SOURCE_DIR="`dirname ${0}`"
 CURRENT_SCRIPT_ORIGINAL_EXECUTION_DIR=`pwd`
+
+SCRATCH_ID=${1:-0}  
+CONTROL_DIR=${2:-$PWD}
 
 TIMESTAMP=`date -u +%Y-%m-%d_%H-%M-%S` 
 echo "#############   ${CURRENT_SCRIPT_NAME}  ####################"
