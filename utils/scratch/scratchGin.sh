@@ -1,7 +1,7 @@
 #!/usr/bin/bash 
 # create a model from scratch and train it, using the supplied params
 ## this script is usually invoked with "nohup" or the equivalent 
-set -x  
+#set -x  
  
 CURRENT_SCRIPT_NAME="`basename ${0}`"
 CURRENT_SCRIPT_SOURCE_DIR="`dirname ${0}`"
@@ -52,10 +52,11 @@ echo "-----------------------------"
   
 echo "#### ${CURRENT_SCRIPT_NAME} getting ${MODEL_NICKNAME}-specific params...."
 mkdir -p ${RUN_DIR}/params
-PARAMS_SOURCE=${PARAMS_SOURCE_ROOT}/{RLGIN_}
+PARAMS_SOURCE=${PARAMS_SOURCE_ROOT}/ginDQNParameters.py.${MODEL_NICKNAME}
 FIXUP=`echo ${SCRATCH_ID} | awk '{p=$0; gsub("[.]","_",p); print p;}'`
 PARAMS_MODULE=params/ginDQNParameters_${MODEL_NICKNAME}_${FIXUP}
 PARAMS_TARGET=${RUN_DIR}/${PARAMS_MODULE}.py
+echo cp ${PARAMS_SOURCE} ${PARAMS_TARGET} 
 cp ${PARAMS_SOURCE} ${PARAMS_TARGET} 
  
 echo "#### ${CURRENT_SCRIPT_NAME} cleaning up fram any previous runs..."
