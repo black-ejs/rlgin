@@ -4,7 +4,7 @@
 #set -x  
  
 SCRATCH_ID=${1:-0}  
-CONTROL_DIR=${1:-$PWD}
+CONTROL_DIR=${2:-$PWD}
 MODEL_NICKNAME=`basename ${CONTROL_DIR}`
 CURRENT_SCRIPT_NAME="`basename ${0}`"
 CURRENT_SCRIPT_SOURCE_DIR="`dirname ${0}`"
