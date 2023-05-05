@@ -99,9 +99,11 @@ echo CMD_ARGS="${CMD_ARGS}"
 python learningGin.py ${CMD_ARGS}
 echo "#### ${CURRENT_SCRIPT_NAME} scratchGin process completed"
  
+set -x
 echo "#### ${CURRENT_SCRIPT_NAME} capturing post-training weights to ${OUTPUT_WEIGHTS}"
 [ -e ${WEIGHTS_PATH_2}.post_training ] && mv ${WEIGHTS_PATH_2}.post_training "${OUTPUT_WEIGHTS}" 
- 
+set +x
+
 cd ${CURRENT_SCRIPT_ORIGINAL_EXECUTION_DIR}
 ENDTIME=`date -u +%Y-%m-%d_%H-%M-%S` 
 echo "############# ${CURRENT_SCRIPT_NAME} completed at ${ENDTIME} ##################"
