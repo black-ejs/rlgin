@@ -4,7 +4,7 @@
 #set -x  
  
 SCRATCH_ID=${1:-0}  
-CONTROL_DIR=${2:-$PWD}
+CONTROL_DIR=${1:-$PWD}
 MODEL_NICKNAME=`basename ${CONTROL_DIR}`
 CURRENT_SCRIPT_NAME="`basename ${0}`"
 CURRENT_SCRIPT_SOURCE_DIR="`dirname ${0}`"
@@ -14,8 +14,7 @@ TIMESTAMP=`date -u +%Y-%m-%d_%H-%M-%S`
 echo "#############   ${CURRENT_SCRIPT_NAME}  ####################"
 echo RLGIN NEW-MODEL scratch session started at "${TIMESTAMP}" 
  
-MODEL_NICKNAME=${PWD##*/} 
-CONTROL_DIR=${PWD}
+MODEL_NICKNAME=`basename ${CONTROL_DIR}`
 RUN_DIR=${RLGIN_BATCH_LOCAL_REPO}
 PARAMS_SOURCE_ROOT=${CONTROL_DIR}
 WEIGHTS_DIR=${CONTROL_DIR}/weights
@@ -32,12 +31,6 @@ else
     ## should just make one -- TBD
     exit 9
 fi
-
-
-
-
-
-
 
 echo "#### ${CURRENT_SCRIPT_NAME} setting up logging and weights management...."
 NAME_SCENARIO="scratchGin_${MODEL_NICKNAME}.${SCRATCH_ID}" 
@@ -57,11 +50,9 @@ echo INPUT_WEIGHTS=${INPUT_WEIGHTS}
 echo OUTPUT_WEIGHTS=${OUTPUT_WEIGHTS} 
 echo "-----------------------------" 
   
-
-
 echo "#### ${CURRENT_SCRIPT_NAME} getting ${MODEL_NICKNAME}-specific params...."
 mkdir -p ${RUN_DIR}/params
-PARAMS_SOURCE=${PARAMS_SOURCE_ROOT}/ginDQNParameters.py.${MODEL_NICKNAME}
+PARAMS_SOURCE=${PARAMS_SOURCE_ROOT}/{RLGIN_}
 FIXUP=`echo ${SCRATCH_ID} | awk '{p=$0; gsub("[.]","_",p); print p;}'`
 PARAMS_MODULE=params/ginDQNParameters_${MODEL_NICKNAME}_${FIXUP}
 PARAMS_TARGET=${RUN_DIR}/${PARAMS_MODULE}.py
@@ -84,7 +75,6 @@ fi
 conda activate
 
 echo 
-
 
 CMD_ARGS="--name_scenario ${NAME_SCENARIO} \
             --logfile ${LOGFILE}  \
