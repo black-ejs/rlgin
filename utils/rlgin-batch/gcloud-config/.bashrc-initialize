@@ -3,7 +3,12 @@
 # echo rlgin batch initialization
 export RLGIN_BATCH_EXECUTION_BUCKET='rb-t-shared-bucket-1'
 export RLGIN_BATCH_REPO_URL='https://github.com/black-ejs/rlgin'
-export RLGIN_BATCH_LOCAL_REPO=~/rlgin-local-repo
+if [[ X${BATCH_TASK_INDEX}X == XX ]]
+then
+	export RLGIN_BATCH_LOCAL_REPO=~/rlgin-local-repo
+else
+	export RLGIN_BATCH_LOCAL_REPO=~/rlgin-local-repo-${BATCH_TASK_INDEX}
+fi
 export RLGIN_BATCH_SERIES_ROOT=~/dev
 export RLGIN_BATCH_SERIES_BASE="${RLGIN_BATCH_SERIES_ROOT}"/projects/training_ground
 export RLGIN_BATCH_PARAMS="${RLGIN_BATCH_SERIES_ROOT}"/projects/rlgin-batch/job-params
