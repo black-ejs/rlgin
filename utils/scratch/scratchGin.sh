@@ -101,7 +101,6 @@ python learningGin.py ${CMD_ARGS}
 echo "#### ${CURRENT_SCRIPT_NAME} scratchGin process completed"
  
 echo "#### ${CURRENT_SCRIPT_NAME} capturing post-training weights to ${OUTPUT_WEIGHTS}"
-echo "[ -e ${WEIGHTS_PATH_2}.post_training ] && mv ${WEIGHTS_PATH_2}.post_training ${OUTPUT_WEIGHTS} "
 [ -e ${WEIGHTS_PATH_2}.post_training ] && mv ${WEIGHTS_PATH_2}.post_training ${OUTPUT_WEIGHTS} 
 
 cd ${CURRENT_SCRIPT_ORIGINAL_EXECUTION_DIR}
