@@ -1,5 +1,5 @@
 #!/bin/bash
-#set -x
+#set -x  
 CURRENT_SCRIPT_NAME="`basename ${0}`"
 CURRENT_SCRIPT_DIR="`dirname ${0}`"
 

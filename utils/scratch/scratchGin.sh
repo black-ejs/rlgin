@@ -1,7 +1,7 @@
 #!/usr/bin/bash 
 # create a model from scratch and train it, using the supplied params
 ## this script is usually invoked with "nohup" or the equivalent 
-#set -x
+#set -x  
  
 SCRATCH_ID=${1:-0}  
 CONTROL_DIR=${2:-$PWD}
