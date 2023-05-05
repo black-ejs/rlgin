@@ -56,7 +56,7 @@ echo "###  ###  ###  ${CURRENT_SCRIPT_NAME}: preflight check ${SERIES_NICKNAME}"
 CONTROL_DIR=${RLGIN_BATCH_SERIES_BASE}/${SERIES_NICKNAME}${SCRATCH_DRIVER_ID}
 echo CONTROL_DIR=${CONTROL_DIR}
 echo "contents of ${CONTROL_DIR}:"
-ls -latr 
+ls -latr ${CONTROL_DIR}
 
 # launch
 if [[ ${TRAIN_OR_SCRATCH} == "SCRATCH" ]]
@@ -66,7 +66,7 @@ then
     cd ${RUN_DIR}
     echo "current directory=`pwd`"
     echo "contents of ${RUN_DIR}:"
-    echo "nohup ./scratchDriver.sh ${SCRATCH_DRIVER_ID} 2>&1 > scratchDriver.sh.out &"
+    echo "nohup ./scratchDriver.sh ${SCRATCH_DRIVER_ID} ${CONTROL_DIR} 2>&1 > scratchDriver.sh.out &"
     nohup ./scratchDriver.sh ${SCRATCH_DRIVER_ID} ${SCRATCH_DRIVER_START} ${SCRATCH_DRIVER_END} 2>&1 > scratchDriver.sh.out.${BATCH_TASK_INDEX} &
 elif [[ ${TRAIN_OR_SCRATCH} == "TRAIN" ]]
 then
@@ -75,7 +75,7 @@ then
     cd ${RUN_DIR}
     echo "current directory=`pwd`"
     echo "contents of ${RUN_DIR}:"
-    echo "nohup ./trainDriver.sh 1 ${TRAIN_GENERATIONS} 2>&1 > trainDriver.sh.out &"
+    echo "nohup ./trainDriver.sh 1 ${TRAIN_GENERATIONS} ${CONTROL_DIR} 2>&1 > trainDriver.sh.out &"
     nohup ./trainDriver.sh 1 ${TRAIN_GENERATIONS} 2>&1 > trainDriver.sh.out &
 else
     echo "###  ###  ###  ${CURRENT_SCRIPT_NAME}: ERROR - TRAIN_OR_SCRATCH=\"${TRAIN_OR_SCRATCH}\", no driver launched"

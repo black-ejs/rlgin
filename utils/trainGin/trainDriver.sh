@@ -11,7 +11,7 @@ CONTROL_DIR=${3:-$PWD}
 echo "*** ${CURRENT_SCRIPT_NAME} start ***"
 for ii in `seq -s' ' ${DRIVER_START} ${DRIVER_END}`
 do
-	echo launching trainGin.sh at `date`
+	echo launching trainGin.sh at `date` - CONTROL_DIR=${CONTROL_DIR}
 	./trainGin.sh ${CONTROL_DIR} > trainGin.sh.out$ii
 	echo trainGin.sh completed at `date`
 done
