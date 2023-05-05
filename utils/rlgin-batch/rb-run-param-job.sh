@@ -53,22 +53,28 @@ echo "###  ###  ###  ${CURRENT_SCRIPT_NAME}: bootrapping for series ${SERIES_NIC
 
 # get into the cockpit
 echo "###  ###  ###  ${CURRENT_SCRIPT_NAME}: preflight check ${SERIES_NICKNAME}"
-TARGET_DIRECTORY=${RLGIN_BATCH_SERIES_BASE}/${SERIES_NICKNAME}${SCRATCH_DRIVER_ID}
-echo TARGET_DIRECTORY=${TARGET_DIRECTORY}
-cd ${TARGET_DIRECTORY}
-echo "current directory=`pwd`"
-echo "contents of ${TARGET_DIRECTORY}:"
+CONTROL_DIR=${RLGIN_BATCH_SERIES_BASE}/${SERIES_NICKNAME}${SCRATCH_DRIVER_ID}
+echo CONTROL_DIR=${CONTROL_DIR}
+echo "contents of ${CONTROL_DIR}:"
 ls -latr 
 
 # launch
 if [[ ${TRAIN_OR_SCRATCH} == "SCRATCH" ]]
 then
     echo "###  ###  ###  ${CURRENT_SCRIPT_NAME}: launching scratchDriver.sh"
+    RUN_DIR=${RLGIN_BATCH_LOCAL_REPO}/utils/scratch
+    cd ${RUN_DIR}
+    echo "current directory=`pwd`"
+    echo "contents of ${RUN_DIR}:"
     echo "nohup ./scratchDriver.sh ${SCRATCH_DRIVER_ID} 2>&1 > scratchDriver.sh.out &"
     nohup ./scratchDriver.sh ${SCRATCH_DRIVER_ID} ${SCRATCH_DRIVER_START} ${SCRATCH_DRIVER_END} 2>&1 > scratchDriver.sh.out.${BATCH_TASK_INDEX} &
 elif [[ ${TRAIN_OR_SCRATCH} == "TRAIN" ]]
 then
     echo "###  ###  ###  ${CURRENT_SCRIPT_NAME}: launching trainDriver.sh"
+    RUN_DIR=${RLGIN_BATCH_LOCAL_REPO}/utils/trainGin
+    cd ${RUN_DIR}
+    echo "current directory=`pwd`"
+    echo "contents of ${RUN_DIR}:"
     echo "nohup ./trainDriver.sh 1 ${TRAIN_GENERATIONS} 2>&1 > trainDriver.sh.out &"
     nohup ./trainDriver.sh 1 ${TRAIN_GENERATIONS} 2>&1 > trainDriver.sh.out &
 else

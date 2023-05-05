@@ -12,8 +12,8 @@ TIMESTAMP=`date -u +%Y-%m-%d_%H-%M-%S`
 echo "############# ${CURRENT_SCRIPT_NAME} #################"
 echo RLGIN TRAINING session started at "${TIMESTAMP}"
 
-MODEL_NICKNAME=${PWD##*/}
-CONTROL_DIR=${PWD}
+CONTROL_DIR=${1:-$PWD}
+MODEL_NICKNAME=`basename ${CONTROL_DIR}`
 RUN_DIR=${RLGIN_BATCH_LOCAL_REPO}
 PARAMS_SOURCE_ROOT=${CONTROL_DIR}
 WEIGHTS_DIR=${CONTROL_DIR}/weights
