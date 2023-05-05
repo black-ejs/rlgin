@@ -78,22 +78,30 @@ mkdir -p ${WEIGHTS_LOC}
 
 echo "**** COPYING PARAMETER TEMPLATE"
 TARGET_PARAMETERS_FILENAME=ginDQNParameters.py.${SERIES_NICKNAME}${SCRATCH_DRIVER_ID}
-cp ${LOCAL_REPO}/ginDQNParameters.py ${TARGET_PARAMETERS_FILENAME}
+if [ ! e  ${TARGET_PARAMETERS_FILENAME} ]
+then
+    cp ${LOCAL_REPO}/ginDQNParameters.py ${TARGET_PARAMETERS_FILENAME}
+fi
 
 echo "**** COPYING TRAINING SCRIPTS"
-cp ${SCRIPTS_LOC}/trainGin/trainGin.sh .
+cp ${SCRIPTS_LOC}/trainGin/trainGin.sh ${RLGIN_BATCH_TMPDIR}/
+mv ${RLGIN_BATCH_TMPDIR}/trainGin.sh .
 chmod a+x ./trainGin.sh
-cp ${SCRIPTS_LOC}/trainGin/trainDriver.sh .
+cp ${SCRIPTS_LOC}/trainGin/trainDriver.sh ${RLGIN_BATCH_TMPDIR}/
+mv ${RLGIN_BATCH_TMPDIR}/trainDriver.sh .
 chmod a+x ./trainDriver.sh
 
 echo "**** COPYING SCRATCH SCRIPTS"
-cp ${SCRIPTS_LOC}/scratch/scratchGin.sh .
+cp ${SCRIPTS_LOC}/scratch/scratchGin.sh ${RLGIN_BATCH_TMPDIR}/
+mv ${RLGIN_BATCH_TMPDIR}/scratchGin.sh .
 chmod a+x ./scratchGin.sh
-cp ${SCRIPTS_LOC}/scratch/scratchDriver.sh .
+cp ${SCRIPTS_LOC}/scratch/scratchDriver.sh ${RLGIN_BATCH_TMPDIR}/
+mv ${RLGIN_BATCH_TMPDIR}/scratchDriver.sh .
 chmod a+x ./scratchDriver.sh
 
 echo "  ********* ${CURRENT_SCRIPT_NAME}: obtaining PARAMS for ${SERIES_NICKNAME} ***********"
-cp ${PARAMS_FILE} ${TARGET_PARAMETERS_FILENAME}
+cp ${PARAMS_FILE} ${RLGIN_BATCH_TMPDIR}/${TARGET_PARAMETERS_FILENAME}
+mv ${RLGIN_BATCH_TMPDIR}/${TARGET_PARAMETERS_FILENAME} ${TARGET_PARAMETERS_FILENAME}
 
 if [[ "${TRAIN_OR_SCRATCH}" == "TRAIN" ]]
 then
