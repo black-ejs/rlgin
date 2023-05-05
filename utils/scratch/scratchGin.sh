@@ -80,7 +80,7 @@ echo
 CMD_ARGS="--name_scenario ${NAME_SCENARIO} \
             --logfile ${LOGFILE}  \
         	--params_module ${PARAMS_MODULE} \
-            --weights_path_2 ${WEIGHTS_DIR}/${NAME_SCENARIO}.h5"
+            --weights_path_2 ${WEIGHTS_DIR}/${NAME_SCENARIO}.${TIMESTAMP}.h5"
 
 echo "############# ${CURRENT_SCRIPT_NAME} checking for parameter overrides...."
 echo RLGIN_BATCH_JP_LEARNING_RATE=${RLGIN_BATCH_JP_LEARNING_RATE}
