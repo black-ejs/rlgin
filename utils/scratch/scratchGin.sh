@@ -77,10 +77,11 @@ conda activate
 
 echo 
 
+WEIGHTS_PATH_2=${WEIGHTS_DIR}/${NAME_SCENARIO}.${TIMESTAMP}.h5
 CMD_ARGS="--name_scenario ${NAME_SCENARIO} \
             --logfile ${LOGFILE}  \
         	--params_module ${PARAMS_MODULE} \
-            --weights_path_2 ${WEIGHTS_DIR}/${NAME_SCENARIO}.${TIMESTAMP}.h5"
+            --weights_path_2 ${WEIGHTS_PATH_2}"
 
 echo "############# ${CURRENT_SCRIPT_NAME} checking for parameter overrides...."
 echo RLGIN_BATCH_JP_LEARNING_RATE=${RLGIN_BATCH_JP_LEARNING_RATE}
@@ -99,11 +100,9 @@ echo CMD_ARGS="${CMD_ARGS}"
 python learningGin.py ${CMD_ARGS}
 echo "#### ${CURRENT_SCRIPT_NAME} scratchGin process completed"
  
-set -x
 echo "#### ${CURRENT_SCRIPT_NAME} capturing post-training weights to ${OUTPUT_WEIGHTS}"
 echo "[ -e ${WEIGHTS_PATH_2}.post_training ] && mv ${WEIGHTS_PATH_2}.post_training ${OUTPUT_WEIGHTS} "
 [ -e ${WEIGHTS_PATH_2}.post_training ] && mv ${WEIGHTS_PATH_2}.post_training ${OUTPUT_WEIGHTS} 
-set +x
 
 cd ${CURRENT_SCRIPT_ORIGINAL_EXECUTION_DIR}
 ENDTIME=`date -u +%Y-%m-%d_%H-%M-%S` 
