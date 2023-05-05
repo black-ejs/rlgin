@@ -67,7 +67,7 @@ then
     echo "current directory=`pwd`"
     echo "contents of ${RUN_DIR}:"
     echo "nohup ./scratchDriver.sh ${SCRATCH_DRIVER_ID} ${CONTROL_DIR} 2>&1 > scratchDriver.sh.out &"
-    nohup ./scratchDriver.sh ${SCRATCH_DRIVER_ID} ${SCRATCH_DRIVER_START} ${SCRATCH_DRIVER_END} 2>&1 > scratchDriver.sh.out.${BATCH_TASK_INDEX} &
+    nohup ./scratchDriver.sh ${SCRATCH_DRIVER_ID} ${SCRATCH_DRIVER_START} ${SCRATCH_DRIVER_END} ${CONTROL_DIR} & #2>&1 > scratchDriver.sh.out.${BATCH_TASK_INDEX} &
 elif [[ ${TRAIN_OR_SCRATCH} == "TRAIN" ]]
 then
     echo "###  ###  ###  ${CURRENT_SCRIPT_NAME}: launching trainDriver.sh"
@@ -76,7 +76,7 @@ then
     echo "current directory=`pwd`"
     echo "contents of ${RUN_DIR}:"
     echo "nohup ./trainDriver.sh 1 ${TRAIN_GENERATIONS} ${CONTROL_DIR} 2>&1 > trainDriver.sh.out &"
-    nohup ./trainDriver.sh 1 ${TRAIN_GENERATIONS} 2>&1 > trainDriver.sh.out &
+    nohup ./trainDriver.sh 1 ${TRAIN_GENERATIONS} ${CONTROL_DIR} & #2>&1 > trainDriver.sh.out &
 else
     echo "###  ###  ###  ${CURRENT_SCRIPT_NAME}: ERROR - TRAIN_OR_SCRATCH=\"${TRAIN_OR_SCRATCH}\", no driver launched"
     echo "###  ###  ###  ${CURRENT_SCRIPT_NAME}: task will clean up and exit"
