@@ -66,38 +66,49 @@ then
     exit 23
 fi
 
-echo "**** CONFIRMING TARGET DIRECTORY ${TARGET_PATH}"
+echo "**** ${CURRENT_SCRIPT_NAME} CONFIRMING TARGET DIRECTORY ${TARGET_PATH}"
 mkdir -p "${TARGET_PATH}"
 cd "${TARGET_PATH}"
     
-echo "**** CREATING LOGS DIRECTORY"
+echo "**** ${CURRENT_SCRIPT_NAME} CREATING LOGS DIRECTORY"
 mkdir -p ${LOG_LOC}
 
-echo "**** CREATING WEIGHTS DIRECTORY"
+echo "**** ${CURRENT_SCRIPT_NAME} CREATING WEIGHTS DIRECTORY"
 mkdir -p ${WEIGHTS_LOC}
 
-echo "**** COPYING PARAMETER TEMPLATE"
 TARGET_PARAMETERS_FILENAME=ginDQNParameters.py.${SERIES_NICKNAME}${SCRATCH_DRIVER_ID}
 if [ ! -e ${TARGET_PARAMETERS_FILENAME} ]
 then
+    echo "**** ${CURRENT_SCRIPT_NAME} COPYING PARAMETER TEMPLATE"
     cp ${LOCAL_REPO}/ginDQNParameters.py ${TARGET_PARAMETERS_FILENAME}
+else
+    echo "**** ${CURRENT_SCRIPT_NAME} ${TARGET_PARAMETERS_FILENAME} found, not changing"
 fi
 
-echo "**** COPYING TRAINING SCRIPTS"
-cp ${SCRIPTS_LOC}/trainGin/trainGin.sh ${RLGIN_BATCH_TMPDIR}/
-mv ${RLGIN_BATCH_TMPDIR}/trainGin.sh .
-chmod a+x ./trainGin.sh
-cp ${SCRIPTS_LOC}/trainGin/trainDriver.sh ${RLGIN_BATCH_TMPDIR}/
-mv ${RLGIN_BATCH_TMPDIR}/trainDriver.sh .
-chmod a+x ./trainDriver.sh
-
-echo "**** COPYING SCRATCH SCRIPTS"
-cp ${SCRIPTS_LOC}/scratch/scratchGin.sh ${RLGIN_BATCH_TMPDIR}/
-mv ${RLGIN_BATCH_TMPDIR}/scratchGin.sh .
-chmod a+x ./scratchGin.sh
-cp ${SCRIPTS_LOC}/scratch/scratchDriver.sh ${RLGIN_BATCH_TMPDIR}/
-mv ${RLGIN_BATCH_TMPDIR}/scratchDriver.sh .
-chmod a+x ./scratchDriver.sh
+echo "**** ${CURRENT_SCRIPT_NAME} - SUPPORT SCRIPTS"
+for batch_script in trainGin.sh trainDriver.sh scratchGin.sh scratchDriver.sh
+do
+    echo "   +++ checking ${batch_script}"
+    if [[ X${batch_script}X == *rain* ]] 
+    then 
+        batch_script_path="trainGin"
+    else 
+        batch_script_path="scratch" 
+    fi
+    if [[ -f ./${batch_script} ]]
+    then
+        echo "   +++ ./${batch_script} found, leaving
+    else
+        cp ${SCRIPTS_LOC}/${batch_script_path}/${batch_script} ${RLGIN_BATCH_TMPDIR}/
+        mv ${RLGIN_BATCH_TMPDIR}/${batch_script} .
+    fi
+    if [[ -x ./${batch_script} ]]
+    then
+        echo "   +++ ./${batch_script} is execitable
+    else
+        chmod a+x ./${batch_script}
+    fi
+done
 
 echo "  ********* ${CURRENT_SCRIPT_NAME}: obtaining PARAMS for ${SERIES_NICKNAME} ***********"
 cp ${PARAMS_FILE} ${RLGIN_BATCH_TMPDIR}/${TARGET_PARAMETERS_FILENAME}

@@ -61,24 +61,26 @@ ls -latr ${CONTROL_DIR}
 # launch
 if [[ ${TRAIN_OR_SCRATCH} == "SCRATCH" ]]
 then
-    echo "###  ###  ###  ${CURRENT_SCRIPT_NAME}: launching scratchDriver.sh"
     RUN_DIR=${RLGIN_BATCH_LOCAL_REPO}/utils/scratch
     cd ${RUN_DIR}
     echo "current directory=`pwd`"
     echo "contents of ${RUN_DIR}:"
     ls -latr ${RUN_DIR}
-    echo "nohup ./scratchDriver.sh ${SCRATCH_DRIVER_ID} ${SCRATCH_DRIVER_START} ${SCRATCH_DRIVER_END} ${CONTROL_DIR} 2>&1 > ${CONTROL_DIR}/scratchDriver.sh.out.${BATCH_TASK_INDEX} &"
-    nohup ./scratchDriver.sh ${SCRATCH_DRIVER_ID} ${SCRATCH_DRIVER_START} ${SCRATCH_DRIVER_END} ${CONTROL_DIR} 2>&1 > ${CONTROL_DIR}/scratchDriver.sh.out.${BATCH_TASK_INDEX} &
+    echo "###  ###  ###  ${CURRENT_SCRIPT_NAME}: launching scratchDriver.sh"
+    echo "nohup ./scratchDriver.sh ${SCRATCH_DRIVER_ID} ${SCRATCH_DRIVER_START} ${SCRATCH_DRIVER_END} ${CONTROL_DIR} 2>&1 > ${CONTROL_DIR}/scratchDriver.sh.out.${BATCH_TASK_INDEX} "
+          nohup ./scratchDriver.sh ${SCRATCH_DRIVER_ID} ${SCRATCH_DRIVER_START} ${SCRATCH_DRIVER_END} ${CONTROL_DIR} 2>&1 > ${CONTROL_DIR}/scratchDriver.sh.out.${BATCH_TASK_INDEX} 
+    echo "###  ###  ###  ${CURRENT_SCRIPT_NAME}: scratchDriver.sh completed"
 elif [[ ${TRAIN_OR_SCRATCH} == "TRAIN" ]]
 then
-    echo "###  ###  ###  ${CURRENT_SCRIPT_NAME}: launching trainDriver.sh"
     RUN_DIR=${RLGIN_BATCH_LOCAL_REPO}/utils/trainGin
     cd ${RUN_DIR}
     echo "current directory=`pwd`"
     echo "contents of ${RUN_DIR}:"
     ls -latr ${RUN_DIR}
-    echo "nohup ./trainDriver.sh 1 ${TRAIN_GENERATIONS} ${CONTROL_DIR} 2>&1 > ${CONTROL_DIR}/trainDriver.sh.out &"
-    nohup ./trainDriver.sh 1 ${TRAIN_GENERATIONS} ${CONTROL_DIR} 2>&1 > ${CONTROL_DIR}/trainDriver.sh.out &
+    echo "###  ###  ###  ${CURRENT_SCRIPT_NAME}: launching trainDriver.sh"
+    echo "nohup ./trainDriver.sh 1 ${TRAIN_GENERATIONS} ${CONTROL_DIR} 2>&1 > ${CONTROL_DIR}/trainDriver.sh.out "
+          nohup ./trainDriver.sh 1 ${TRAIN_GENERATIONS} ${CONTROL_DIR} 2>&1 > ${CONTROL_DIR}/trainDriver.sh.out 
+    echo "###  ###  ###  ${CURRENT_SCRIPT_NAME}: trainDriver.sh completed"
 else
     echo "###  ###  ###  ${CURRENT_SCRIPT_NAME}: ERROR - TRAIN_OR_SCRATCH=\"${TRAIN_OR_SCRATCH}\", no driver launched"
     echo "###  ###  ###  ${CURRENT_SCRIPT_NAME}: task will clean up and exit"
