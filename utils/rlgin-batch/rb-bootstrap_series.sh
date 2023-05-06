@@ -85,7 +85,6 @@ else
     echo "**** ${CURRENT_SCRIPT_NAME} ${TARGET_PARAMETERS_FILENAME} found, not changing"
 fi
 
-set -x
 echo "**** ${CURRENT_SCRIPT_NAME} - SUPPORT SCRIPTS"
 for batch_script in trainGin.sh trainDriver.sh scratchGin.sh scratchDriver.sh
 do
@@ -112,7 +111,6 @@ do
         chmod a+x ./${batch_script}
     fi
 done
-set +x
 
 echo "  ********* ${CURRENT_SCRIPT_NAME}: obtaining PARAMS for ${SERIES_NICKNAME} ***********"
 cp ${PARAMS_FILE} ${RLGIN_BATCH_TMPDIR}/${TARGET_PARAMETERS_FILENAME}
