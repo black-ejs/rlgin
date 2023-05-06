@@ -85,6 +85,7 @@ else
     echo "**** ${CURRENT_SCRIPT_NAME} ${TARGET_PARAMETERS_FILENAME} found, not changing"
 fi
 
+set -x
 echo "**** ${CURRENT_SCRIPT_NAME} - SUPPORT SCRIPTS"
 for batch_script in trainGin.sh trainDriver.sh scratchGin.sh scratchDriver.sh
 do
@@ -97,18 +98,21 @@ do
     fi
     if [[ -f ./${batch_script} ]]
     then
-        echo "   +++ ./${batch_script} found, leaving
+        echo "   +++ ./${batch_script} found, will not disturb
     else
+        echo "   +++ ./${batch_script} not found, copying from ${SCRIPTS_LOC}/${batch_script_path}/${batch_script}
         cp ${SCRIPTS_LOC}/${batch_script_path}/${batch_script} ${RLGIN_BATCH_TMPDIR}/
         mv ${RLGIN_BATCH_TMPDIR}/${batch_script} .
     fi
     if [[ -x ./${batch_script} ]]
     then
-        echo "   +++ ./${batch_script} is execitable
+        echo "   +++ ./${batch_script} is executable
     else
+        echo "   +++ ./${batch_script} is not executable, calling chmod
         chmod a+x ./${batch_script}
     fi
 done
+set +x
 
 echo "  ********* ${CURRENT_SCRIPT_NAME}: obtaining PARAMS for ${SERIES_NICKNAME} ***********"
 cp ${PARAMS_FILE} ${RLGIN_BATCH_TMPDIR}/${TARGET_PARAMETERS_FILENAME}
