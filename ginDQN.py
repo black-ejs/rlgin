@@ -120,7 +120,7 @@ class ginDQNStrategy(playGin.OneDecisionGinStrategy):
         self.myPlayer = None
         self.turns = 0
         self.batch_size = params['batch_size']
-        self.train = params['train']
+        self.train_mode = params['train']
         self.pretrain_weights = None
         self.benchmark_scorer = None
 
@@ -159,7 +159,7 @@ class ginDQNStrategy(playGin.OneDecisionGinStrategy):
             if not reward == 0:
                 print(f"=== WARNING: non-zero reward={reward} before end-of-hand: {ginhand}")
             ginhand.nn_players[self.myPlayer.name]['total_reward'] += reward
-            if self.train:
+            if self.train_mode:
                 self.learnTurn(self.turn_states, self.turn_scores, reward, new_state, 
                                     is_first_turn=(self.turns==1))
         else:
@@ -213,7 +213,7 @@ class ginDQNStrategy(playGin.OneDecisionGinStrategy):
         else:
             dummy=-1
         ginhand.nn_players[self.myPlayer.name]['total_reward'] += reward
-        if self.train:
+        if self.train_mode:
             ## deal with our last turn
             new_state = self.agent.get_state(ginhand,self.myPlayer)
             self.learnTurn(self.turn_states, self.turn_scores, reward, new_state, isDone=True)
