@@ -97,7 +97,10 @@ fi
 
 echo "#### ${CURRENT_SCRIPT_NAME} launching scratchGin process..."
 echo CMD_ARGS="${CMD_ARGS}"
-python learningGin.py ${CMD_ARGS}
+#python learningGin.py ${CMD_ARGS}
+python  -m cProfile \
+        -o ${CONTROL_DIR}/${JOB_TAG}.${TRAIN_OR_SCRATCH}.profile.${TIMESTAMP} \
+        learningGin.py ${CMD_ARGS}
 echo "#### ${CURRENT_SCRIPT_NAME} scratchGin process completed"
  
 echo "#### ${CURRENT_SCRIPT_NAME} capturing post-training weights to ${OUTPUT_WEIGHTS}"
