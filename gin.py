@@ -44,12 +44,12 @@ class Card:
 	def __eq__(self, other):
 		if other == None:
 			return False
-		rs = self.rank
-		ss = self.suit
-		ro = other.rank
-		so = other.suit
-		t = (self.rank==other.rank and self.suit==other.suit)
-		v = (rs==ro and ss==so)
+		#rs = self.rank
+		#ss = self.suit
+		#ro = other.rank
+		#so = other.suit
+		#t = (self.rank==other.rank and self.suit==other.suit)
+		#v = (rs==ro and ss==so)
 
 		return self.rank==other.rank and self.suit==other.suit
 
