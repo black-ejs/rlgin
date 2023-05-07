@@ -102,10 +102,10 @@ fi
 
 echo "############# ${CURRENT_SCRIPT_NAME} launching training process at `date -u +%Y-%m-%d_%H-%M-%S` ..."
 echo CMD_ARGS="${CMD_ARGS}"
-# python learningGin.py ${CMD_ARGS}
-python  -m cProfile \
-        -o ${CONTROL_DIR}/${JOB_TAG}.${TRAIN_OR_SCRATCH}.profile.${TIMESTAMP} \
-        learningGin.py ${CMD_ARGS}
+python learningGin.py ${CMD_ARGS}
+#python  -m cProfile \
+#        -o ${CONTROL_DIR}/${JOB_TAG}.${TRAIN_OR_SCRATCH}.profile.${TIMESTAMP} \
+#        learningGin.py ${CMD_ARGS}
 echo "############# ${CURRENT_SCRIPT_NAME} training process completed at `date -u +%Y-%m-%d_%H-%M-%S`"
 
 echo "############# ${CURRENT_SCRIPT_NAME} capturing post-training weights to ${OUTPUT_WEIGHTS}"
