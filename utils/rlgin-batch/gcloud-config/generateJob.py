@@ -47,8 +47,8 @@ def create_script_job_with_template(template_link: str,
 
     # We can specify what resources are requested by each task.
     resources = batch_v1.ComputeResource()
-    resources.cpu_milli =  1000  # in ms per cpu-second. 1000 means the task requires 1 whole vCPU
-    resources.memory_mib = 1500 
+    resources.cpu_milli =  1500  # in ms per cpu-second. 1000 means the task requires 1 whole vCPU
+    resources.memory_mib = 2000 
     task.compute_resource = resources
 
     task.max_retry_count = 2

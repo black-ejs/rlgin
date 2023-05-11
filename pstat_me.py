@@ -13,5 +13,5 @@ if __name__ == "__main__":
 	
 	with open(output_file, 'w') as o: 
 		p = pstats.Stats(input_file, stream=o)
-		p.sort_stats(SortKey.CUMULATIVE).print_stats()
+		p.sort_stats('tottime').print_stats()
 	
