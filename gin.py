@@ -90,7 +90,7 @@ class Hand:
 		for c in self.card:
 			rez += c.__str__()
 			rez+=" "
-		res = res[:-1]
+		rez = rez[:-1]
 		return rez
 
 	def __eq__(self, other):
@@ -206,9 +206,20 @@ class Hand:
 
 		return result
 
-	def ginScore(self):
+	def deadwood(self):
 		runs, matches, cards = self.analyze()
 		score=0
+		already = []
+		for r in runs:
+			for c in r:
+				if not c in already:
+					cards.remove(c)
+					already.append(c) 			
+		for m in matches:
+			for c in m:
+				if not c in already:
+					cards.remove(c)
+					already.append(c) 			
 		for c in cards:
 			score += c.ginScore()
 		return score
@@ -483,7 +494,7 @@ class GinHand:
 		
 		if len(self.turns)>0:
 			m = self.turns[len(self.turns)-1]
-			rez += m
+			rez += str(m)
 		else:
 			rez += "awaiting first play"
 		
@@ -495,10 +506,13 @@ class GinHand:
 		return rez
 	
 	def notCurrentlyPlaying(self):
-		if self.currentlyPlaying == self.playingOne:
+		return self.otherPlaying(self.currentlyPlaying)
+
+	def otherPlaying(self,notThisOne:Playing):
+		if notThisOne == self.playingOne:
 			return self.playingTwo
 		return  self.playingOne
-
+	
 	def toString(self,which):
 		if which==1:
 			return self.toString(self.playingOne)
@@ -509,10 +523,10 @@ class GinHand:
 		
 		rez += playing.player.name
 		if hasattr(playing, "playerHand"):
-			rez += "'s hand: " + playing.playerHand
+			rez += "'s hand: " + str(playing.playerHand)
 		
 		if hasattr(self, "discard"):
-			rez += "     PILE: " + self.discard
+			rez += "     PILE: " + str(self.discard)
 		
 		return rez
 
@@ -530,17 +544,21 @@ class GinHand:
 			            - the score is zero
 		"""
 		winner = self.winner
+		h1 = self.playingOne.playerHand
+		h2 = self.playingTwo.playerHand
 		if self.winner == self.playingOne:
-			score = self.playingTwo.playerHand.ginScore() + GinHand.GIN_BONUS
+			score = (h2.deadwood() - h1.deadwood()) + GinHand.GIN_BONUS
+			winner = self.playingOne
 		elif self.winner == self.playingTwo:
-			score = self.playingOne.playerHand.ginScore() + GinHand.GIN_BONUS
+			score = (h1.deadwood() - h2.deadwood()) + GinHand.GIN_BONUS
+			winner = self.playingTwo
 		else:
-			score = self.playingTwo.playerHand.ginScore() - self.playingOne.playerHand.ginScore()
+			score = h2.deadwood() - h1.deadwood()
 			if score>0:
-				winner = self.playingTwo
-			elif score<0:
 				winner = self.playingOne
-				score = 0 - score
+			else:
+				winner = self.playingTwo
+				score = -score
 
 		return winner, score, self.lifecycle_stage==GinHand.DONE
 

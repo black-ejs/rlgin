@@ -112,7 +112,7 @@ class learningPlayer:
             return weights_to_save
 
 ## #############################################
-def display(counter_hands, hand_duration, ginhand:(gin.GinHand), log_decisions):
+def display(counter_hands:int, hand_duration:int, ginhand:(gin.GinHand), log_decisions:bool):
     winner = ginhand.winner
     if not winner == None:
         winner_name = winner.player.name
@@ -127,9 +127,9 @@ def display(counter_hands, hand_duration, ginhand:(gin.GinHand), log_decisions):
             f"{hand}" + 
             f"Turns: {len(ginhand.turns)}    " + 
             f"Time: {hand_duration*1000:3.2f}   " + 
-            f"Score: {ginhand.playingOne.player.name} {ginhand.playingOne.playerHand.ginScore()}  " +
-                   f"{ginhand.playingTwo.player.name} {ginhand.playingTwo.playerHand.ginScore()}  " +  
-                   f"net {ginhand.ginScore()[1]}   " +  
+            f"Scoring: {ginhand.playingOne.player.name} {ginhand.playingOne.playerHand.deadwood()}  " +
+                   f"{ginhand.playingTwo.player.name} {ginhand.playingTwo.playerHand.deadwood()}  " +  
+                   f"net2win {gin_score}   " +  
             "")
     if len(ginhand.nn_players)>0:
         reward_str = "Reward: "

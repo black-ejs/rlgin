@@ -5,7 +5,7 @@ def define_parameters():
     timestamp = str(datetime.datetime.now().strftime("%Y%m%d%H%M%S"))
     params = dict()
 
-    params['episodes'] = 5                # gin hands
+    params['episodes'] = 50                # gin hands
     params['test_runs'] = 5
 
     epsilon_decay_percent = 3   # 3% of hands
@@ -39,7 +39,8 @@ def define_parameters():
     params['player2']['nn']['test'] = True
     params['player2']['nn']['pretest'] = params['player2']['nn']['train']
     params['player2']['nn']["load_weights"] = True   # False if starting from scratch, True if re-training 
-    params['player2']['nn']['weights_path'] = "weights/weights." + params['player2']['strategy']  + ".h5"
+    #params['player2']['nn']['weights_path'] = "weights/weights." + params['player2']['strategy']  + ".h5"
+    params['player2']['nn']['weights_path'] = "../LRB/train/a3.6/scratchGin_LRB3.3.6.2023-05-05_14-09-28.h5"
     params['player2']['nn']['use_cheat_rewards'] = False
 
     # game structure
@@ -49,7 +50,7 @@ def define_parameters():
     # logging 
     params['timestamp'] = timestamp
     # params['log_path'] = "logs/learningGin_log." + timestamp + ".txt"
-    params['log_path'] = ""
+    params['log_path'] = "logs/ttt"
     params["display"] = True
     params["log_decisions"] = False
 

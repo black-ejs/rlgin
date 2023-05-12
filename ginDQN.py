@@ -35,20 +35,51 @@ class ginDQN(DQNAgent):
     ## #####################################################
     ## ###############################################################
 
-    def set_reward(self, ginhand, player):
+    def set_reward(self, ginhand:gin.GinHand, player):
         """
         Return the reward.
         """
         self.reward = 0
-        if ginhand.playing[player.name].playerHand.wins():
-            # I won!
-            self.reward = self.win_reward
-        elif ginhand.currentlyPlaying.playerHand.wins():
-            # I lost!
-            self.reward = self.loss_reward
-        elif ginhand.lifecycle_stage == gin.GinHand.DONE:
-            # no winner - not helping
-            self.reward = self.no_winner_reward
+
+        hand_winner, winner_score, is_done = ginhand.ginScore()
+
+        if is_done:
+            """
+            if ginhand.winner==None:
+                ginHand_winner="None"
+            else:
+                ginHand_winner=ginhand.winner.player.name
+            playing = ginhand.playing[player.name]
+            otherPlaying = ginhand.otherPlaying(playing)
+            print(f"setting reward for {player.name} when hand is done: ")
+            print(f"ginhand.winner={ginHand_winner}")
+            print(f"{player.name}'s hand={playing.playerHand}")
+            print(f"{player.name}'s deadwood={playing.playerHand.deadwood()}")
+            print(f"{otherPlaying.player.name}'s hand={otherPlaying.playerHand}")
+            print(f"{otherPlaying.player.name}'s deadwood={otherPlaying.playerHand.deadwood()}")
+            print(f"ginhand.ginScore() returned: hand_winner={hand_winner.player.name}, winner_score={winner_score}, is_done={is_done} ")
+            if not ((ginhand.winner==None) 
+                    or (hand_winner.player.name==ginHand_winner)):
+                print(f"## ## ## winner mismatch ## ## ##")
+            """    
+            
+            if ginhand.playing[player.name] == hand_winner:
+                # I won!
+                #self.reward = self.win_reward
+                self.reward = winner_score
+            elif ginhand.currentlyPlaying.playerHand == hand_winner:
+                # I lost!
+                # self.reward = self.loss_reward
+                self.reward = -winner_score
+            else:
+                # no winner - not helping
+                #self.reward = self.no_winner_reward
+                self.reward = -ginhand.playing[player.name].playerHand.deadwood()
+
+            # normalize the reward so that is is between 0 and 1
+            # the highest possible score is 10Xgin.
+            denom=10*gin.HAND_SIZE+gin.GinHand.GIN_BONUS
+            self.reward = round(self.reward*(1/denom),4)
 
         if (('use_cheat_rewards' in self.params)
                 and (self.params['use_cheat_rewards'])):
@@ -206,15 +237,16 @@ class ginDQNStrategy(playGin.OneDecisionGinStrategy):
         if self.myPlayer == None:
             # the other player was dealt a winning hand
             # nothing to learn here, except perhaps philosophically
+            # since we didn't make any decisions
             return
         reward = self.agent.set_reward(ginhand,self.myPlayer)
-        if reward == 0:
-            print(f"=== WARNING: zero reward={reward} at end-of-hand: {ginhand}")
-        else:
-            dummy=-1
+        #if reward == 0:
+        #    print(f"=== WARNING: zero reward={reward} at end-of-hand: {ginhand}")
+        #else:
+        #    dummy=-1
         ginhand.nn_players[self.myPlayer.name]['total_reward'] += reward
         if self.train_mode:
-            ## deal with our last turn
+            ## deal with our final turn
             new_state = self.agent.get_state(ginhand,self.myPlayer)
             self.learnTurn(self.turn_states, self.turn_scores, reward, new_state, isDone=True)
         if ginhand.currentlyPlaying.player.name == self.myPlayer.name: 

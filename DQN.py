@@ -20,7 +20,7 @@ def argmax(l:list):
     return index
 
 class DQNAgent(torch.nn.Module):
-    MAX_EFFECTIVE_DISCOUNT = 0.009
+    MAX_EFFECTIVE_DISCOUNT = 0.01
 
     def __init__(self, params):
         super().__init__()
@@ -105,7 +105,7 @@ class DQNAgent(torch.nn.Module):
     def distribute_reward_discount(self, memory, undiscounted_reward:float):
         discount = self.gamma
         memory_index = -2
-        while discount>DQNAgent.MAX_EFFECTIVE_DISCOUNT and memory_index>0-len(memory): 
+        while discount>=DQNAgent.MAX_EFFECTIVE_DISCOUNT and memory_index>0-len(memory): 
             effective_reward = undiscounted_reward*discount
             self.update_reward(memory, memory_index, effective_reward)
             memory_index-=1
