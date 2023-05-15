@@ -23,11 +23,11 @@ do
 
 	# this will find the currently-being-worked-on guys
 	~/gcmd.sh \
-	"DD=\`ps -ef | grep learningGin | grep -v grep | awk \"{print \\\\\\\$13}\"\`; \
+	"set -x; DD=\`ps -ef | grep learningGin | grep -v grep | awk \"{print \\\\\\\$13}\"\`; \
 	for logfile in \${DD}; \
 	do \
 		echo \${logfile} @${HOST}; \
-		egrep -v ' turn | bench ' \${logfile}; \
+		egrep -v ' turn | bench ' \${logfile} ; \
 	done"  \
 		${HOST} >> "${OUTPUT1}"
 
@@ -35,9 +35,10 @@ do
 	if [[ "${ALREADY_DONE}"} == *" ${LEARNDIR} "* ]]
 	then
 		# already processed this guy
-		# echo "skipping ${LEARNDIR} @${HOST}"
+		echo "skipping completed for ${LEARNDIR} @${HOST}"
 		dummy=dummy
 	else
+		echo "checking completed for ${LEARNDIR} @${HOST}"
 		ALREADY_DONE="${ALREADY_DONE} ${LEARNDIR} "	
 		~/gcmd.sh \
 		"DD=\`grep -c \" took \" ${LOGS}/* | grep -v \":0\$\" | cut -f1 -d: \`; \
@@ -50,6 +51,9 @@ do
 	fi
 done
 
+# #####################################
+# #####################################
+
 cat "${OUTPUT1}" | awk '	
 	/Game/ { 
 		hand_count=$2; 
@@ -57,20 +61,28 @@ cat "${OUTPUT1}" | awk '
 		total_time=total_time+hand_time; } 
 	/ing[.][.]/ { 
 		phase=$0;} 
-	/r.*[34]-vm|r.*plate-| [@]rb-job-.*/ { 
+	/[@]rb-/ {
 		if (total_time>0 && hands_done==0 && hand_count>0) { 
 			avg=int(total_time/hand_count); 
 			tdo=int((5000-hand_count)*avg/36000)/100;  
 			too=""; 
 			if (tdo>0) {
 				too="" tdo " hrs to turnover";} 
-			print hand_count " hands " int(total_time/hand_count) "ms avg  " too " " lpath;} 
+			print hand_count " hands " int(total_time/hand_count) "ms avg  " too " " lpath;}
 		ppath=substr($0,34); 
 		print ppath; 
 		lpath=substr(ppath,index(ppath,"logs/")+5); 
-		hands_done = 0; total_time=0;} 
+		hands_done = 0; 
+		total_time=0;} 
+	/total_reward/{
+		player_name=substr($2,4,length($2)-5)
+		reward=substr($3,1,length($3)-2)
+		print "total_reward=" player_name " " reward " " phase
+		} 
 	/winMap/{ 
-		if (hand_count>0 && hands_done ==0) {print hand_count " hands  " int(total_time/hand_count) " ms avg";} 
+		if (hand_count>0 && hands_done ==0) {
+			print hand_count " hands  " int(total_time/hand_count) " ms avg";
+		} 
 		print $0 " " phase; 
 		hands_done = 1} 
 	END { 
@@ -105,10 +117,13 @@ cat "${FINAL_OUTPUT}" |  awk '
 			ptrain=train;
 		} else { 
 			twins = wins;
-			ii=ii+1; 
 			delta=delta+twins-train; 
 			base=base+train; 
-			print ii " train:" train " test:" twins " gen-gain:" generation_gain "  id:" id; 
+			if (id != prev_id) {
+				ii=ii+1; 
+				print ii " train:" train " test:" twins " gen-gain:" generation_gain "  id:" id; 
+			}
+			prev_id=id;
 			if (twins>4) { 
 				iii=iii+1; 
 				deltai=deltai+twins-train; 
@@ -118,6 +133,10 @@ cat "${FINAL_OUTPUT}" |  awk '
 		} 
 	} 
 	/logs\/.*[0-9]*[.][0-9]*[.][0-9]*[.]2023-.*log/ { 
+		if (id != prev_id) {
+			ii=ii+1; 
+			print ii " train:" train " test:" twins " gen-gain:" generation_gain "  id:" id; 
+		}
 		log_name_regex="[0-9]*[.][0-9]*[.][0-9]*[.]2023-"
 		idpos = match($0,log_name_regex)
 		front=substr($0,1,idpos-1)
@@ -134,6 +153,7 @@ cat "${FINAL_OUTPUT}" |  awk '
 		prev_model = model;  
 	} 
 	END{ 
+		print ii " train:" train " test:" twins " gen-gain:" generation_gain "  id:" id; 
 		if (ii >0 && igen>0 && base>0 && basegen >0) {
 			print "runs=" ii "  delta=" delta  \
 				"  avg=" delta/ii " on " base/ii " =" (((delta+base)/base)-1)*100"%" \
@@ -146,4 +166,5 @@ cat "${FINAL_OUTPUT}" |  awk '
 		else {print "ii=" ii " igen=" igen " base=" base " basegen=" basegen}
 	} 
 	'
+
 
