@@ -127,7 +127,7 @@ class Tgt_Processor:
             # print(line[:-1])
         elif line.find("Game")>-1:
             self.hand_count=int(toks[1])
-            if toks[3]=="nobody":
+            if toks[3]=="nobody":  
                 time=toks[7]
             else:
                 time=toks[12]
