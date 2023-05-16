@@ -3,7 +3,6 @@
 ## this script is usually invoked with "nohup" or the equivalent 
 #set -x
 
-
 CURRENT_SCRIPT_NAME="`basename ${0}`"
 CURRENT_SCRIPT_SOURCE_DIR="`dirname ${0}`"
 CURRENT_SCRIPT_ORIGINAL_EXECUTION_DIR=`pwd`
@@ -12,7 +11,9 @@ TIMESTAMP=`date -u +%Y-%m-%d_%H-%M-%S`
 echo "############# ${CURRENT_SCRIPT_NAME} #################"
 echo RLGIN TRAINING session started at "${TIMESTAMP}"
 
+
 CONTROL_DIR=${1:-$PWD}
+
 MODEL_NICKNAME=`basename ${CONTROL_DIR}`
 RUN_DIR=${RLGIN_BATCH_LOCAL_REPO}
 PARAMS_SOURCE_ROOT=${CONTROL_DIR}
@@ -49,7 +50,7 @@ echo RUN_DIR=${RUN_DIR}
 echo MODEL_NICKNAME=${MODEL_NICKNAME}
 echo NAME_SCENARIO=${NAME_SCENARIO}
 echo LOGFILE=${LOGFILE}
-echo PARAMS_SOURCE_ROOT={$PARAMS_SOURCE_ROOT}
+echo PARAMS_SOURCE_ROOT=${PARAMS_SOURCE_ROOT}
 echo INPUT_GENERATION_NUMBER=${INPUT_GENERATION_NUMBER}
 echo OUTPUT_GENERATION_NUMBER=${OUTPUT_GENERATION_NUMBER}
 echo INPUT_WEIGHTS=${INPUT_WEIGHTS}
@@ -59,13 +60,17 @@ echo "-----------------------------"
 echo "############# ${CURRENT_SCRIPT_NAME} copying input weights...."
 cp "${INPUT_WEIGHTS}" "${PROCESS_WEIGHTS_PATH}"
 
-echo "############# ${CURRENT_SCRIPT_NAME} getting "${MODEL_NICKNAME}"-specific params...."
+echo "#### ${CURRENT_SCRIPT_NAME} getting ${MODEL_NICKNAME}-specific params...."
 mkdir -p ${RUN_DIR}/params
 PARAMS_SOURCE=${PARAMS_SOURCE_ROOT}/ginDQNParameters.py.${MODEL_NICKNAME}
 FIXUP=`echo ${MODEL_NICKNAME} | awk '{p=$0; gsub("[.]","_",p); print p;}'`
 PARAMS_MODULE=params/ginDQNParameters_${FIXUP}
 PARAMS_TARGET=${RUN_DIR}/${PARAMS_MODULE}.py
+echo cp ${PARAMS_SOURCE} ${PARAMS_TARGET} 
 cp ${PARAMS_SOURCE} ${PARAMS_TARGET} 
+
+
+
 
 echo "#### ${CURRENT_SCRIPT_NAME} checking python..."
 which python
@@ -81,6 +86,7 @@ fi
 conda activate
 
 echo 
+
 
 CMD_ARGS="--name_scenario ${NAME_SCENARIO} \
             --logfile ${LOGFILE}  \
@@ -100,15 +106,15 @@ then
     CMD_ARGS="${CMD_ARGS}""  --gamma_2 ${RLGIN_BATCH_JP_GAMMA}"
 fi
 
-echo "############# ${CURRENT_SCRIPT_NAME} launching training process at `date -u +%Y-%m-%d_%H-%M-%S` ..."
+echo "#### ${CURRENT_SCRIPT_NAME} launching training process at `date -u +%Y-%m-%d_%H-%M-%S` ... ####"
 echo CMD_ARGS="${CMD_ARGS}"
 python learningGin.py ${CMD_ARGS}
 #python  -m cProfile \
 #        -o ${CONTROL_DIR}/${JOB_TAG}.${TRAIN_OR_SCRATCH}.profile.${TIMESTAMP} \
 #        learningGin.py ${CMD_ARGS}
-echo "############# ${CURRENT_SCRIPT_NAME} training process completed at `date -u +%Y-%m-%d_%H-%M-%S`"
+echo "#### ${CURRENT_SCRIPT_NAME} training process completed at `date -u +%Y-%m-%d_%H-%M-%S` ####"
 
-echo "############# ${CURRENT_SCRIPT_NAME} capturing post-training weights to ${OUTPUT_WEIGHTS}"
+echo "#### ${CURRENT_SCRIPT_NAME} capturing post-training weights to ${OUTPUT_WEIGHTS}"
 cp ${PROCESS_WEIGHTS_PATH}.post_training "${OUTPUT_WEIGHTS}"
 
 echo "############# ${CURRENT_SCRIPT_NAME} comparing output and input weights..."

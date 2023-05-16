@@ -95,6 +95,8 @@ class learningPlayer:
             print(f"weights loaded from {ginDQN.weights_path} for player '{self.name}' with strategy '{self.strategy}'")
             if params['train']:
                 self.pretrain_weights = copy.deepcopy(ginDQN.state_dict())
+        elif params['load_weights']:
+            print(f"***** WARING: weights not loaded from {params['weights_path']} for player '{self.name}' with strategy '{self.strategy}', what happened?")            
 
         return ginDQN
 
@@ -237,6 +239,7 @@ def run(params):
     for p in players:
         if p.is_nn_player():
             nn_players.append(p)
+            p.get_strategy()
             p.total_reward = 0
 
     winMap = {player1.name:0, player2.name:0, NO_WIN_NAME:0}
@@ -314,16 +317,23 @@ def run(params):
     total_reward = []
     for p in nn_players:
         if p.ginDQN.params['train']:
+            if os.path.exists(p.ginDQN.params['weights_path']):
                 p.ginDQN.params['weights_path'] += ".post_training"
-                posttrain_weights = p.save_weights()
-                if not (p.pretrain_weights==None or posttrain_weights==None):
-                    count_diffs = ginDQN.ginDQNStrategy.compare_weights(p.pretrain_weights, posttrain_weights)
-                    if count_diffs == 0:
-                        print(f"** WARNING: {p.name}'s weights appear unchanged after training **")
+            posttrain_weights = p.save_weights()
+            if not (p.pretrain_weights==None or posttrain_weights==None):
+                count_diffs = ginDQN.ginDQNStrategy.compare_weights(p.pretrain_weights, posttrain_weights)
+                if count_diffs == 0:
+                    print(f"** WARNING: {p.name}'s weights appear unchanged after training **")
         total_reward.append((p.name,p.total_reward))
 
-    mean_durations, stdev_durations = get_mean_stdev(durations)
-    mean_turns, stdev_turns = get_mean_stdev(turns_in_hand)
+    if len(durations)>0:
+        mean_durations, stdev_durations = get_mean_stdev(durations)
+    else:
+         mean_durations, stdev_durations = 0,0
+    if len(turns_in_hand)>0:
+        mean_turns, stdev_turns = get_mean_stdev(turns_in_hand)
+    else:
+        mean_turns, stdev_turns = 0,0
 
     stats.put("start_time", startTime)
     stats.put("end_time", endTime)
@@ -344,6 +354,25 @@ def run(params):
 def run_pretest(params):
     ## pretest
     return run_test(params, True)
+
+## #############################################
+def run_scratch(params):
+    scratch_params = copy.deepcopy(params)
+    do_scratch = False
+    for p in ('player1', 'player2'):
+        if 'nn' in scratch_params[p]:
+            nnp = scratch_params[p]['nn']
+            nnp['pretest']=False
+            nnp['test']=False
+            nnp['train']=True
+            nnp['load_weights']=False
+            do_scratch = True
+
+    if do_scratch:
+        scratch_params['episodes']=0
+        print("Scratching...")
+        stats = run(scratch_params) 
+        print_stats(stats)
 
 ## #############################################
 def run_train(params):
@@ -455,6 +484,7 @@ if __name__ == '__main__':
     parser.add_argument("--gamma_2", nargs='?', type=float, default=None)
     parser.add_argument("--generation", nargs='?', type=int, default=-1)
     parser.add_argument("--max_memory", nargs='?', type=int, default=-1)
+    parser.add_argument("--scratch", nargs='?', type=int, default=argparse.SUPPRESS)
     args = parser.parse_args()
     print("learningGin: args ", args)
 
@@ -491,6 +521,11 @@ if __name__ == '__main__':
     if args.max_memory != -1:
         params["max_python_memory"] = args.max_memory
 
+    if hasattr(args,'scratch'):
+        params['scratch'] = True
+    elif not 'scratch' in params:
+        params['scratch'] = False
+
     old_stdout = None
     old_stderr = None
     log = None
@@ -519,6 +554,9 @@ if __name__ == '__main__':
             new_mpm = resource.getrlimit(resource.RLIMIT_AS)
             print(f" old={old_mpm} rez={rez_mpm} new={new_mpm}")
             print_psinfo(" post: ")
+
+        if params['scratch']:
+            run_scratch(params)
 
         run_train_test(params)
 

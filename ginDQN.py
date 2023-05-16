@@ -260,7 +260,7 @@ class ginDQNStrategy(playGin.OneDecisionGinStrategy):
         self.agent.remember_episode()
         
     ## #############################################
-    def compare_weights(pretrain_weights, posttrain_weights):
+    def compare_weights(pretrain_weights, posttrain_weights, verbose=False):
         count_diffs = 0
         for p in pretrain_weights:
             try:
@@ -268,12 +268,15 @@ class ginDQNStrategy(playGin.OneDecisionGinStrategy):
                 post = posttrain_weights[p]
                 if not (torch.equal(pre, post)):
                     count_diffs += 1
-                    print(f"unequal state_dict: ")
-                    print(f"(pre) {p}: {pre}")
-                    print(f"(post){p}: {post}")
+                    if verbose:
+                        print(f"unequal state_dict: ")
+                        print(f"(pre) {p}: {pre}")
+                        print(f"(post){p}: {post}")
             except RuntimeError as err:
-                print(f"error processing element {p}: {err}")
-                print 
+                if verbose:
+                    print(f"error processing element {p}: {err}")
+                    print 
+                break
             
         return count_diffs
             

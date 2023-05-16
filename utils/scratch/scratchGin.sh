@@ -7,18 +7,19 @@ CURRENT_SCRIPT_NAME="`basename ${0}`"
 CURRENT_SCRIPT_SOURCE_DIR="`dirname ${0}`"
 CURRENT_SCRIPT_ORIGINAL_EXECUTION_DIR=`pwd`
 
+TIMESTAMP=`date -u +%Y-%m-%d_%H-%M-%S` 
+echo "############# ${CURRENT_SCRIPT_NAME} #################"
+echo RLGIN NEW-MODEL scratch session started at "${TIMESTAMP}" 
+ 
 SCRATCH_ID=${1:-0}  
 CONTROL_DIR=${2:-$PWD}
 
-TIMESTAMP=`date -u +%Y-%m-%d_%H-%M-%S` 
-echo "#############   ${CURRENT_SCRIPT_NAME}  ####################"
-echo RLGIN NEW-MODEL scratch session started at "${TIMESTAMP}" 
- 
 MODEL_NICKNAME=`basename ${CONTROL_DIR}`
 RUN_DIR=${RLGIN_BATCH_LOCAL_REPO}
 PARAMS_SOURCE_ROOT=${CONTROL_DIR}
 WEIGHTS_DIR=${CONTROL_DIR}/weights
 LOGS_DIR=${CONTROL_DIR}/logs
+
  
 echo "############# ${CURRENT_SCRIPT_NAME} changing directories to ${RUN_DIR}...."
 if [[ -d ${RUN_DIR} ]]
@@ -32,6 +33,11 @@ else
     exit 9
 fi
 
+
+
+
+
+
 echo "#### ${CURRENT_SCRIPT_NAME} setting up logging and weights management...."
 NAME_SCENARIO="scratchGin_${MODEL_NICKNAME}.${SCRATCH_ID}" 
 LOGFILE="${LOGS_DIR}/${NAME_SCENARIO}.${TIMESTAMP}.log" 
@@ -43,12 +49,16 @@ echo CONTROL_DIR=${CONTROL_DIR}
 echo RUN_DIR=${RUN_DIR}
 echo MODEL_NICKNAME=${MODEL_NICKNAME}
 echo NAME_SCENARIO=${NAME_SCENARIO} 
-echo CONTROL_DIR=${CONTROL_DIR}
 echo LOGFILE=${LOGFILE}
 echo PARAMS_SOURCE_ROOT=${PARAMS_SOURCE_ROOT}
 echo INPUT_WEIGHTS=${INPUT_WEIGHTS}
 echo OUTPUT_WEIGHTS=${OUTPUT_WEIGHTS} 
 echo "-----------------------------" 
+
+
+
+
+
   
 echo "#### ${CURRENT_SCRIPT_NAME} getting ${MODEL_NICKNAME}-specific params...."
 mkdir -p ${RUN_DIR}/params
@@ -81,7 +91,8 @@ WEIGHTS_PATH_2=${WEIGHTS_DIR}/${NAME_SCENARIO}.${TIMESTAMP}.h5
 CMD_ARGS="--name_scenario ${NAME_SCENARIO} \
             --logfile ${LOGFILE}  \
         	--params_module ${PARAMS_MODULE} \
-            --weights_path_2 ${WEIGHTS_PATH_2}"
+            --weights_path_2 ${WEIGHTS_PATH_2} \
+            --scratch"
 
 echo "############# ${CURRENT_SCRIPT_NAME} checking for parameter overrides...."
 echo RLGIN_BATCH_JP_LEARNING_RATE=${RLGIN_BATCH_JP_LEARNING_RATE}
@@ -95,16 +106,19 @@ then
     CMD_ARGS="${CMD_ARGS}""  --gamma_2 ${RLGIN_BATCH_JP_GAMMA}"
 fi
 
-echo "#### ${CURRENT_SCRIPT_NAME} launching scratchGin process..."
+echo "#### ${CURRENT_SCRIPT_NAME} launching scrathGin process at `date -u +%Y-%m-%d_%H-%M-%S` ... ####"
 echo CMD_ARGS="${CMD_ARGS}"
-python learningGin.py ${CMD_ARGS}
+python learningGin.py ${CMD_ARGS} 
 #python  -m cProfile \
 #        -o ${CONTROL_DIR}/${JOB_TAG}.${TRAIN_OR_SCRATCH}.profile.${TIMESTAMP} \
 #        learningGin.py ${CMD_ARGS}
-echo "#### ${CURRENT_SCRIPT_NAME} scratchGin process completed"
+echo "#### ${CURRENT_SCRIPT_NAME} scratchGin process completed at `date -u +%Y-%m-%d_%H-%M-%S` ####"
  
 echo "#### ${CURRENT_SCRIPT_NAME} capturing post-training weights to ${OUTPUT_WEIGHTS}"
 [ -e ${WEIGHTS_PATH_2}.post_training ] && mv ${WEIGHTS_PATH_2}.post_training ${OUTPUT_WEIGHTS} 
+
+
+
 
 cd ${CURRENT_SCRIPT_ORIGINAL_EXECUTION_DIR}
 ENDTIME=`date -u +%Y-%m-%d_%H-%M-%S` 
