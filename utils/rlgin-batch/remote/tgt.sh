@@ -23,7 +23,7 @@ do
 
 	# this will find the currently-being-worked-on guys
 	~/gcmd.sh \
-	"set -x; DD=\`ps -ef | grep learningGin | grep -v grep | awk \"{print \\\\\\\$13}\"\`; \
+	"DD=\`ps -ef | grep learningGin | grep -v grep | awk \"{print \\\\\\\$13}\"\`; \
 	for logfile in \${DD}; \
 	do \
 		echo \${logfile} @${HOST}; \
