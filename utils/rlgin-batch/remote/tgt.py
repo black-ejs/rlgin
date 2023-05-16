@@ -14,8 +14,12 @@ class Tgt_Processor:
         rewards=""
         wins=""
         for phase in self.rewards:
+            if phase == "scratch":
+                continue
             rewards += f"{phase}:{mean(self.rewards[phase]):.3f}/"
         for phase in self.wins:
+            if phase == "scratch":
+                continue
             wins += f"{phase}:{mean(self.wins[phase]):3.1f}/"
 
         avg_time=self.tot_time/self.hand_count;
