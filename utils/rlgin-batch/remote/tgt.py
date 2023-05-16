@@ -37,7 +37,7 @@ class Tgt_Processor:
 
         avg_time=self.tot_time/self.hand_count;
 
-        if len(wins) > 0:
+        if 'train' in self.rewards:
             outline = f"{self.run_id.ljust(14)} rewards={rewards[:-1]}, wins={wins[:-1]}, score:{self.score():3.2f}"
         elif self.hand_count < 5000:
             secs_to_go = int((5000-self.hand_count) * (avg_time/1000))
