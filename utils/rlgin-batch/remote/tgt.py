@@ -7,6 +7,19 @@ class Tgt_Processor:
     ID_PATTERN="[A-Za-z]+[0-9]+[.][0-9]+[.][0-9]"
     ID_LOCATE_PATTERN="Gin_"+ID_PATTERN+"[.]202[3456789]"
 
+    def output_series_score(self, nick:str):
+        if len(nick)<1:
+            return
+        
+        outline = f"{nick} overall_score={self.series_total_score:.3f}  avg_score={self.series_total_score/self.series_score_count:.3f}"
+        print(outline)
+        
+        with open(self.output_file, 'w') as o: 
+            print(outline,file=o)
+
+        self.series_total_score = 0
+        self.series_score_count = 0
+
     def output(self):
         if self.hand_count == 0:
             return
@@ -25,15 +38,17 @@ class Tgt_Processor:
         avg_time=self.tot_time/self.hand_count;
 
         if len(wins) > 0:
-            outline = f"{self.series_id.ljust(14)} rewards={rewards[:-1]}, wins={wins[:-1]}, score:{self.score():3.2f}"
+            outline = f"{self.run_id.ljust(14)} rewards={rewards[:-1]}, wins={wins[:-1]}, score:{self.score():3.2f}"
         elif self.hand_count < 5000:
             secs_to_go = int((5000-self.hand_count) * (avg_time/1000))
             hrs_to_go = secs_to_go/3600
-            outline =  (f"{self.series_id.ljust(14)} {self.hand_count} hands, avg time={avg_time:6.2f}, " +
+            outline =  (f"{self.run_id.ljust(14)} {self.hand_count} hands, avg time={avg_time:6.2f}, " +
                         f"{secs_to_go}s/{hrs_to_go:.2f}h to turnover @{self.host} ")
         print(outline)
-        
-        with open(output_file, 'w') as o: 
+        self.series_total_score += self.score()
+        self.series_score_count += 1
+
+        with open(self.output_file, 'w') as o: 
             print(outline,file=o)
 
     def score(self):
@@ -52,19 +67,28 @@ class Tgt_Processor:
         self.logfile=""
         self.host =""
         self.phase=""
+        self.run_id=""
         self.wins={}
         self.rewards={}
 
     def process(self, input_file:str, output_file:str):
+
+        self.output_file = output_file
+        self.series_nick = ""
+        self.series_total_score = 0
+        self.series_score_count = 0
         self.new_logfile()
+
         with open(input_file, 'r') as tgt_in: 
             lines = tgt_in.readlines()
+
         for line in lines:
             self.process_line(line)
 
-        # final logfile
+        # final ourpur
         if self.tot_time>0:
             self.output()
+            self.output_series_score(self.series_nick)
 
     def process_line(self,line:str):
         toks=line.split()
@@ -75,14 +99,22 @@ class Tgt_Processor:
             pos=line.find("@rb-")
             self.logfile = line[:pos-1:]
             self.host = line[pos+1:]
-            self.series_id = self.logfile
+            self.run_id = self.logfile
             match = re.search(self.ID_PATTERN,line)
             if not match == None:
                 end=match.span()[1]
                 while line[end].isdigit():
                     end+=1
-                self.series_id = line[match.span()[0]:end]
-            # print(f"{self.series_id}") 
+                self.run_id = line[match.span()[0]:end]
+            prev_nick=self.series_nick
+            if "scratchGin" in self.logfile:
+                self.series_nick = self.run_id[:self.run_id.find(".")]
+            else:
+                self.series_nick = self.run_id[:-(self.run_id[::-1].find("."))-1]
+            if not prev_nick == self.series_nick:
+                self.output_series_score(prev_nick)
+            # print(f"{self.series_nick}") 
+            # print(f"{self.run_id}") 
             # print(line[:-1])
         elif line.find("Game")>-1:
             self.hand_count=int(toks[1])
@@ -109,7 +141,7 @@ if __name__ == "__main__":
     if len(sys.argv)>1:
         input_file = sys.argv[1]
     else:
-        input_file = "/Users/edward/tgt.sh.out.1"
+        input_file = "/Users/edward/tgt2.sh.out.1"
     output_file = f"{input_file}.x"
     if len(sys.argv)>2:
         output_file = sys.argv[2]
