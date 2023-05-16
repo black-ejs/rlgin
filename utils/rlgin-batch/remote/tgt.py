@@ -134,6 +134,7 @@ class Tgt_Processor:
             self.tot_time += float(time)
         elif line.find("ing...")>-1:
             self.phase=toks[0][:-6].lower()
+            self.tot_time=0
         elif line.find("total_reward")>-1:
             reward=toks[2][:-2]
             if not self.phase in self.rewards:
