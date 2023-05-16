@@ -54,9 +54,11 @@ class Tgt_Processor:
     def score(self):
         if 'pretest' in self.rewards:
             base = mean(self.rewards['pretest'])
-        else:
+        elif 'train' in self.rewards:
             base = mean(self.rewards['train'])
-
+        else:
+            return 0
+        
         score = mean(self.rewards['test']) - base
 
         return score
