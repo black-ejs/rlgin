@@ -52,6 +52,9 @@ class Tgt_Processor:
             print(outline,file=o)
 
     def score(self):
+        if not 'test' in self.rewards:
+            return 0
+
         if 'pretest' in self.rewards:
             base = mean(self.rewards['pretest'])
         elif 'train' in self.rewards:
