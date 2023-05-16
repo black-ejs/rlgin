@@ -7,7 +7,6 @@ CURRENT_SCRIPT_NAME="`basename ${0}`"
 CURRENT_SCRIPT_SOURCE_DIR="`dirname ${0}`"
 
 zp=`${CURRENT_SCRIPT_SOURCE_DIR}/host2zone.sh ${HOST}`
-echo zp is $zp
 zone=`echo $zp | cut -f1 "-d "`
 project=`echo $zp | cut -f2 "-d "`
 

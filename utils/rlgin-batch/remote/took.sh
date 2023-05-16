@@ -1,4 +1,4 @@
-# set -x
+#set -x
 
 CURRENT_SCRIPT_NAME="`basename ${0}`"
 CURRENT_SCRIPT_DIR="`dirname ${0}`"
@@ -9,11 +9,12 @@ rm ${ALL_OUTPUT_FILES}
 
 OUTPUT1="${CURRENT_SCRIPT_DIR}"/"${CURRENT_SCRIPT_NAME}".out.1
 
-TRAINING_GROUND_TARGETS=`~/training_ground_targets.sh`
+TRAINING_GROUND_TARGETS=${1:-~/training_ground_targets.txt}
+
 REMOTE_USERID=edward_schwarz_tonigooddog_com
 ALREADY_DONE=""
 
-for PROJECT in ${TRAINING_GROUND_TARGETS}
+for PROJECT in `grep -v "^[#]" ${TRAINING_GROUND_TARGETS}`
 do
     LEARNDIR=`echo "${PROJECT}" | cut -d@ -f1`
     HOST=`echo "${PROJECT}" | cut -d@ -f2`
