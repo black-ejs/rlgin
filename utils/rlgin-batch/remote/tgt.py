@@ -1,5 +1,6 @@
 import re
 import sys
+import os
 from statistics import mean
 
 
@@ -14,7 +15,7 @@ class Tgt_Processor:
         outline = f"{nick} overall_score={self.series_total_score:.3f}  avg_score={self.series_total_score/self.series_score_count:.3f}"
         print(outline)
         
-        with open(self.output_file, 'w') as o: 
+        with open(self.output_file, 'a') as o: 
             print(outline,file=o)
 
         self.series_total_score = 0
@@ -43,13 +44,13 @@ class Tgt_Processor:
             secs_to_go = int((5000-self.hand_count) * (avg_time/1000))
             hrs_to_go = secs_to_go/3600
             outline =  (f"{self.run_id.ljust(14)} {self.hand_count} hands, avg time={avg_time:6.2f}, " +
-                        f"{secs_to_go}s/{hrs_to_go:.2f}h to turnover @{self.host} ")
+                        f"{secs_to_go}s/{hrs_to_go:.2f}h to turnover @{self.host}")
         print(outline)
+        with open(self.output_file, 'a') as o: 
+            print(outline,file=o)
+
         self.series_total_score += self.score()
         self.series_score_count += 1
-
-        with open(self.output_file, 'w') as o: 
-            print(outline,file=o)
 
     def score(self):
         if not 'test' in self.rewards:
@@ -84,6 +85,9 @@ class Tgt_Processor:
         self.series_score_count = 0
         self.new_logfile()
 
+        if os.path.exists(self.output_file):
+            os.remove(self.output_file)
+
         with open(input_file, 'r') as tgt_in: 
             lines = tgt_in.readlines()
 
@@ -103,7 +107,7 @@ class Tgt_Processor:
             self.new_logfile()
             pos=line.find("@rb-")
             self.logfile = line[:pos-1:]
-            self.host = line[pos+1:]
+            self.host = line[pos+1:-1]
             self.run_id = self.logfile
             match = re.search(self.ID_PATTERN,line)
             if not match == None:
