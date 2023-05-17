@@ -244,7 +244,6 @@ if __name__ == '__main__':
                     old_stderr = sys.stderr
                     sys.stderr = log
 
-
         run_probe(params)
 
     finally:
