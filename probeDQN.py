@@ -231,7 +231,7 @@ if __name__ == '__main__':
     parser.add_argument("--params_module", nargs='?', type=str, default="logs/ginDQNParameters_probe")
     parser.add_argument("--logfile", nargs='?', type=str, default=None)
     parser.add_argument("--weights_path_2", nargs='?', type=str, default="weights/BLGlrc2.12_weights.h5.1")
-    parser.add_argument("--heatmap_file", nargs='?', type=str, default="doo-doo.html")
+    parser.add_argument("--heatmap_file", nargs='?', type=str, default=None)
     args = parser.parse_args()
     print("learningGin: args ", args)
 
@@ -258,6 +258,9 @@ if __name__ == '__main__':
                     param_val=os.path.expanduser(param_val)
                 if 'nn' in params[player_key]:
                     params[player_key]['nn'][params_key]  = param_val
+                    if args.heatmap_file == None:
+                        params['heatmap_file'] = param_val+".heatmap.html"
+
                 else:
                     print(f"*** WARNING, --{args_key} specified but {player_key} is not a neural net ")
 
