@@ -3,7 +3,6 @@ import sys
 import os
 from statistics import mean
 
-
 class Tgt_Processor:
     ID_PATTERN="[A-Za-z]+[0-9]+[.][0-9]+[.][0-9]"
     ID_LOCATE_PATTERN="Gin_"+ID_PATTERN+"[.]202[3456789]"

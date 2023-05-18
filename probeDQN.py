@@ -4,9 +4,11 @@ import time
 import sys
 import os
 import argparse
+from pathlib import Path
 
-import torch.optim as optim
+import numpy as np
 import torch 
+import torch.optim as optim
 
 import DQN 
 from playGin import BrainiacGinStrategy
@@ -144,6 +146,8 @@ def run(params):
         conv2Dlayer = p.ginDQN.layers[0]
         conv_weights = conv2Dlayer.weight
         print(f"{conv_weights}")
+        create_heatmap(conv_weights,params['player2']['nn']['weights_path'],
+                       params['heatmap_file'])
 
     endTime = time.time()
     total_duration = endTime - startTime
@@ -175,6 +179,33 @@ def run_probe(params):
         print_stats(stats)
 
 ## #############################################
+def create_heatmap(conv_weights:torch.Tensor, title:str, output_file=None):
+    source_path = Path(__file__).resolve()
+    source_dir = source_path.parent
+    template_filename = "probeDQN.html"
+
+    my_weights = conv_weights.detach().numpy()
+
+    with open(source_dir / template_filename,"r") as t:
+        template = t.readlines()
+
+    for line in template:
+        if "INSERT show_grid() CALLS HERE" in line:
+            for i in range(2):
+                map_title = f"{title} ({i+1})"
+                t=my_weights[i][0]
+                array_str = np.array2string(t, separator=', ')
+                p2f(f"conv2_{i} = {array_str};\n",output_file)
+                p2f(f"show_grid(conv2_{i},\"{map_title}\");\n",output_file)
+        else:
+            p2f(line, output_file)
+
+def p2f(data,output_file:str=None):
+    if not output_file == None:
+        with open(output_file,"a") as o:
+            o.write(data)
+    else:
+        sys.stdout.write(data)
 
 ## #############################################
 ## #############################################
@@ -200,6 +231,7 @@ if __name__ == '__main__':
     parser.add_argument("--params_module", nargs='?', type=str, default="logs/ginDQNParameters_probe")
     parser.add_argument("--logfile", nargs='?', type=str, default=None)
     parser.add_argument("--weights_path_2", nargs='?', type=str, default="weights/BLGlrc2.12_weights.h5.1")
+    parser.add_argument("--heatmap_file", nargs='?', type=str, default="doo-doo.html")
     args = parser.parse_args()
     print("learningGin: args ", args)
 
@@ -210,6 +242,7 @@ if __name__ == '__main__':
         params = import_parameters(args.params_module)
 
     params['display'] = True
+    params['heatmap_file'] = args.heatmap_file
 
     if not (args.logfile == None):
         params['log_path'] = args.logfile        

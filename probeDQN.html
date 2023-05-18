@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+
+.spacer {
+      width: 100%;
+      height: 10px;
+}
+
+.title_bar {
+   background-color: darkblue;   
+   color: white
+   width: 300px
+}
+
+.sp {
+      width: 100%;
+      height: 5px;
+}
+
+.mainstage {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  grid-gap: 10px;
+  width: 100%;
+}
+.mainstage div {
+  /* background-color: red; */
+  /* aspect-ratio: 1 / 1; */
+  text-align: left;
+  width: 100%;
+  color: white;
+}
+.container2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  grid-gap: 5px;
+  width: 100%;
+}
+.container2 div {
+  /* background-color: red; */
+  aspect-ratio: 1 / 1;
+  text-align: left;
+  width: 100%;
+  color: white;
+}
+
+        </style>
+        <script>
+
+function get_color(val) {
+    r = "00"
+    b = "00"
+    cval = val - minval;
+    step = val_range/0xFF;
+    color_val = Math.floor(cval/step).toString(16);
+    if (color_val.length==1) {
+        color_val = "0" + color_val
+    }
+    return "#" + r + color_val + b
+}
+
+function show_grid(array2d, title) {
+
+    minval = 999999999.0
+    maxval = -minval
+    array2d.forEach(element => {
+        element.forEach(val => {
+            minval = Math.min(minval,val);
+            maxval = Math.max(maxval,val);
+        });
+    });
+
+    val_range=maxval - minval;
+
+    main_stage = document.getElementById("mainstage");
+    my_stage = document.createElement('div')
+    main_stage.appendChild(my_stage)
+
+    title_bar = document.createElement('div')
+    title_bar.innerHTML = title
+    title_bar.className = "title_bar"
+    my_stage.appendChild(title_bar)
+    sp = document.createElement('div')
+    sp.className = "sp"
+    my_stage.appendChild(sp)
+
+    patch_container = document.createElement('div')
+    patch_container.className = "container2"
+
+    array2d.forEach(element => {
+        element.forEach(patch_val => {
+            mypatch = document.createElement('div');
+            mypatch.innerHTML = patch_val.toFixed(3);
+            bg = get_color(patch_val)
+            mypatch.style.backgroundColor = bg;
+            patch_container.appendChild(mypatch)
+        });
+    });
+    my_stage.appendChild(patch_container)
+
+    spacer = document.createElement('div')
+    spacer.className = "spacer"
+    my_stage.appendChild(spacer)
+}
+        </script>
+    </head>
+    <body>
+        <div id="mainstage" class="mainstage">
+        </div>    
+        <script>
+            /* INSERT show_grid() CALLS HERE */
+        </script>
+        <!--  testing
+        <script>
+            conv2d_tensor1 = [[ 7.3027, -6.0780,  4.9258,  7.3776],
+                [ 5.0605,  5.1418,  7.1393,  4.7632],
+                [-9.6619, -4.3661, -4.8756,  6.4516],
+                [ 4.5971,  4.6761,  5.0737, -3.6105]];
+
+            conv2d_tensor2 = [[-5.5669, -4.6219, -5.1202, -4.5326],
+                [-5.4197, -5.8364, -5.1714, -2.3141],
+                [ 3.6552,  4.0367,  5.2390,  2.4995],
+                [-7.8055, -8.1118,  4.0020, -2.6678]];
+                
+            show_grid(conv2d_tensor1,"BLG1.12 conv2d/a")
+            show_grid(conv2d_tensor2,"BLG1.12 conv2d/b") 
+        </script>
+        -->
+</body>   
+</html>
