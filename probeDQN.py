@@ -121,7 +121,7 @@ def print_stats(stats, file=None):
             print(f"{key}: {value}", file=file)
 
 ## #############################################
-def run(params):
+def run(params:dict,weights:list):
     """
     Use the DQN to play gin, via a ginDQNStrategy            
     """
@@ -133,21 +133,23 @@ def run(params):
     print(f"--- PROBE START at {startTime} ---")
     print(params)
 
-    player1 = learningPlayer(params['player1'])
-    player2 = learningPlayer(params['player2'])
-    players = [player1, player2]
-    nn_players = []
-    for p in players:
-        if p.is_nn_player():
-            nn_players.append(p)
-            p.get_strategy()
+    heatmap_script = ""
 
-    for p in nn_players:
-        conv2Dlayer = p.ginDQN.layers[0]
+    for weightsfile in weights:
+        player2 = learningPlayer(params['player2'])
+        nn_params = params['player2']['nn']     
+        nn_params['weights_path'] = weightsfile
+        player2.get_strategy()
+
+        conv2Dlayer = player2.ginDQN.layers[0]
         conv_weights = conv2Dlayer.weight
+        print(f"{weightsfile}")
         print(f"{conv_weights}")
-        create_heatmap(conv_weights,params['player2']['nn']['weights_path'],
-                       params['heatmap_file'])
+
+        heatmap_script += create_heatmap_script(conv_weights,
+                                             weightsfile)
+        
+    create_heatmap(heatmap_script, params['heatmap_file'])
 
     endTime = time.time()
     total_duration = endTime - startTime
@@ -160,7 +162,7 @@ def run(params):
     return stats
 
 ## #############################################
-def run_probe(params):
+def run_probe(params:dict,weights:list):
     probe_params = copy.deepcopy(params)
     do_probe = False
     for p in ('player1', 'player2'):
@@ -175,30 +177,38 @@ def run_probe(params):
     if do_probe:
         probe_params['episodes']=0
         print("Probing...")
-        stats = run(probe_params) 
+        stats = run(probe_params, weights) 
         print_stats(stats)
 
 ## #############################################
-def create_heatmap(conv_weights:torch.Tensor, title:str, output_file=None):
+def create_heatmap(heatmap_script, output_file=None):
+    
     source_path = Path(__file__).resolve()
     source_dir = source_path.parent
     template_filename = "probeDQN.html"
-
-    my_weights = conv_weights.detach().numpy()
 
     with open(source_dir / template_filename,"r") as t:
         template = t.readlines()
 
     for line in template:
         if "INSERT show_grid() CALLS HERE" in line:
-            for i in range(2):
-                map_title = f"{title} ({i+1})"
-                t=my_weights[i][0]
-                array_str = np.array2string(t, separator=', ')
-                p2f(f"conv2_{i} = {array_str};\n",output_file)
-                p2f(f"show_grid(conv2_{i},\"{map_title}\");\n",output_file)
+            p2f(heatmap_script,output_file) 
         else:
             p2f(line, output_file)
+
+def create_heatmap_script(conv_weights:torch.Tensor, title:str):
+
+    my_weights = conv_weights.detach().numpy()
+
+    heatmap_script = ""
+    var_name = "heat_" + str(title.__hash__()).replace("-","_")
+    for i in range(2):
+        map_title = f"{title} ({i+1})"
+        t=my_weights[i][0]
+        array_str = np.array2string(t, separator=', ')
+        heatmap_script += f"{var_name} = {array_str};\n"
+        heatmap_script += f"show_grid({var_name},\"{map_title}\");\n"
+    return heatmap_script
 
 def p2f(data,output_file:str=None):
     if not output_file == None:
@@ -230,10 +240,14 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--params_module", nargs='?', type=str, default="logs/ginDQNParameters_probe")
     parser.add_argument("--logfile", nargs='?', type=str, default=None)
-    parser.add_argument("--weights_path_2", nargs='?', type=str, default="weights/BLGlrc2.12_weights.h5.1")
-    parser.add_argument("--heatmap_file", nargs='?', type=str, default=None)
+    parser.add_argument("--weights_path_2", nargs='?', type=str, default="weights/BLG1")
+    parser.add_argument("--heatmap_file", nargs='?', type=str, default="~/gg.html")
     args = parser.parse_args()
-    print("learningGin: args ", args)
+    print("probeDQN.py: args ", args)
+
+    if args.weights_path_2 == None:
+        print("no weights to load, exiting")
+        exit(-1)
 
     if (args.params_module == None):
         print("using default parameters")
@@ -246,23 +260,17 @@ if __name__ == '__main__':
 
     if not (args.logfile == None):
         params['log_path'] = args.logfile        
-    for player_index in ("1","2"):
-        player_key="player" + player_index
-        for key_root in ["weights_path"]:
-            params_key=key_root
-            args_key=f"{key_root}_{player_index}"
-            argvars = vars(args)
-            if (args_key in argvars) and (not (argvars[args_key] == None)):
-                param_val = argvars[args_key]
-                if isinstance(param_val,str):
-                    param_val=os.path.expanduser(param_val)
-                if 'nn' in params[player_key]:
-                    params[player_key]['nn'][params_key]  = param_val
-                    if args.heatmap_file == None:
-                        params['heatmap_file'] = param_val+".heatmap.html"
 
-                else:
-                    print(f"*** WARNING, --{args_key} specified but {player_key} is not a neural net ")
+    weights=[]
+    if os.path.isfile(args.weights_path_2):
+        weights.append(args.weights_path_2)
+    elif os.path.isdir(args.weights_path_2):
+        entries = os.scandir(args.weights_path_2)
+        for e in entries:
+            if e.is_file():
+                weights.append(e.path)
+    else:
+        weights = args.weights_path_2.split()
 
     old_stdout = None
     old_stderr = None
@@ -280,7 +288,7 @@ if __name__ == '__main__':
                     old_stderr = sys.stderr
                     sys.stderr = log
 
-        run_probe(params)
+        run_probe(params, weights)
 
     finally:
         if not old_stdout == None:
