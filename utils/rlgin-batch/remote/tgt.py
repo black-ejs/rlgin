@@ -39,7 +39,7 @@ class Tgt_Processor:
         avg_time=self.tot_time/self.hand_count;
 
         if 'train' in self.rewards:
-            outline = f"{self.run_id.ljust(14)} rewards={rewards[:-1]}, wins={wins[:-1]}, score:{self.score():3.2f}"
+            outline = f"{self.run_id.ljust(14)} r={rewards[:-1]}, w={wins[:-1]}, score:{self.score():3.2f}"
         elif self.hand_count < 5000:
             secs_to_go = int((5000-self.hand_count) * (avg_time/1000))
             hrs_to_go = secs_to_go/3600
@@ -56,8 +56,8 @@ class Tgt_Processor:
         if not 'test' in self.rewards:
             return 0
 
-        if 'pretest' in self.rewards:
-            base = mean(self.rewards['pretest'])
+        if 'pre' in self.rewards:
+            base = mean(self.rewards['pre'])
         elif 'train' in self.rewards:
             base = mean(self.rewards['train'])
         else:
@@ -134,6 +134,8 @@ class Tgt_Processor:
             self.tot_time += float(time)
         elif line.find("ing...")>-1:
             self.phase=toks[0][:-6].lower()
+            if self.phase == "pretest":
+                self.phase="pre"
             self.tot_time=0
         elif line.find("total_reward")>-1:
             reward=toks[2][:-2]
