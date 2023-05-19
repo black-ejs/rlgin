@@ -55,7 +55,7 @@ def run(params:dict,weights:list):
     heatmap_script = ""
 
     for weightsfile in weights:
-        player2 = learningPlayer(params['player2'])
+        player2 = learningPlayer.learningPlayer(params['player2'])
         nn_params = params['player2']['nn']     
         nn_params['weights_path'] = weightsfile
         player2.get_strategy()

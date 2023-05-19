@@ -150,8 +150,8 @@ def run(params):
     stats.put('run_timestamp', datetime.datetime.now())
     stats.put('params', params)
 
-    player1 = learningPlayer(params['player1'])
-    player2 = learningPlayer(params['player2'])
+    player1 = learningPlayer.learningPlayer(params['player1'])
+    player2 = learningPlayer.learningPlayer(params['player2'])
     players = [player1, player2]
     nn_players = []
     for p in players:
