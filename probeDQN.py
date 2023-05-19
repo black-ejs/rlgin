@@ -20,6 +20,7 @@ from ginDQNConvoFloatPlane import ginDQNConvoFloatPlane
 from ginDQNLinear import ginDQNLinear
 from ginDQNLinearB import ginDQNLinearB
 import ginDQNConvFHandOut
+import ginDQNCFHPad
 NO_WIN_NAME = 'nobody'
 
 ## #############################################
@@ -58,7 +59,7 @@ class learningPlayer:
         dqn_params = self.params['nn']
         if self.ginDQN == None:
             self.ginDQN = self.initializeDQN(dqn_params)
-        if self.strategy == "nn-cfh":
+        if self.strategy == "nn-cfh" or self.strategy == "nn-cfhp":
             nn_strategy = ginDQNConvFHandOut.ginDQNHandOutStrategy(dqn_params, self.ginDQN)
             nn_strategy.benchmark_scorer = ginDQNConvFHandOut.ginHandOutBenchmarkStrategy ()
         else:
@@ -79,6 +80,8 @@ class learningPlayer:
             ginDQN = ginDQNConvoBitPlanes(params)    
         elif self.strategy == "nn-cfh":
             ginDQN = ginDQNConvFHandOut.ginDQNConvFHandOut(params)
+        elif self.strategy == "nn-cfhp":
+            ginDQN = ginDQNCFHPad.ginDQNCFHPad(params)
 
         print(f"sending DQN ({self.strategy}/{type(ginDQN).__name__}) to DEVICE ('{DQN.DEVICE}') for player {self.name}")
         ginDQN = ginDQN.to(DQN.DEVICE)
@@ -190,6 +193,10 @@ def create_heatmap(heatmap_script, output_file=None):
     with open(source_dir / template_filename,"r") as t:
         template = t.readlines()
 
+    if not output_file == None:
+        if os.path.isfile(output_file):
+            os.unlink(output_file)
+
     for line in template:
         if "INSERT show_grid() CALLS HERE" in line:
             p2f(heatmap_script,output_file) 
@@ -238,9 +245,9 @@ if __name__ == '__main__':
 
     # Set options 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--params_module", nargs='?', type=str, default="logs/ginDQNParameters_probe")
+    parser.add_argument("--params_module", nargs='?', type=str, default="logs/pad_params")
     parser.add_argument("--logfile", nargs='?', type=str, default=None)
-    parser.add_argument("--weights_path_2", nargs='?', type=str, default="weights/BLG1")
+    parser.add_argument("--weights_path_2", nargs='?', type=str, default="weights/pad_params_weights.h5.post_training")
     parser.add_argument("--heatmap_file", nargs='?', type=str, default="~/gg.html")
     args = parser.parse_args()
     print("probeDQN.py: args ", args)
@@ -256,7 +263,7 @@ if __name__ == '__main__':
         params = import_parameters(args.params_module)
 
     params['display'] = True
-    params['heatmap_file'] = args.heatmap_file
+    params['heatmap_file'] = os.path.expanduser(args.heatmap_file)
 
     if not (args.logfile == None):
         params['log_path'] = args.logfile        

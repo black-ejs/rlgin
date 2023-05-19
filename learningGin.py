@@ -24,6 +24,7 @@ from ginDQNConvoFloatPlane import ginDQNConvoFloatPlane
 from ginDQNLinear import ginDQNLinear
 from ginDQNLinearB import ginDQNLinearB
 import ginDQNConvFHandOut
+import ginDQNCFHPad
 NO_WIN_NAME = 'nobody'
 
 ## #############################################
@@ -62,7 +63,7 @@ class learningPlayer:
         dqn_params = self.params['nn']
         if self.ginDQN == None:
             self.ginDQN = self.initializeDQN(dqn_params)
-        if self.strategy == "nn-cfh":
+        if self.strategy == "nn-cfh" or self.strategy == "nn-cfhp":
             nn_strategy = ginDQNConvFHandOut.ginDQNHandOutStrategy(dqn_params, self.ginDQN)
             nn_strategy.benchmark_scorer = ginDQNConvFHandOut.ginHandOutBenchmarkStrategy ()
         else:
@@ -83,6 +84,8 @@ class learningPlayer:
             ginDQN = ginDQNConvoBitPlanes(params)    
         elif self.strategy == "nn-cfh":
             ginDQN = ginDQNConvFHandOut.ginDQNConvFHandOut(params)
+        elif self.strategy == "nn-cfhp":
+            ginDQN = ginDQNCFHPad.ginDQNCFHPad(params)
 
         print(f"sending DQN ({self.strategy}/{type(ginDQN).__name__}) to DEVICE ('{DQN.DEVICE}') for player {self.name}")
         ginDQN = ginDQN.to(DQN.DEVICE)

@@ -1,5 +1,6 @@
 logs
 weights
+params
 __pycache__
 .vscode
 .DS_Store
