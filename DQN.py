@@ -98,7 +98,8 @@ class DQNAgent(torch.nn.Module):
         Store the <state, action, reward, next_state, is_done> tuple in a 
         memory buffer for replay memory.
         """
-        self.episode_memory.append((state, action, reward, next_state, done))
+        future_rewards = 0
+        self.episode_memory.append((state, action, reward, next_state, done, future_rewards))
         if not reward==0:
             self.distribute_reward_discount(self.episode_memory, reward)
 
@@ -112,8 +113,9 @@ class DQNAgent(torch.nn.Module):
             discount *= self.gamma
 
     def update_reward(self, memory:collections.deque, index:int, addl_reward:float):
-        (state, action, reward, next_state, done) = memory[index]
-        memory[index] = (state, action, reward+addl_reward, next_state, done)
+        (state, action, reward, next_state, done, future_rewards) = memory[index]
+        memory[index] = (state, action, reward, 
+                         next_state, done, future_rewards+addl_reward)
 
     def replay_new(self, memory, batch_size):
         """
@@ -128,18 +130,20 @@ class DQNAgent(torch.nn.Module):
         self.replay_minibatch(minibatch)
 
     def replay_minibatch(self, minibatch):
-        for state, action, reward, next_state, done in minibatch:
+        for state, action, reward, next_state, done, future_rewards in minibatch:
             self.train()
             torch.set_grad_enabled(True)
-            target = reward
+            target = reward + future_rewards
             state_tensor = torch.tensor(np.expand_dims(state, 0), dtype=torch.float32, requires_grad=True).to(DEVICE)
             output = self.forward(state_tensor)
             target_f = output.clone()
 
             # replace the value of the action taken with the reward
             # the difference between this value (the reward) and the 
-            # value supplied will be the back-propagated error
+            # value supplied (the estimated Q-value) will be the back-propagated error
             target_f[np.argmax(action)] = target
+            if target > 0:
+                print(f"reward={reward} future_rewards={future_rewards} target={target}")
 
             target_f.detach()
             self.optimizer.zero_grad()
