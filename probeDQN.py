@@ -1,5 +1,6 @@
 import copy
 import datetime
+import random
 import sys
 import time
 import argparse
@@ -62,11 +63,28 @@ def run(params:dict,weights:list):
 
         conv2Dlayer = player2.ginDQN.layers[0]
         conv_weights = conv2Dlayer.weight
+        conv_bias = conv2Dlayer.bias
+        b0 = conv_bias[0].item()
+        b1 = conv_bias[1].item()
+        u0 = torch.sub(conv_weights[0],b0)
+        u1 = torch.sub(conv_weights[1],b1)
+        conv_biased_weights = torch.cat((u0,u1))
+        conv_biased_weights = conv_biased_weights.reshape((2,1,4,4))
+        print(f"******************************")
         print(f"{weightsfile}")
+        print(f"---- Conv2D weights")
         print(f"{conv_weights}")
+        print(f"---- Conv2D bias")
+        print(f"{conv_bias} - {conv_bias[0].item()} - {conv_bias[1].item()}")
+        print(f"---- Conv2D biased weights")
+        print(f"{conv_biased_weights}")
 
+        model_id = weightsfile[weightsfile.find("_")+1:weightsfile.find("-")-5]
         heatmap_script += create_heatmap_script(conv_weights,
-                                             weightsfile)
+                                             model_id,"G")
+        
+        heatmap_script += create_heatmap_script(conv_biased_weights,
+                                                 model_id+" biased","R")
         
     create_heatmap(heatmap_script, params['heatmap_file'])
 
@@ -96,7 +114,8 @@ def run_probe(params:dict,weights:list):
     if do_probe:
         probe_params['episodes']=0
         print("Probing...")
-        stats = run(probe_params, weights) 
+        with torch.no_grad():
+            stats = run(probe_params, weights) 
         print_stats(stats)
 
 ## #############################################
@@ -119,18 +138,20 @@ def create_heatmap(heatmap_script, output_file=None):
         else:
             p2f(line, output_file)
 
-def create_heatmap_script(conv_weights:torch.Tensor, title:str):
+def create_heatmap_script(conv_weights:torch.Tensor, title:str, color:str="G"):
 
     my_weights = conv_weights.detach().numpy()
 
     heatmap_script = ""
-    var_name = "heat_" + str(title.__hash__()).replace("-","_")
+    #var_name = "heat_" + str(title.__hash__()).replace("-","_")
+    var_name = "heat_" + str(random.randint(0,100000000)).replace("-","_")
     for i in range(2):
         map_title = f"{title} ({i+1})"
         t=my_weights[i][0]
         array_str = np.array2string(t, separator=', ')
         heatmap_script += f"{var_name} = {array_str};\n"
-        heatmap_script += f"show_grid({var_name},\"{map_title}\");\n"
+        heatmap_script += f"show_grid({var_name},\"{map_title}\",\"{color}\");\n"
+
     return heatmap_script
 
 def p2f(data,output_file:str=None):

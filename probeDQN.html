@@ -10,8 +10,8 @@
 
 .title_bar {
    background-color: darkblue;   
-   color: white
-   width: 300px
+   color: white;
+   width: 300px;
 }
 
 .sp {
@@ -49,19 +49,27 @@
         </style>
         <script>
 
-function get_color(val) {
+function get_color(val, heat_color) {
     r = "00"
     b = "00"
+    g = "00"
     cval = val - minval;
     step = val_range/0xFF;
     color_val = Math.floor(cval/step).toString(16);
     if (color_val.length==1) {
         color_val = "0" + color_val
     }
-    return "#" + r + color_val + b
+    if (heat_color=="B") {
+        return "#" + r + g + color_val;
+    } else if (heat_color=="R") { 
+        return "#" + color_val + g + b; 
+    } else { 
+        return "#" + r + color_val + b; 
+    }
+
 }
 
-function show_grid(array2d, title) {
+function show_grid(array2d, title, heat_color) {
 
     minval = 999999999.0
     maxval = -minval
@@ -93,7 +101,7 @@ function show_grid(array2d, title) {
         element.forEach(patch_val => {
             mypatch = document.createElement('div');
             mypatch.innerHTML = patch_val.toFixed(3);
-            bg = get_color(patch_val)
+            bg = get_color(patch_val,heat_color)
             mypatch.style.backgroundColor = bg;
             patch_container.appendChild(mypatch)
         });
