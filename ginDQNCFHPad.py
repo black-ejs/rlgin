@@ -1,14 +1,9 @@
 import collections
 
 import numpy as np
-import torch 
 import torch.nn as nn
 import torch.nn.functional as F
 
-import gin
-import playGin
-import DQN
-import ginDQN
 from ginDQNConvoFloatPlane import ginDQNConvoFloatPlane
 from ginDQNConvFHandOut import ginDQNConvFHandOut
 
