@@ -43,7 +43,7 @@ done
 cat "${OUTPUT1}" | awk '  \
 		/^--/  {rr=$2; host=$3;} \
 		/^[*]/ {took=$5; hsecs=(took-took%3600); h=hsecs/3600; msecs=(took-hsecs)-(took-hsecs)%60; m=msecs/60; \
-		print took "secs   avg@5000=" (took/5000)*1000 "  run=" rr "  host=" host "  time=" h ":" m} \
+		print took "secs " (took/3600) "h  avg@5000=" (took/5000)*1000 "  run=" rr "  host=" host "  time=" h ":" m} \
 	' \
 	| sort -n >> "${FINAL_OUTPUT}"
 

@@ -11,22 +11,30 @@ tmpfile=score_logs.tmp.$$
 			| grep \"Gin_.*${target_folder_name}\" \`; \
 	do \
 		echo \$p > ~/${tmpfile}; \
-		egrep \"winMap|ing[.][.][.]\" ${target_path}\$p >> ~/${tmpfile}; \
+		egrep \"total_reward|winMap|ing[.][.][.]\" ${target_path}\$p >> ~/${tmpfile}; \
 		cat ~/${tmpfile}; \
 	done; rm score_logs.tmp.*" \
 	${remote_host} \
       | awk '
 	/Gin_.*[.]202[0-9]-/ {
 		if (length(fn)>0) {
-			print tot " " fn;
+			print tot_r " " tot "  " fn;
 		}
 		tot=0; 
+		tot_r=0;
 		p=split($0,aa,"/"); 
 		fn=aa[p]; 
 	}
 	/Training[.][.][.]/ {phase="train"}
 	/Testing[.][.][.]/ {phase="test"}
 	/Pretesting[.][.][.]/ {phase="pretest"}
+	/total_reward/ {
+		if (phase=="test") {
+			r=$3
+			r=substr(r,1,length(r)-2)
+			tot_r+=r
+		}
+	}
 	/winMap/ {
 		if (phase=="test") {
 			w=$5;
@@ -36,7 +44,7 @@ tmpfile=score_logs.tmp.$$
 	}
 	END {
 		if (length(fn)>0) {
-			print tot " " fn;
+			print tot_r " "tot "  " fn;
 		}
 	}
 	'  \

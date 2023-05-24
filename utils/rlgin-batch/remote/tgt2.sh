@@ -18,7 +18,7 @@ rm ${OUTPUT1}
 TRAINING_GROUND_TARGETS=${1:-~/training_ground_targets.txt}
 REMOTE_USERID="edward_schwarz_tonigooddog_com"
 
-echo "checking targets from ${TRAINING_GROUND_TARGETS}"
+echo "${CURRENT_SCRIPT_NAME}: checking targets from ${TRAINING_GROUND_TARGETS} at `date`"
 
 for PROJECT in `grep -v "^[#]" ${TRAINING_GROUND_TARGETS}`
 do
@@ -65,4 +65,6 @@ python ${MYTMP}/rlgin/utils/rlgin-batch/remote/tgt.py "${OUTPUT1}" | sort -V > $
 
 rm -rf ${MYTMP}
 cat ${FINAL_OUTPUT}
+
+echo "${CURRENT_SCRIPT_NAME} completed at `date`"
 
