@@ -11,6 +11,8 @@ class Tgt_Processor:
         if len(nick)<1:
             return
         
+        if self.series_score_count==0:
+            self.series_score_count=1
         outline = f"{nick} overall_score={self.series_total_score:.3f}  avg_score={self.series_total_score/self.series_score_count:.3f}"
         print(outline)
         
