@@ -129,7 +129,7 @@ class DQNAgent(torch.nn.Module):
             minibatch = memory
         self.replay_minibatch(minibatch)
 
-    def replay_minibatch(self, minibatch):
+    def replay_minibatch1(self, minibatch):
         for state, action, reward, next_state, done, future_rewards in minibatch:
             self.train()
             torch.set_grad_enabled(True)
@@ -150,6 +150,60 @@ class DQNAgent(torch.nn.Module):
             loss = F.mse_loss(output, target_f)
             loss.backward()
             self.optimizer.step()            
+
+    def replay_minibatch(self, minibatch):
+
+        # collect our batch into arrays we can process via Tensor Operations
+        states = []
+        actions = []
+        rewards = []
+        next_states = []
+        dones = []
+        future_rewards = []
+        for state, action, reward, next_state, done, future_reward in minibatch:
+            states.append(state)
+            actions.append(action)
+            rewards.append(reward)
+            future_rewards.append(future_reward)
+            next_states.append(next_state)
+            dones.append(done)
+        
+        replay_future_rewards = self.set_replay_future_rewards(next_states, future_rewards)
+
+        target_rewards = torch.zeros(len(rewards))
+        for i in range(len(rewards)):
+            target_rewards[i] = rewards[i] + replay_future_rewards[i]
+
+        with torch.set_grad_enabled(True):
+            states_tensor = torch.tensor(states, dtype=torch.float32, requires_grad=True).to(DEVICE)
+            output_tensor = self.forward(states_tensor)
+            target_f = output_tensor.clone()
+
+        #target_f.detach()
+
+        # replace the value of the action taken with the reward
+        # the difference between this value (the reward) and the 
+        # value supplied (the estimated Q-value) will be the back-propagated error
+        for i in range(target_f.size(0)):
+            qmax=target_f[i].max()
+            for idx in range(len(target_f[i])):
+                if target_f[i][idx] == qmax:
+                    break
+            #print(f"my target is target_f[{i}]: {target_f[i]}")
+            #print(f"my idx is {idx}, so the value I will replace is target_f[{i}][{idx}] : {target_f[i][idx]} ")
+            #print(f"using the same batch-index of {i} for target_rewards[{i}]={target_rewards[i]}")
+            #print(f"ready to assign")
+            target_f[i][idx] = target_rewards[i]
+            #print(f"   after assign: target_f[{i}] is now: {target_f[i]}")
+            i+=1
+
+        self.optimizer.zero_grad()
+        loss = F.mse_loss(output_tensor, target_f)
+        loss.backward()
+        self.optimizer.step()            
+        
+    def set_replay_future_rewards(self, next_states:list, gamma_rewards:list):
+        return gamma_rewards
 
     def translatePrediction(self, prediction):
         ##  translation = np.argmax(prediction.detach().cpu().numpy()[0])

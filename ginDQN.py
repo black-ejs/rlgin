@@ -249,6 +249,9 @@ class ginDQNStrategy(playGin.OneDecisionGinStrategy):
             ## deal with our final turn
             new_state = self.agent.get_state(ginhand,self.myPlayer)
             self.learnTurn(self.turn_states, self.turn_scores, reward, new_state, isDone=True)
+            self.agent.train_episode()
+            self.agent.remember_episode()
+            
         if ginhand.currentlyPlaying.player.name == self.myPlayer.name: 
             ginhand.lastTurn().turn_scores = self.turn_scores
             ginhand.lastTurn().turn_benchmarks = self.turn_benchmarks
@@ -256,8 +259,6 @@ class ginDQNStrategy(playGin.OneDecisionGinStrategy):
             ginhand.turns[-2].turn_scores = self.turn_scores
             ginhand.turns[-2].turn_benchmarks = self.turn_benchmarks
 
-        self.agent.train_episode()
-        self.agent.remember_episode()
         
     ## #############################################
     def compare_weights(pretrain_weights, posttrain_weights, verbose=False):
