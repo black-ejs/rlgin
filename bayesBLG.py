@@ -44,7 +44,7 @@ if __name__ == '__main__':
 
     ## run optimization
     bayesOpt = BLGBayesAnalyzer(optim_params,args.history_file)
-    bayesOpt.optimize_RL(max_iter=200)
+    bayesOpt.optimize_RL(max_iter=200,initial_iters=6)
 
     ## report
     end_time = datetime.datetime.now() - start_time

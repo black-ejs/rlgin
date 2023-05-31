@@ -101,7 +101,7 @@ class HistoricalBayesianOptimizer():
                                                maximize=True)
 
         max_iter=max(len(self.history),1)
-        bayes_optimizer.run_optimization()
+        bayes_optimizer.run_optimization(max_iter)
         for i in range(len(self.optim_params)):
             print(f"Optimized {self.optim_params[i]['name']}: ", bayes_optimizer.x_opt[i])
         #self.append_next_result(bayes_optimizer.x_opt)
