@@ -243,6 +243,20 @@ def run(params):
                 if count_diffs == 0:
                     print(f"** WARNING: {p.name}'s weights appear unchanged after training **")
         total_reward.append((p.name,p.total_reward))
+        if hasattr(p.ginDQN,"forward_invocation_count"):
+            if "dqn_forward_stats" in stats.stats:
+                dqn_forward_stats = stats.get('dqn_forward_stats')
+            else:
+                dqn_forward_stats = {}
+                stats.put("dqn_forward_stats", dqn_forward_stats)
+            dfs = {}                  
+            dqn_forward_stats[p.name] = dfs
+            dfs['player'] = p.name
+            dfs['player_strategy'] = p.strategy
+            dfs['forward_invocation_count'] = p.ginDQN.forward_invocation_count
+            dfs['forward_action_count'] = p.ginDQN.forward_action_count
+            dfs['zero_invocation_count'] = p.ginDQN.zero_invocation_count
+            dfs['zero_action_count'] = p.ginDQN.zero_action_count
 
     if len(durations)>0:
         mean_durations, stdev_durations = get_mean_stdev(durations)

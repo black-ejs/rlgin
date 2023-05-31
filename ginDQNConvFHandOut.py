@@ -14,11 +14,18 @@ from ginDQNConvoFloatPlane import ginDQNConvoFloatPlane
 # ******************************
 class ginDQNConvFHandOut(ginDQNConvoFloatPlane):
 
+    OUTPUT_SIZE = gin.HAND_SIZE + 1
+    zero_action = torch.zeros((OUTPUT_SIZE))
+
     def __init__(self, params):
-        params['output_size'] = gin.HAND_SIZE + 1 
+        params['output_size'] = self.OUTPUT_SIZE 
         super().__init__(params)
-        self.output_size = gin.HAND_SIZE + 1
+        self.output_size = self.OUTPUT_SIZE
         self.input_state = None
+        self.forward_invocation_count = 0
+        self.forward_action_count = 0
+        self.zero_invocation_count = 0
+        self.zero_action_count = 0
 
     def get_state(self, ginhand:(gin.GinHand), 
                          player:(gin.Player), 
@@ -40,17 +47,32 @@ class ginDQNConvFHandOut(ginDQNConvoFloatPlane):
         llayers.append(nn.Linear(prev_layer_size, self.output_size))
         self.layers = nn.ModuleList(llayers)
 
+    ## ###############################################
+    def check_forward_product(self, x:torch.Tensor, 
+                              input_tensor:torch.Tensor=None, 
+                              title:str= "forward-product-tensor"):
+        input_states_count = 0
+        if not (type(input_tensor) == type(None)):
+            input_states_count = input_tensor.shape[0]
+            if not x.shape[0] == input_states_count:
+                print(f"*** WARNING: {title}: count is: {x.shape[0]}, expected {input_states_count}")
+        non_dupe=0
+        non_zero=0
+        for u in x:
+            if not torch.eq(u,x[0]).all():
+                non_dupe+=1
+            if not torch.eq(u,torch.zeros(u.shape)).all():
+                non_zero+=1
+        if x.shape[0]>1:
+            if not non_dupe>0:
+                print(f"*** WARNING: {title}: entire list len={x.shape[0]} is identical")
+            if not non_zero>0:
+                print(f"*** WARNING: {title}: entire list len={x.shape[0]} is zeros")
+        return non_dupe, non_zero
+        
+    ## ###############################################
     def forward(self, x):
-
-        """
-        for dim in range(len(x)):
-            print (f"x.shape={x.shape}")
-            print(x)
-            print(f"dim={dim}")
-            p=x[dim]
-            print(f"x[{dim}]={p}")
-            print("0-0-0-0-0-0-0-0-0-")
-        """
+        self.forward_invocation_count += 1
 
         # capture input stateÍ
         input_tensor = x
@@ -62,67 +84,21 @@ class ginDQNConvFHandOut(ginDQNConvoFloatPlane):
 
         # Conv2D layer
         x = self.layers[0](x)   
-        if not x.shape[0] == input_states_count:
-            print(f"ERROR: layer[0] output: count is: {x.shape[0]}, expexted {input_states_count}")
-        if input_states_count>10:
-            d=0
-            for u in x:
-                if not torch.eq(u,x[0]).all():
-                    d+=1
-            if not d>0:
-                print(f"ERROR: layer[0] output: entire list is identical")
+        self.check_forward_product(x, input_tensor, "conv layer output")
 
         x = torch.flatten(x,1)  
-        if x.shape[0] != input_states_count:
-            print(f"ERROR: flattened layer[0] output: count is: {x.shape[0]}, expexted {input_states_count}")
-        if input_states_count>10:
-            d=0
-            for u in x:
-                if not torch.eq(u,x[0]).all():
-                    d+=1
-            if not d>0:
-                print(f"ERROR: flattened layer[0] output: entire list is identical")
-
-        # append to input state and pass to linear layers
-        ## input_state_size = self.input_size[2]*self.input_size[3]
-        ## y = torch.tensor(self.input_state.reshape(input_state_size)).float().to(DQN.DEVICE)
-        ## combined_input_size = self.convo_output_size + input_state_size
-        ## x = torch.cat((y,x))
+        self.check_forward_product(x, input_tensor, "flattened conv layer output")
 
         # append to input state and pass to linear layers
         input_state_size = self.input_size[2]*self.input_size[3]
         flat_input = torch.flatten(input_tensor,1)
-        if flat_input.shape[0] != input_states_count:
-            print(f"ERROR: flattened input: count is: {flat_input.shape[0]}, expexted {input_states_count}")
-        if input_states_count>10:
-            d=0
-            for u in flat_input:
-                if not torch.eq(u,flat_input[0]).all():
-                    d+=1
-            if not d>0:
-                print(f"ERROR: flattened input output: entire list is identical")
-
+        self.check_forward_product(flat_input, input_tensor, "flattened input")
+        
         obs=torch.cat((x,flat_input),1)
-        if obs.shape[0] != input_states_count:
-            print(f"ERROR: flattened layer[0] and input combined: count is: {obs.shape[0]}, expexted {input_states_count}")
-        if input_states_count>10:
-            d=0
-            for u in obs:
-                if not torch.eq(u,obs[0]).all():
-                    d+=1
-            if not d>0:
-                print(f"ERROR: flattened layer[0] and input combined: entire list is identical")
+        self.check_forward_product(obs, input_tensor, "flattened conv and input combined")
 
         x=torch.Tensor(obs)
-        if x.shape[0] != input_states_count:
-            print(f"ERROR: flattened layer[0] and input combined 2: count is: {x.shape[0]}, expexted {input_states_count}")
-        if input_states_count>10:
-            d=0
-            for u in x:
-                if not torch.eq(u,x[0]).all():
-                    d+=1
-            if not d>0:
-                print(f"ERROR: flattened layer[0] and input combined 2: entire list is identical")
+        self.check_forward_product(x, input_tensor, "flattened conv and input combined 2")
 
         # Linear Layers
         for layer in self.layers[1:-1]:
@@ -131,28 +107,23 @@ class ginDQNConvFHandOut(ginDQNConvoFloatPlane):
             else:
                 x = layer(x)
                 x = F.relu(x)
-            if x.shape[0] != input_states_count:
-                print(f"ERROR: layer[{layer}] output: count is: {x.shape[0]}, expexted {input_states_count}")
-                if input_states_count>10:
-                    d=0
-                    for u in x:
-                        if not torch.eq(u,x[0]).all():
-                            d+=1
-                    if not d>0:
-                        print(f"ERROR: layer[{layer}] output: entire list is identical")
+
+            non_dupe, non_zero = self.check_forward_product(x, input_tensor, f"linear layer[{layer.in_features}/{layer.out_features}] output")
+
         x = self.layers[-1](x) # last layer
-        if x.shape[0] != input_states_count:
-            print(f"ERROR: final output: count is: {x.shape[0]}, expexted {input_states_count}")
-        if input_states_count>10:
-            d=0
-            for u in x:
-                if not torch.eq(u,x[0]).all():
-                    d+=1
-            if not d>0:
-                #print(f"ERROR: final output: entire list is identical")
-                pass
+        self.forward_action_count += x.shape[0]
+        self.check_forward_product(x, input_tensor, f"final output")
+        z=0
+        for u in x:
+            if torch.eq(u,self.zero_action).all():
+                self.zero_action_count += 1
+            else:
+                z+=1
+        if z == 0:
+            self.zero_invocation_count += 1
+
         if x.shape[1] != gin.HAND_SIZE+1:
-            print(f"ERROR: final output: count is: {x.shape[1]}, expexted {gin.HAND_SIZE+1}")
+            print(f"***: WARNING: final output: count is: {x.shape[1]}, expected {gin.HAND_SIZE+1}")
 
         return x
 
