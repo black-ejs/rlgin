@@ -25,7 +25,7 @@ class ginDQNConvFHandOut(ginDQNConvoFloatPlane):
         self.forward_invocation_count = 0
         self.forward_action_count = 0
         self.zero_invocation_count = 0
-        self.zero_action_count = 0
+        self.zero_forward_count = 0
 
     def get_state(self, ginhand:(gin.GinHand), 
                          player:(gin.Player), 
@@ -68,6 +68,7 @@ class ginDQNConvFHandOut(ginDQNConvoFloatPlane):
                 print(f"*** WARNING: {title}: entire list len={x.shape[0]} is identical")
             if not non_zero>0:
                 print(f"*** WARNING: {title}: entire list len={x.shape[0]} is zeros")
+                self.zero_forward_count+=1
         return non_dupe, non_zero
         
     ## ###############################################
@@ -112,14 +113,8 @@ class ginDQNConvFHandOut(ginDQNConvoFloatPlane):
 
         x = self.layers[-1](x) # last layer
         self.forward_action_count += x.shape[0]
-        self.check_forward_product(x, input_tensor, f"final output")
-        z=0
-        for u in x:
-            if torch.eq(u,self.zero_action).all():
-                self.zero_action_count += 1
-            else:
-                z+=1
-        if z == 0:
+        non_dupe, non_zero = self.check_forward_product(x, input_tensor, f"final output")
+        if non_zero==0:
             self.zero_invocation_count += 1
 
         if x.shape[1] != gin.HAND_SIZE+1:
