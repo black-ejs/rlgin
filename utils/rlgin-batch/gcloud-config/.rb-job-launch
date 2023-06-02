@@ -18,6 +18,11 @@ then
 	echo "## ## ## ## ## ${CURRENT_SCRIPT_NAME}: BATCH_TASK_INDEX is not set, setting to 0"
 	export BATCH_JOB_ID="rb-job-mockup"
 	export BATCH_TASK_INDEX=0
+	export JOB_TAG="${BATCH_JOB_ID}-t${BATCH_TASK_INDEX}"
+	if [ ! -e "${RLGIN_BATCH_JOB_SCRIPT}" ]
+	then
+    	RLGIN_BATCH_JOB_SCRIPT=./rb-run-param-job.sh # bail-out default
+	fi
 fi
 
 export RLGIN_BATCH_TASK_TAG="${BATCH_JOB_ID}-t${BATCH_TASK_INDEX}"
