@@ -179,7 +179,7 @@ class DQNAgent(torch.nn.Module):
             output_tensor = self.forward(states_tensor)
             target_f = output_tensor.clone()
 
-        #target_f.detach()
+        target_f.detach()
 
         # replace the value of the action taken with the reward
         # the difference between this value (the reward) and the 
