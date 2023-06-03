@@ -256,7 +256,7 @@ def run(params):
             dfs['forward_invocation_count'] = p.ginDQN.forward_invocation_count
             dfs['forward_action_count'] = p.ginDQN.forward_action_count
             dfs['zero_invocation_count'] = p.ginDQN.zero_invocation_count
-            dfs['zero_action_count'] = p.ginDQN.zero_action_count
+            dfs['zero_forward_count'] = p.ginDQN.zero_forward_count
 
     if len(durations)>0:
         mean_durations, stdev_durations = get_mean_stdev(durations)
