@@ -13,10 +13,10 @@ echo sleeping ${sleepsecs} seconds -- I am BATCH_TASK_INDEX=${BATCH_TASK_INDEX}
 echo "******************************************** "
 sleep ${sleepsecs}
 
-export JOB_TAG="${BATCH_JOB_ID}-t${BATCH_TASK_INDEX}"
+export RLGIN_BATCH_TASK_TAG="${BATCH_JOB_ID}-t${BATCH_TASK_INDEX}"
 export RLGIN_BATCH_USER="edward_schwarz_tonigooddog_com"
-export RLGIN_BATCH_TMP_BOOTSTRAP_DIR=/var/tmp/${JOB_TAG}-bootstrap
-echo JOB_TAG="${JOB_TAG}"
+export RLGIN_BATCH_TMP_BOOTSTRAP_DIR=/var/tmp/${RLGIN_BATCH_TASK_TAG}-bootstrap
+echo RLGIN_BATCH_TASK_TAG="${RLGIN_BATCH_TASK_TAG}"
 echo RLGIN_BATCH_TMP_BOOTSTRAP_DIR="${RLGIN_BATCH_TMP_BOOTSTRAP_DIR}"
 
 echo updating code base.... 
@@ -114,7 +114,7 @@ ls -latr /home/${RLGIN_BATCH_USER}
 cmd="\
 export BATCH_JOB_ID=${BATCH_JOB_ID};\
 export BATCH_TASK_INDEX=${BATCH_TASK_INDEX};\
-export JOB_TAG=${JOB_TAG};\
+export RLGIN_BATCH_TASK_TAG=${JOB_RLGIN_BATCH_TASK_TAG};\
 export RLGIN_BATCH_JOB_PARAMS_PATH=${RLGIN_BATCH_JOB_PARAMS_PATH};\
 export RLGIN_BATCH_JOB_SCRIPT=${RLGIN_BATCH_JOB_SCRIPT}
 cd /home/${RLGIN_BATCH_USER};\

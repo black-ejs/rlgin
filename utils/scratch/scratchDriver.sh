@@ -7,7 +7,7 @@ driver_id=${1:-0}
 DRIVER_START=${2:-1}
 DRIVER_END=${3:-10}
 CONTROL_DIR=${4:-$PWD}
-JOB_ID=${5:-$$}
+JOB_ID=${5:-J$$}
 
 echo "*** ${CURRENT_SCRIPT_NAME} start ***"
 for hh in `seq -s' ' ${DRIVER_START} ${DRIVER_END}`

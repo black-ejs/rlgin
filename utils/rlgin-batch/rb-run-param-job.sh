@@ -7,7 +7,7 @@ CURRENT_SCRIPT_ORIGINAL_EXECUTION_DIR=`pwd`
 
 ## figure out our job parameters
 echo "###  ###  ###  ${CURRENT_SCRIPT_NAME}: fetching Job parameters"
-JOB_ID=${JOB_TAG}
+JOB_ID=${RLGIN_BATCH_TASK_TAG}
 source ./rb-fetch-job-params.sh
 SERIES_NICKNAME="${1:-${RLGIN_BATCH_JP_SERIES_NICKNAME}}"
 PARAMS_SPEC="${2:-${RLGIN_BATCH_JP_PARAMS_SPEC}}"
