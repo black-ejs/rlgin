@@ -181,8 +181,8 @@ class ginDQNHandOutStrategy(ginDQN.ginDQNStrategy):
         discard_score = turn_scores[1]
 
         # store the new data into memory for experience replay
-        self.agent.remember(draw_state, draw_score, reward, discard_state, False)
-        self.agent.remember(discard_state, discard_score, reward, new_state, isDone)
+        self.agent.remember(draw_state, draw_score, reward/2, discard_state, False)
+        self.agent.remember(discard_state, discard_score, reward/2, new_state, isDone)
         
 ## ###############################################
 ## ###############################################
