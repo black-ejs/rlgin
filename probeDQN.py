@@ -79,7 +79,14 @@ def run(params:dict,weights:list):
         print(f"---- Conv2D biased weights")
         print(f"{conv_biased_weights}")
 
-        model_id = weightsfile[weightsfile.find("_")+1:weightsfile.find("-")-5]
+        if '_' in weightsfile:
+            model_id = weightsfile[weightsfile.find("_")+1:weightsfile.find("-")-5]
+        else:
+            chunks = weightsfile.split("/")
+            generation = chunks[-1].split(".")[-1]
+            model_tag = chunks[-3]
+            model_id = model_tag + " g" + generation
+        print(f"weightsfile={weightsfile}  model_id={model_id}")
         heatmap_script += create_heatmap_script(conv_weights,
                                              model_id,"G")
         
