@@ -185,17 +185,13 @@ class DQNAgent(torch.nn.Module):
         # the difference between this value (the reward) and the 
         # value supplied (the estimated Q-value) will be the back-propagated error
         for i in range(target_f.size(0)):
-            qmax=target_f[i].max()
-            for idx in range(len(target_f[i])):
-                if target_f[i][idx] == qmax:
-                    break
+            action_taken = argmax(actions[i])
             #print(f"my target is target_f[{i}]: {target_f[i]}")
-            #print(f"my idx is {idx}, so the value I will replace is target_f[{i}][{idx}] : {target_f[i][idx]} ")
+            #print(f"my idx is {action_taken}, so the value I will replace is target_f[{i}][{action_taken}] : {target_f[i][action_taken]} ")
             #print(f"using the same batch-index of {i} for target_rewards[{i}]={target_rewards[i]}")
             #print(f"ready to assign")
-            target_f[i][idx] = target_rewards[i]
+            target_f[i][action_taken] = target_rewards[i]
             #print(f"   after assign: target_f[{i}] is now: {target_f[i]}")
-            i+=1
 
         self.optimizer.zero_grad()
         loss = F.mse_loss(output_tensor, target_f)
