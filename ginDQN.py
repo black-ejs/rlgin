@@ -204,10 +204,10 @@ class ginDQNStrategy(playGin.OneDecisionGinStrategy):
         
     def get_random_score(self):
         if self.agent.output_size < 2:
-            return random.random()
+            return (random.random()-0.5)*2
         rez = []
         for i in range(self.agent.output_size):
-            rez.append(random.random())
+            rez.append((random.random()-0.5)*2)
         return rez
 
     def scoreCandidate(self, myHand, candidate, ginhand):
@@ -219,7 +219,7 @@ class ginDQNStrategy(playGin.OneDecisionGinStrategy):
             score = self.get_random_score()
             is_random = True
         else:
-            # predict action based on the old state
+            # predict action based on the state
             with torch.no_grad():
                 state_old_tensor = torch.tensor(current_state.reshape(self.agent.input_size), 
                                                 dtype=torch.float32).to(DEVICE)
