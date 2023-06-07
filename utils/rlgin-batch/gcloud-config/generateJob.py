@@ -197,7 +197,7 @@ if __name__ == '__main__':
     parser.add_argument("--num_tasks", nargs='?', type=int, default=1)
     parser.add_argument("--parallelism", nargs='?', type=int, default=1)
     parser.add_argument("--region", nargs='?', type=str, default="us-central1")
-    parser.add_argument("--vm_template", nargs='?', type=str, default="rb-n2-50-template-6")
+    parser.add_argument("--vm_template", nargs='?', type=str, default="rb-c2d-2x8-template-7")
     parser.add_argument("--script", nargs='?', type=str, default="./rb-run-param-job.sh")
     parser.add_argument("--scriptfile", nargs='?', type=str, default=None)
     parser.add_argument("--scriptraw", nargs='?', type=int, default=False) # run on raw vm
