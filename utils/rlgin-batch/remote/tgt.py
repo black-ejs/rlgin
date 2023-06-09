@@ -13,7 +13,11 @@ class Tgt_Processor:
             self.run_id, self.series_nick = self.parse_run_id(logfile)
         else:
             self.run_id, self.series_nick = ("","")
-        self.tot_time=0
+        self.tot_time = {}
+        self.tot_time['train'] = 0
+        self.tot_time['test'] = 0
+        self.tot_time['pre'] = 0
+        self.tot_time['scratch'] = 0
         self.hand_count=0
         self.logfile=""
         self.host =""
@@ -40,14 +44,14 @@ class Tgt_Processor:
             self.process_line(line)
 
         # final output
-        if self.tot_time>0:
+        if len(self.phase)>0 and self.tot_time[self.phase]>0:
             self.output()
             self.output_series_score(self.series_nick)
 
     def process_line(self,line:str):
         toks=line.split()
         if line.find("@rb-")>-1:
-            if self.tot_time>0:
+            if len(self.phase)>0 and self.tot_time[self.phase]>0:
                 self.output()
 
             prev_nick = self.series_nick
@@ -67,12 +71,12 @@ class Tgt_Processor:
                 time=toks[7]
             else:
                 time=toks[12]
-            self.tot_time += float(time)
+            self.tot_time[self.phase] += float(time)
         elif line.find("ing...")>-1:
             self.phase=toks[0][:-6].lower()
             if self.phase == "pretest":
                 self.phase="pre"
-            self.tot_time=0
+            self.tot_time[self.phase]=0
         elif line.find("total_reward")>-1:
             reward=toks[2][:-2]
             if not self.phase in self.rewards:
@@ -134,7 +138,7 @@ class Tgt_Processor:
     def logfile_summary(self):
         rewards=""
         wins=""
-        avg_time=self.tot_time/self.hand_count
+        avg_time=self.tot_time['train']/self.hand_count
 
         for phase in self.rewards:
             if phase == "scratch":
@@ -146,11 +150,11 @@ class Tgt_Processor:
                 continue
             wins += f"{phase}:{mean(self.wins[phase]):3.1f}/"
 
-        summary = f"{self.run_id.ljust(14)} r={rewards[:-1]}, w={wins[:-1]}, score:{self.score_logfile():3.2f}  tavg: {avg_time}"
+        summary = f"{self.run_id.ljust(14)} r={rewards[:-1]}, w={wins[:-1]}, score:{self.score_logfile():3.2f}  tavg: {avg_time:3.2f}"
         return summary
 
     def logfile_progress_summary(self):
-        avg_time=self.tot_time/self.hand_count
+        avg_time=self.tot_time[self.phase]/self.hand_count
         secs_to_go = int((5000-self.hand_count) * (avg_time/1000))
         hrs_to_go = secs_to_go/3600
         summary =  (f"{self.run_id.ljust(14)} {self.hand_count} hands, avg time={avg_time:6.2f}, " +
