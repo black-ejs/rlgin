@@ -7,74 +7,17 @@ class Tgt_Processor:
     ID_PATTERN="[A-Za-z]+[0-9]+[.][0-9]+[.][0-9]"
     ID_LOCATE_PATTERN="Gin_"+ID_PATTERN+"[.]202[3456789]"
 
-    def output_series_score(self, nick:str):
-        if len(nick)<1:
-            return
-        
-        if self.series_score_count==0:
-            self.series_score_count=1
-        outline = f"{nick} overall_score={self.series_total_score:.3f}  avg_score={self.series_total_score/self.series_score_count:.3f}"
-        print(outline)
-        
-        with open(self.output_file, 'a') as o: 
-            print(outline,file=o)
-
-        self.series_total_score = 0
-        self.series_score_count = 0
-
-    def output(self):
-        if self.hand_count == 0:
-            return
-        
-        rewards=""
-        wins=""
-        for phase in self.rewards:
-            if phase == "scratch":
-                continue
-            rewards += f"{phase}:{mean(self.rewards[phase]):.3f}/"
-        for phase in self.wins:
-            if phase == "scratch":
-                continue
-            wins += f"{phase}:{mean(self.wins[phase]):3.1f}/"
-
-        avg_time=self.tot_time/self.hand_count;
-
-        if 'train' in self.rewards:
-            outline = f"{self.run_id.ljust(14)} r={rewards[:-1]}, w={wins[:-1]}, score:{self.score():3.2f}"
-        elif self.hand_count < 5000:
-            secs_to_go = int((5000-self.hand_count) * (avg_time/1000))
-            hrs_to_go = secs_to_go/3600
-            outline =  (f"{self.run_id.ljust(14)} {self.hand_count} hands, avg time={avg_time:6.2f}, " +
-                        f"{secs_to_go}s/{hrs_to_go:.2f}h to turnover @{self.host}")
-        print(outline)
-        with open(self.output_file, 'a') as o: 
-            print(outline,file=o)
-
-        self.series_total_score += self.score()
-        self.series_score_count += 1
-
-    def score(self):
-        if not 'test' in self.rewards:
-            return 0
-
-        if 'pre' in self.rewards:
-            base = mean(self.rewards['pre'])
-        elif 'train' in self.rewards:
-            base = mean(self.rewards['train'])
+    def new_logfile(self, logfile:str=""):
+        self.logfile=logfile
+        if len(logfile)>0:
+            self.run_id, self.series_nick = self.parse_run_id(logfile)
         else:
-            return 0
-        
-        score = mean(self.rewards['test']) - base
-
-        return score
-
-    def new_logfile(self):
+            self.run_id, self.series_nick = ("","")
         self.tot_time=0
         self.hand_count=0
         self.logfile=""
         self.host =""
         self.phase=""
-        self.run_id=""
         self.wins={}
         self.rewards={}
 
@@ -84,7 +27,6 @@ class Tgt_Processor:
         self.series_nick = ""
         self.series_total_score = 0
         self.series_score_count = 0
-        self.new_logfile()
 
         if os.path.exists(self.output_file):
             os.remove(self.output_file)
@@ -92,10 +34,12 @@ class Tgt_Processor:
         with open(input_file, 'r') as tgt_in: 
             lines = tgt_in.readlines()
 
+        self.new_logfile()
+
         for line in lines:
             self.process_line(line)
 
-        # final ourpur
+        # final output
         if self.tot_time>0:
             self.output()
             self.output_series_score(self.series_nick)
@@ -105,24 +49,15 @@ class Tgt_Processor:
         if line.find("@rb-")>-1:
             if self.tot_time>0:
                 self.output()
-            self.new_logfile()
+
+            prev_nick = self.series_nick
             pos=line.find("@rb-")
-            self.logfile = line[:pos-1:]
+            logfile = line[:pos-1:]
+            self.new_logfile(logfile)
             self.host = line[pos+1:-1]
-            self.run_id = self.logfile
-            match = re.search(self.ID_PATTERN,line)
-            if not match == None:
-                end=match.span()[1]
-                while line[end].isdigit():
-                    end+=1
-                self.run_id = line[match.span()[0]:end]
-            prev_nick=self.series_nick
-            if "scratchGin" in self.logfile:
-                self.series_nick = self.run_id[:self.run_id.find(".")]
-            else:
-                self.series_nick = self.run_id[:-(self.run_id[::-1].find("."))-1]
-            if not prev_nick == self.series_nick:
+            if len(prev_nick) > 0 and (not (prev_nick == self.series_nick)):
                 self.output_series_score(prev_nick)
+
             # print(f"{self.series_nick}") 
             # print(f"{self.run_id}") 
             # print(line[:-1])
@@ -149,6 +84,93 @@ class Tgt_Processor:
                 self.wins[self.phase] = []
             self.wins[self.phase].append(int(wins))
 
+    def parse_run_id(self,logfile:str):
+        run_id = logfile
+        match = re.search(self.ID_PATTERN,logfile)
+        if not match == None:
+            end=match.span()[1]
+            while logfile[end].isdigit():
+                end+=1
+            run_id = logfile[match.span()[0]:end]
+
+        if "scratchGin" in self.logfile:
+            series_nick = run_id[:run_id.find(".")]
+        else:
+            series_nick = run_id[:-(run_id[::-1].find("."))-1]
+
+        return run_id, series_nick
+
+    def output_series_score(self, nick:str):
+        if len(nick)<1:
+            return
+        
+        if self.series_score_count==0:
+            self.series_score_count=1
+        outline = f"{nick} overall_score={self.series_total_score:.3f}  avg_score={self.series_total_score/self.series_score_count:.3f}"
+        print(outline)
+        
+        with open(self.output_file, 'a') as o: 
+            print(outline,file=o)
+
+        self.series_total_score = 0
+        self.series_score_count = 0
+
+    def output(self):
+        if self.hand_count == 0:
+            return
+        
+        if 'train' in self.rewards:
+            outline = self.logfile_summary()
+        elif self.hand_count < 5000:
+            outline = self.logfile_progress_summary()
+
+        print(outline)
+        with open(self.output_file, 'a') as o: 
+            print(outline,file=o)
+
+        self.series_total_score += self.score_logfile()
+        self.series_score_count += 1
+
+    def logfile_summary(self):
+        rewards=""
+        wins=""
+        avg_time=self.tot_time/self.hand_count
+
+        for phase in self.rewards:
+            if phase == "scratch":
+                continue
+            rewards += f"{phase}:{mean(self.rewards[phase]):.3f}/"
+
+        for phase in self.wins:
+            if phase == "scratch":
+                continue
+            wins += f"{phase}:{mean(self.wins[phase]):3.1f}/"
+
+        summary = f"{self.run_id.ljust(14)} r={rewards[:-1]}, w={wins[:-1]}, score:{self.score_logfile():3.2f}  tavg: {avg_time}"
+        return summary
+
+    def logfile_progress_summary(self):
+        avg_time=self.tot_time/self.hand_count
+        secs_to_go = int((5000-self.hand_count) * (avg_time/1000))
+        hrs_to_go = secs_to_go/3600
+        summary =  (f"{self.run_id.ljust(14)} {self.hand_count} hands, avg time={avg_time:6.2f}, " +
+                    f"{secs_to_go}s/{hrs_to_go:.2f}h to turnover @{self.host}")
+        return summary
+
+    def score_logfile(self):
+        if not 'test' in self.rewards:
+            return 0
+
+        if 'pre' in self.rewards:
+            base = mean(self.rewards['pre'])
+        elif 'train' in self.rewards:
+            base = mean(self.rewards['train'])
+        else:
+            return 0
+        
+        score = mean(self.rewards['test']) - base
+
+        return score
 
 if __name__ == "__main__":
     if len(sys.argv)>1:
