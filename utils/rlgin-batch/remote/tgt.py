@@ -4,7 +4,7 @@ import os
 from statistics import mean
 
 class Tgt_Processor:
-    ID_PATTERN="[A-Za-z]+[0-9]+[.][0-9]+[.][0-9]"
+    ID_PATTERN="[A-Za-z]+[0-9]+[.][0-9]+[.][0-9]*"
     ID_LOCATE_PATTERN="Gin_"+ID_PATTERN+"[.]202[3456789]"
 
     def new_logfile(self, logfile:str=""):
@@ -13,6 +13,7 @@ class Tgt_Processor:
             self.run_id, self.series_nick = self.parse_run_id(logfile)
         else:
             self.run_id, self.series_nick = ("","")
+            print(f"...")
         self.tot_time = {}
         self.tot_time['train'] = 0
         self.tot_time['test'] = 0
