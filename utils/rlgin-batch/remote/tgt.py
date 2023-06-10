@@ -19,7 +19,6 @@ class Tgt_Processor:
         self.tot_time['pre'] = 0
         self.tot_time['scratch'] = 0
         self.hand_count=0
-        self.logfile=""
         self.host =""
         self.phase=""
         self.wins={}
@@ -50,7 +49,8 @@ class Tgt_Processor:
         # final output
         if len(self.phase)>0 and self.tot_time[self.phase]>0:
             self.output()
-            self.output_series_score(self.series_nick)
+            if not input_file == self.logfile:
+                self.output_series_score(self.series_nick)
 
     def process_line(self,line:str):
         toks=line.split()
@@ -185,6 +185,7 @@ if __name__ == "__main__":
         input_file = sys.argv[1]
     else:
         input_file = "/Users/edward/tgt2.sh.out.1"
+        #input_file = "/Users/edward/Documents/dev/projects/BLG/scratch/analysis/BLG22/logs/scratchGin_BLG22.22.5.2023-06-10_05-23-27.log"
     output_file = f"{input_file}.x"
     if len(sys.argv)>2:
         output_file = sys.argv[2]
