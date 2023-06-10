@@ -38,7 +38,11 @@ class Tgt_Processor:
         with open(input_file, 'r') as tgt_in: 
             lines = tgt_in.readlines()
 
-        self.new_logfile()
+        match = re.search(self.ID_LOCATE_PATTERN,input_file)
+        if not match == None:
+            self.new_logfile(input_file)
+        else:
+            self.new_logfile()
 
         for line in lines:
             self.process_line(line)
