@@ -46,8 +46,8 @@ class HistoricalBayesianOptimizer():
             result[self.optim_params[len(result)]['name']] = inp
         result['score']=0
         with open(self.historical_file,"a") as f:
-            if len(self.history)>0:
-                f.write("\n")
+            # if len(self.history)>0:
+            #    f.write("\n")
             f.write(f"{result}")
 
     ##########################################################
