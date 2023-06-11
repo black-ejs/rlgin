@@ -13,7 +13,6 @@ class Tgt_Processor:
             self.run_id, self.series_nick = self.parse_run_id(logfile)
         else:
             self.run_id, self.series_nick = ("","")
-            print(f"...")
         self.tot_time = {}
         self.tot_time['train'] = 0
         self.tot_time['test'] = 0

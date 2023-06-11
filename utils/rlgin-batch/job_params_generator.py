@@ -31,7 +31,7 @@ if not args.params_spec == None:
 else:
         params_spec=f"ginDQNParameters.py.{series}.{mode.lower()}"
 
-if args.output_filename==None or len(args.output_file==0):
+if args.output_filename==None or len(args.output_filename)==0:
         output_filename=f"job-params.{series}{driver_id}.{mode.lower()}.txt"
 else:
         output_filename=args.output_filename
