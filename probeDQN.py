@@ -53,8 +53,21 @@ def run(params:dict,weights:list):
     print(f"--- PROBE START at {startTime} ---")
     print(params)
 
-    heatmap_script = ""
+    run_conv_heatmap(weights,params['heatmap_file'])
 
+    endTime = time.time()
+    total_duration = endTime - startTime
+    
+    stats.put("start_time", startTime)
+    stats.put("end_time", endTime)
+    stats.put("total_duration", total_duration)
+    print(f"--- PROBE END at {time.time()} ---")
+
+    return stats
+
+## #############################################
+def run_conv_heatmap(weights:list,output_file:str):
+    heatmap_script = ""
     for weightsfile in weights:
         player2 = learningPlayer.learningPlayer(params['player2'])
         nn_params = params['player2']['nn']     
@@ -87,26 +100,69 @@ def run(params:dict,weights:list):
             model_tag = chunks[-3]
             model_id = model_tag + " g" + generation
         print(f"weightsfile={weightsfile}  model_id={model_id}")
-        heatmap_script += create_heatmap_script(conv_weights,
+        heatmap_script += create_conv_heatmap_script(conv_weights,
                                              model_id,"G")
         
-        heatmap_script += create_heatmap_script(conv_biased_weights,
+        heatmap_script += create_conv_heatmap_script(conv_biased_weights,
                                                  model_id+" biased","R")
-        
-    create_heatmap(heatmap_script, params['heatmap_file'])
-
-    endTime = time.time()
-    total_duration = endTime - startTime
     
-    stats.put("start_time", startTime)
-    stats.put("end_time", endTime)
-    stats.put("total_duration", total_duration)
-    print(f"--- PROBE END at {time.time()} ---")
-
-    return stats
+    create_conv_heatmap(heatmap_script,output_file)
 
 ## #############################################
-def run_probe(params:dict,weights:list):
+def run_probe_with_logging(params:dict,weights_path_2:str):
+    old_stdout = None
+    old_stderr = None
+    log = None
+    try:
+            
+        if 'log_path' in params:
+            log_path = params['log_path']
+            log_path = os.path.expanduser(log_path)
+            if len(log_path)>0:
+                log = open(log_path, "w")
+                if log.writable:
+                    old_stdout = sys.stdout
+                    sys.stdout = log
+                    old_stderr = sys.stderr
+                    sys.stderr = log
+
+        output_file = params['heatmap_file']
+        if not output_file == None:
+            if os.path.isfile(output_file):
+                os.unlink(output_file)
+
+        run_probe(params, weights_path_2)
+
+    finally:
+        if not old_stdout == None:
+            sys.stdout = old_stdout
+        if not old_stderr == None:
+            sys.stderr = old_stderr
+        if not log == None:
+            log.close()
+
+## #############################################
+def run_probe(params:dict,weights_path_2:str):
+    weights=[]
+    if os.path.isfile(weights_path_2):
+        weights.append(weights_path_2)
+    elif os.path.isdir(weights_path_2):
+        entries = os.scandir(weights_path_2)
+        for e in entries:
+            if e.is_file():
+                weights.append(e.path)
+    else:
+        weights = weights_path_2.split()
+        # see refactor below
+        for w_p_2 in weights:
+            run_probe(params, w_p_2)
+        return  True
+
+    # should refactor to always recurse the list here
+    return run_probe_list(params,weights) 
+
+## #############################################
+def run_probe_list(params:dict,weights:list):
     probe_params = copy.deepcopy(params)
     do_probe = False
     for p in ('player1', 'player2'):
@@ -124,9 +180,11 @@ def run_probe(params:dict,weights:list):
         with torch.no_grad():
             stats = run(probe_params, weights) 
         print_stats(stats)
+    
+    return True
 
 ## #############################################
-def create_heatmap(heatmap_script, output_file=None):
+def create_conv_heatmap(heatmap_script, output_file=None):
     
     source_path = Path(__file__).resolve()
     source_dir = source_path.parent
@@ -135,17 +193,14 @@ def create_heatmap(heatmap_script, output_file=None):
     with open(source_dir / template_filename,"r") as t:
         template = t.readlines()
 
-    if not output_file == None:
-        if os.path.isfile(output_file):
-            os.unlink(output_file)
-
     for line in template:
         if "INSERT show_grid() CALLS HERE" in line:
             p2f(heatmap_script,output_file) 
         else:
             p2f(line, output_file)
 
-def create_heatmap_script(conv_weights:torch.Tensor, title:str, color:str="G"):
+## #############################################
+def create_conv_heatmap_script(conv_weights:torch.Tensor, title:str, color:str="G"):
 
     my_weights = conv_weights.detach().numpy()
 
@@ -161,6 +216,7 @@ def create_heatmap_script(conv_weights:torch.Tensor, title:str, color:str="G"):
 
     return heatmap_script
 
+## #############################################
 def p2f(data,output_file:str=None):
     if not output_file == None:
         with open(output_file,"a") as o:
@@ -189,9 +245,15 @@ if __name__ == '__main__':
 
     # Set options 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--params_module", nargs='?', type=str, default="logs/pad_params")
     parser.add_argument("--logfile", nargs='?', type=str, default=None)
-    parser.add_argument("--weights_path_2", nargs='?', type=str, default="weights/pad_params_weights.h5.post_training")
+    #parser.add_argument("--params_module", nargs='?', type=str, default="params/ginDQNParamaters_BLGw17_16") # default="logs/pad_params")
+    #parser.add_argument("--weights_path_2", nargs='?', type=str, default="weights/pad_params_weights.h5.post_training")
+    parser.add_argument("--params_module", nargs='?', type=str, default="params/ginDQNParamaters_BLGw17_16") # default="logs/pad_params")
+    #parser.add_argument("--weights_path_2", nargs='?', type=str, default="../BLG/train/analysis/BLGw17.16/weights/weights.h5.3  ../BLG/train/analysis/BLGw17.16/weights/weights.h5.4") 
+    #parser.add_argument("--weights_path_2", nargs='?', type=str, default="../BLG/train/analysis/BLGw17.16/weights/weights.h5.3") 
+    #parser.add_argument("--weights_path_2", nargs='?', type=str, default="../BLG/train/analysis/BLGw17.16/weights") 
+    #parser.add_argument("--weights_path_2", nargs='?', type=str, default="../BLG/train/analysis/BLGw17.16/weights ../BLG/train/analysis/BLGf7.3/weights") 
+    parser.add_argument("--weights_path_2", nargs='?', type=str, default="../BLG/train/analysis/BLGw17.16/weights/weights.h5.3 ../BLG/train/analysis/BLGf7.3/weights") 
     parser.add_argument("--heatmap_file", nargs='?', type=str, default="~/gg.html")
     args = parser.parse_args()
     print("probeDQN.py: args ", args)
@@ -212,40 +274,4 @@ if __name__ == '__main__':
     if not (args.logfile == None):
         params['log_path'] = args.logfile        
 
-    weights=[]
-    if os.path.isfile(args.weights_path_2):
-        weights.append(args.weights_path_2)
-    elif os.path.isdir(args.weights_path_2):
-        entries = os.scandir(args.weights_path_2)
-        for e in entries:
-            if e.is_file():
-                weights.append(e.path)
-    else:
-        weights = args.weights_path_2.split()
-
-    old_stdout = None
-    old_stderr = None
-    log = None
-    try:
-            
-        if 'log_path' in params:
-            log_path = params['log_path']
-            log_path = os.path.expanduser(log_path)
-            if len(log_path)>0:
-                log = open(log_path, "w")
-                if log.writable:
-                    old_stdout = sys.stdout
-                    sys.stdout = log
-                    old_stderr = sys.stderr
-                    sys.stderr = log
-
-        run_probe(params, weights)
-
-    finally:
-        if not old_stdout == None:
-            sys.stdout = old_stdout
-        if not old_stderr == None:
-            sys.stderr = old_stderr
-        if not log == None:
-            log.close()
-
+    run_probe_with_logging(params, args.weights_path_2)
