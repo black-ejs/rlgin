@@ -161,8 +161,9 @@ class Tgt_Processor:
         avg_time=self.tot_time[self.phase]/self.hand_count
         secs_to_go = int((5000-self.hand_count) * (avg_time/1000))
         hrs_to_go = secs_to_go/3600
+        min_to_go = secs_to_go/60
         summary =  (f"{self.run_id.ljust(14)} {self.hand_count} hands, avg time={avg_time:6.2f}, " +
-                    f"{secs_to_go}s/{hrs_to_go:.2f}h to turnover @{self.host}")
+                    f"{secs_to_go}s/{min_to_go:.2f}m/{hrs_to_go:.2f}h to turnover @{self.host}")
         return summary
 
     def score_logfile(self):
