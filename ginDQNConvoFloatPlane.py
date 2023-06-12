@@ -124,12 +124,16 @@ class ginDQNConvoFloatPlane(ginDQN.ginDQN):
     def create_conv_layer(self):
         # one-channel input, two filters, 4x4 kernel
         # no stride, no padding, no groups, no dilation
+        if 'conv_layer_kernels'  in self.params:
+            convo_output_channels =  self.params['conv_layer_kernels']
+        else:
+            convo_output_channels =  ginDQNConvoFloatPlane.CONVO_OUTPUT_CHANNELS
         self.convo_output_size = self.calc_conv_output_size(ginDQNConvoFloatPlane.CONVO_INPUT_CHANNELS, 
-                                            ginDQNConvoFloatPlane.CONVO_OUTPUT_CHANNELS, 
+                                            convo_output_channels, 
                                             ginDQNConvoFloatPlane.CONVO_KERNEL_SIZE, 
                                             ginDQNConvoFloatPlane.CONVO_INPUT_CHANNEL_SIZE)
         return nn.Conv2d(ginDQNConvoFloatPlane.CONVO_INPUT_CHANNELS,
-                         ginDQNConvoFloatPlane.CONVO_OUTPUT_CHANNELS,
+                         convo_output_channels,
                          ginDQNConvoFloatPlane.CONVO_KERNEL_SIZE)
 
     def calc_conv_output_image_size(self, kernel_size, conv_input_size,

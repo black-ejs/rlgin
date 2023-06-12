@@ -43,7 +43,7 @@ class DQNAgent(torch.nn.Module):
         self.reward = 0
         self.optimizer = None
         self.episode_memory = collections.deque(maxlen=1000)
-        self.memory = collections.deque(maxlen=params['memory_size'])
+        self.memory = collections.deque(maxlen=params['replay_memory_size'])
         self.posttrain_weights = None
 
         self.network()

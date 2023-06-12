@@ -175,6 +175,7 @@ def run(params):
                                 player1.get_strategy(),
                                 gin.Player(player2.name),
                                 player2.get_strategy())
+        ginhand.extend_hands =  params['extend_hands']
         ginhand.nn_players = {}
         for p in nn_players:
             ginhand.nn_players[p.name] = {}
@@ -198,9 +199,14 @@ def run(params):
         ##if params['train'] and (not pretrain_weights==None):
         ##    dqnStrategy.pretrain_weights = pretrain_weights
 
+        if params['extend_hands']:
+            max_turns=params['max_turns_per_hand']
+        else:
+            max_turns=(gin.NUM_RANKS*gin.NUM_SUITS) - (gin.HAND_SIZE*2)
+
         # play the hand
         hand_startTime = time.time()
-        winner = ginhand.play(params['max_steps_per_hand'])
+        winner = ginhand.play(max_turns)
         counter_hands += 1
         for p in nn_players:
             if p.ginDQN.params['train']:
@@ -377,6 +383,52 @@ def print_psinfo(prefix=""):
         f"psinfo={process.memory_info().rss}/{process.memory_percent():1.2f}%")
 
 ## #############################################
+def set_max_python_memory(target_mpm:int):
+    print(f"setting max_python_memory={target_mpm}")
+    process = psutil.Process(os.getpid())
+    print_psinfo(" pre:  ")
+    old_mpm = resource.getrlimit(resource.RLIMIT_AS)
+    rez_mpm = resource.setrlimit(resource.RLIMIT_AS,
+                                target_mpm,target_mpm)
+    new_mpm = resource.getrlimit(resource.RLIMIT_AS)
+    print(f" old={old_mpm} rez={rez_mpm} new={new_mpm}")
+    print_psinfo(" post: ")
+
+## #############################################
+def run_with_logging(params:dict):
+    old_stdout = None
+    old_stderr = None
+    log = None
+    try:
+            
+        if 'log_path' in params:
+            log_path = params['log_path']
+            log_path = os.path.expanduser(log_path)
+            if len(log_path)>0:
+                log = open(log_path, "w")
+                if log.writable:
+                    old_stdout = sys.stdout
+                    sys.stdout = log
+                    old_stderr = sys.stderr
+                    sys.stderr = log
+
+        if 'max_python_memory' in params:
+            set_max_python_memory(params["max_python_memory"])
+
+        if params['scratch']:
+            run_scratch(params)
+
+        run_train_test(params)
+
+    finally:
+        if not old_stdout == None:
+            sys.stdout = old_stdout
+        if not old_stderr == None:
+            sys.stderr = old_stderr
+        if not log == None:
+            log.close()
+
+## #############################################
 ## #############################################
 ## #############################################
 import importlib
@@ -408,15 +460,15 @@ if __name__ == '__main__':
     parser.add_argument("--params_module", nargs='?', type=str, default=None)
     parser.add_argument("--name_scenario", nargs='?', type=str, default=None)
     parser.add_argument("--logfile", nargs='?', type=str, default=None)
+    parser.add_argument("--generation", nargs='?', type=int, default=-1)
+    parser.add_argument("--max_python_memory", nargs='?', type=int, default=-1)
     parser.add_argument("--weights_path_1", nargs='?', type=str, default=None)
     parser.add_argument("--weights_path_2", nargs='?', type=str, default=None)
     parser.add_argument("--learning_rate_1", nargs='?', type=float, default=None)
     parser.add_argument("--learning_rate_2", nargs='?', type=float, default=None)
     parser.add_argument("--gamma_1", nargs='?', type=float, default=None)
     parser.add_argument("--gamma_2", nargs='?', type=float, default=None)
-    parser.add_argument("--generation", nargs='?', type=int, default=-1)
-    parser.add_argument("--max_memory", nargs='?', type=int, default=-1)
-    parser.add_argument("--scratch", nargs='?', type=int, default=argparse.SUPPRESS)
+    parser.add_argument("--scratch", nargs='?', type=int, default=True) # default=argparse.SUPPRESS)
     args = parser.parse_args()
     print("learningGin: args ", args)
 
@@ -433,7 +485,12 @@ if __name__ == '__main__':
     if args.name_scenario != None:
         params['name_scenario'] = args.name_scenario
     if not (args.logfile == None):
-        params['log_path'] = args.logfile        
+        params['log_path'] = args.logfile   
+    if args.generation != -1:
+        params['generation'] = args.generation
+    if args.max_python_memory != -1:
+        params["max_python_memory"] = args.max_python_memory
+             
     for player_index in ("1","2"):
         player_key="player" + player_index
         for key_root in ("weights_path", "gamma", "learning_rate"):
@@ -448,55 +505,11 @@ if __name__ == '__main__':
                     params[player_key]['nn'][params_key]  = param_val
                 else:
                     print(f"*** WARNING, --{args_key} specified but {player_key} is not a neural net ")
-    if args.generation != -1:
-        params['generation'] = args.generation
-    if args.max_memory != -1:
-        params["max_python_memory"] = args.max_memory
 
     if hasattr(args,'scratch'):
         params['scratch'] = True
     elif not 'scratch' in params:
         params['scratch'] = False
 
-    old_stdout = None
-    old_stderr = None
-    log = None
-    try:
-            
-        if 'log_path' in params:
-            log_path = params['log_path']
-            log_path = os.path.expanduser(log_path)
-            if len(log_path)>0:
-                log = open(log_path, "w")
-                if log.writable:
-                    old_stdout = sys.stdout
-                    sys.stdout = log
-                    old_stderr = sys.stderr
-                    sys.stderr = log
-
-        if 'max_python_memory' in params:
-            target_mpm = params["max_python_memory"]
-            print(f"setting max_python_memory={target_mpm}")
-            process = psutil.Process(os.getpid())
-            print_psinfo(" pre:  ")
-            old_mpm = resource.getrlimit(resource.RLIMIT_AS)
-            rez_mpm = resource.setrlimit(resource.RLIMIT_AS,
-                            [params["max_python_memory"],
-                             params["max_python_memory"]])
-            new_mpm = resource.getrlimit(resource.RLIMIT_AS)
-            print(f" old={old_mpm} rez={rez_mpm} new={new_mpm}")
-            print_psinfo(" post: ")
-
-        if params['scratch']:
-            run_scratch(params)
-
-        run_train_test(params)
-
-    finally:
-        if not old_stdout == None:
-            sys.stdout = old_stdout
-        if not old_stderr == None:
-            sys.stderr = old_stderr
-        if not log == None:
-            log.close()
+    run_with_logging(params)
 
