@@ -511,5 +511,9 @@ if __name__ == '__main__':
     elif not 'scratch' in params:
         params['scratch'] = False
 
+    # back-compatibility for prop rename
+    if 'memory_size' in params:
+        params['replay_memory_size'] = params['memory_size']    
+
     run_with_logging(params)
 
