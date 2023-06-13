@@ -49,6 +49,7 @@ def define_parameters():
     # game structure
     params['extend_hands'] = False          # recycle discards when deck is exhausted, up to max_turns_per_hand
     params['max_turns_per_hand'] = 100     # max turns before no_winner, if 'extend_hands' == TRUE
+    params['scratch'] = False
 
     # logging 
     params['timestamp'] = timestamp
