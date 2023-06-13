@@ -16,27 +16,13 @@ NO_WIN_NAME = 'nobody'
 import learningPlayer
 
 ## #############################################
-## #############################################
-class Stats:
-    def __init__(self):
-        self.stats = {}    
-
-    def put(self, key, value):
-        self.stats[key]=value
-
-    def get(self, key): 
-        if key in self.stats:
-            return self.stats[key]
-        return "unknown statistic"
-
-## #############################################
 def print_stats(stats, file=None):
     """
     force winMap to be last for parsing
     """
     if file == None:
         file = sys.stdout
-    for key, value in stats.stats.items():
+    for key, value in stats.items():
         if not key == 'params':
             print(f"{key}: {value}", file=file)
 
@@ -45,9 +31,9 @@ def run(params:dict,weights:list):
     """
     Use the DQN to play gin, via a ginDQNStrategy            
     """
-    stats = Stats()
-    stats.put('run_timestamp', datetime.datetime.now())
-    stats.put('params', params)
+    stats = {}
+    stats['run_timestamp'] = datetime.datetime.now()
+    stats['params'] = params
 
     startTime = time.time()
     print(f"--- PROBE START at {startTime} ---")
@@ -58,9 +44,9 @@ def run(params:dict,weights:list):
     endTime = time.time()
     total_duration = endTime - startTime
     
-    stats.put("start_time", startTime)
-    stats.put("end_time", endTime)
-    stats.put("total_duration", total_duration)
+    stats['start_time']=startTime
+    stats['end_time']=endTime
+    stats['total_duration']=total_duration
     print(f"--- PROBE END at {time.time()} ---")
 
     return stats
@@ -75,14 +61,18 @@ def run_conv_heatmap(weights:list,output_file:str):
         player2.get_strategy()
 
         conv2Dlayer = player2.ginDQN.layers[0]
-        conv_weights = conv2Dlayer.weight
-        conv_bias = conv2Dlayer.bias
-        b0 = conv_bias[0].item()
-        b1 = conv_bias[1].item()
-        u0 = torch.sub(conv_weights[0],b0)
-        u1 = torch.sub(conv_weights[1],b1)
-        conv_biased_weights = torch.cat((u0,u1))
-        conv_biased_weights = conv_biased_weights.reshape((2,1,4,4))
+        conv_weights = conv2Dlayer.weight.clone().detach()
+        conv_bias = conv2Dlayer.bias.clone().detach()
+        num_kernels = conv_bias.shape[0]
+        conv_biased_weights = None
+        for kernel_ndx in range(num_kernels):
+            b0 = conv_bias[kernel_ndx].item()
+            u0 = torch.sub(conv_weights[kernel_ndx],b0)
+            if type(None) == type(conv_biased_weights):
+                conv_biased_weights = u0.clone().detach()
+            else:
+                conv_biased_weights = torch.cat((conv_biased_weights,u0))
+        conv_biased_weights = conv_biased_weights.reshape((num_kernels,1,4,4))
         print(f"******************************")
         print(f"{weightsfile}")
         print(f"---- Conv2D weights")
@@ -246,14 +236,16 @@ if __name__ == '__main__':
     # Set options 
     parser = argparse.ArgumentParser()
     parser.add_argument("--logfile", nargs='?', type=str, default=None)
-    #parser.add_argument("--params_module", nargs='?', type=str, default="params/ginDQNParamaters_BLGw17_16") # default="logs/pad_params")
+    ###parser.add_argument("--params_module", nargs='?', type=str, default="logs/pad_params") # default="logs/pad_params")
     #parser.add_argument("--weights_path_2", nargs='?', type=str, default="weights/pad_params_weights.h5.post_training")
-    parser.add_argument("--params_module", nargs='?', type=str, default="params/ginDQNParamaters_BLGw17_16") # default="logs/pad_params")
+    ###parser.add_argument("--params_module", nargs='?', type=str, default="params/ginDQNParameters_BLGw17_16") 
     #parser.add_argument("--weights_path_2", nargs='?', type=str, default="../BLG/train/analysis/BLGw17.16/weights/weights.h5.3  ../BLG/train/analysis/BLGw17.16/weights/weights.h5.4") 
     #parser.add_argument("--weights_path_2", nargs='?', type=str, default="../BLG/train/analysis/BLGw17.16/weights/weights.h5.3") 
     #parser.add_argument("--weights_path_2", nargs='?', type=str, default="../BLG/train/analysis/BLGw17.16/weights") 
     #parser.add_argument("--weights_path_2", nargs='?', type=str, default="../BLG/train/analysis/BLGw17.16/weights ../BLG/train/analysis/BLGf7.3/weights") 
-    parser.add_argument("--weights_path_2", nargs='?', type=str, default="../BLG/train/analysis/BLGw17.16/weights/weights.h5.3 ../BLG/train/analysis/BLGf7.3/weights") 
+    #parser.add_argument("--weights_path_2", nargs='?', type=str, default="../BLG/train/analysis/BLGw17.16/weights/weights.h5.3 ../BLG/train/analysis/BLGf7.3/weights") 
+    parser.add_argument("--params_module", nargs='?', type=str, default="params/ginDQNParameters_TPN") 
+    parser.add_argument("--weights_path_2", nargs='?', type=str, default="../TPN/scratch/analysis/TPN1/weights/scratchGin_TPN1.1.27.2023-06-12_20-23-22.h5") 
     parser.add_argument("--heatmap_file", nargs='?', type=str, default="~/gg.html")
     args = parser.parse_args()
     print("probeDQN.py: args ", args)
