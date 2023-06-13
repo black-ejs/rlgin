@@ -468,7 +468,7 @@ if __name__ == '__main__':
     parser.add_argument("--learning_rate_2", nargs='?', type=float, default=None)
     parser.add_argument("--gamma_1", nargs='?', type=float, default=None)
     parser.add_argument("--gamma_2", nargs='?', type=float, default=None)
-    parser.add_argument("--scratch", nargs='?', type=int, default=True) # default=argparse.SUPPRESS)
+    parser.add_argument("--scratch", nargs='?', type=int, default=argparse.SUPPRESS)
     args = parser.parse_args()
     print("learningGin: args ", args)
 
