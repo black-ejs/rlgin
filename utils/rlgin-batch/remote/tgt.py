@@ -54,7 +54,12 @@ class Tgt_Processor:
 
     def process_line(self,line:str):
         toks=line.split()
-        if line.find("@rb-")>-1:
+        if line.find("episodes=")>-1:
+            episodes=line[line.find("'episodes': ")+11:]
+            episodes=episodes[episodes.find(",")]
+            self.episodes=int(episodes)
+
+        elif line.find("@rb-")>-1:
             if len(self.phase)>0 and self.tot_time[self.phase]>0:
                 self.output()
 
@@ -81,6 +86,7 @@ class Tgt_Processor:
             if self.phase == "pretest":
                 self.phase="pre"
             self.tot_time[self.phase]=0
+            self.episodes=5000 # gotts put something
         elif line.find("total_reward")>-1:
             reward=toks[2][:-2]
             if not self.phase in self.rewards:
@@ -129,7 +135,7 @@ class Tgt_Processor:
         
         if 'train' in self.rewards:
             outline = self.logfile_summary()
-        elif self.hand_count < 5000:
+        elif self.hand_count < self.episodes:
             outline = self.logfile_progress_summary()
 
         print(outline)
@@ -159,7 +165,7 @@ class Tgt_Processor:
 
     def logfile_progress_summary(self):
         avg_time=self.tot_time[self.phase]/self.hand_count
-        secs_to_go = int((5000-self.hand_count) * (avg_time/1000))
+        secs_to_go = int((self.episodes-self.hand_count) * (avg_time/1000))
         hrs_to_go = secs_to_go/3600
         min_to_go = secs_to_go/60
         summary =  (f"{self.run_id.ljust(14)} {self.hand_count} hands, avg time={avg_time:6.2f}, " +
