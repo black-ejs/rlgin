@@ -200,7 +200,10 @@ def run(params):
         ##    dqnStrategy.pretrain_weights = pretrain_weights
 
         if params['extend_hands']:
-            max_turns=params['max_turns_per_hand']
+            if 'max_turns_per_hand' in params:
+                max_turns=params['max_turns_per_hand']
+            else:
+                max_turns=params['max_steps_per_hand'] # back-compat
         else:
             max_turns=(gin.NUM_RANKS*gin.NUM_SUITS) - (gin.HAND_SIZE*2)
 
