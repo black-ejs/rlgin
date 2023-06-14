@@ -288,13 +288,14 @@ def get_strategy(key: str):
 
 ## ##############################
 if __name__ == '__main__':	
+	NO_EXTEND_TURNS = (gin.NUM_RANKS*gin.NUM_SUITS) - (gin.HAND_SIZE*2)
 
 	strategy_help = "(r=random, d=dumbass, b=brainiac, brNN=brandiac with NN percent random)"
 
 	parser = argparse.ArgumentParser()
 	parser.add_argument('num_hands_to_play',
                     default=500, type=int,
-                    nargs='?', help='number of hands to play ' + strategy_help)
+                    nargs='?', help='number of hands to play ')
 	parser.add_argument('strategy1',
                     default='b', type=str,
                     nargs='?', help='the strategy for the first player' + strategy_help)
@@ -318,6 +319,9 @@ if __name__ == '__main__':
 					type=str,
                     nargs='?', 
 					help='show turn-by-turn info')
+	parser.add_argument('max_turns',
+                    default=NO_EXTEND_TURNS, type=int,
+                    nargs='?', help=f"max turns in one hand, default is {NO_EXTEND_TURNS}")
 	args = parser.parse_args()
 
 	if not args.show_card_counts == 'False':
@@ -330,11 +334,14 @@ if __name__ == '__main__':
 	else:
 		show_turns = False
 
+	max_turns = args.max_turns
+
 	play(num_hands_to_play=args.num_hands_to_play, 
 			strategy1=get_strategy(args.strategy1), 
 			strategy2=get_strategy(args.strategy2), 
 			name1=args.name1, 
 			name2=args.name2,
 			show_card_counts=show_card_counts,
-			show_turns=show_turns)
+			show_turns=show_turns,
+			max_turns=max_turns)
 
