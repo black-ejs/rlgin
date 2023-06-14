@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 
 import torch 
+import torch.nn as nn
 import numpy as np
 
 import ginDQNParameters
@@ -40,6 +41,7 @@ def run(params:dict,weights:list):
     print(params)
 
     run_conv_heatmap(weights,params['heatmap_file'])
+    #run_linear_heatmap(weights,params['heatmap_file']+"_l_")
 
     endTime = time.time()
     total_duration = endTime - startTime
@@ -50,6 +52,29 @@ def run(params:dict,weights:list):
     print(f"--- PROBE END at {time.time()} ---")
 
     return stats
+
+## #############################################
+def run_linear_heatmap(weights:list,output_file:str):
+    heatmap_script = ""
+    for weightsfile in weights:
+        player2 = learningPlayer.learningPlayer(params['player2'])
+        nn_params = params['player2']['nn']     
+        nn_params['weights_path'] = weightsfile
+        player2.get_strategy()
+
+        for layer_ndx in range(1,len(player2.ginDQN.layers)):
+            llayer = nn.Linear(player2.ginDQN.layers[layer_ndx])
+            lin_weights = llayer.weight
+            lin_bias = llayer.bias
+            print(f"******************************")
+            print(f"{weightsfile}")
+            print(f"---- Linear Layer {layer_ndx} weights")
+            print(f"{lin_weights}")
+            print(f"---- Linear Layer {layer_ndx} bias")
+            print(f"{lin_bias} - {lin_bias[0].item()} - {lin_bias[1].item()}")
+            #print(f"---- Linear Layer {layer_ndx} biased weights")
+            #print(f"{conv_biased_weights}")
+            
 
 ## #############################################
 def run_conv_heatmap(weights:list,output_file:str):
@@ -197,7 +222,7 @@ def create_conv_heatmap_script(conv_weights:torch.Tensor, title:str, color:str="
     heatmap_script = ""
     #var_name = "heat_" + str(title.__hash__()).replace("-","_")
     var_name = "heat_" + str(random.randint(0,100000000)).replace("-","_")
-    for i in range(2):
+    for i in range(conv_weights.shape[0]):
         map_title = f"{title} ({i+1})"
         t=my_weights[i][0]
         array_str = np.array2string(t, separator=', ')
@@ -245,7 +270,7 @@ if __name__ == '__main__':
     #parser.add_argument("--weights_path_2", nargs='?', type=str, default="../BLG/train/analysis/BLGw17.16/weights ../BLG/train/analysis/BLGf7.3/weights") 
     #parser.add_argument("--weights_path_2", nargs='?', type=str, default="../BLG/train/analysis/BLGw17.16/weights/weights.h5.3 ../BLG/train/analysis/BLGf7.3/weights") 
     parser.add_argument("--params_module", nargs='?', type=str, default="params/ginDQNParameters_TPN") 
-    parser.add_argument("--weights_path_2", nargs='?', type=str, default="../TPN/scratch/analysis/TPN1/weights/scratchGin_TPN1.1.27.2023-06-12_20-23-22.h5") 
+    parser.add_argument("--weights_path_2", nargs='?', type=str, default="../TPN/scratch/analysis/TPN1/weights/scratchGin_TPN1.1.22.2023-06-13_22-30-01.h5") 
     parser.add_argument("--heatmap_file", nargs='?', type=str, default="~/gg.html")
     args = parser.parse_args()
     print("probeDQN.py: args ", args)
@@ -263,7 +288,9 @@ if __name__ == '__main__':
     params['display'] = True
     params['heatmap_file'] = os.path.expanduser(args.heatmap_file)
 
-    if not (args.logfile == None):
-        params['log_path'] = args.logfile        
+    # step on what is supplied in the paramss, that was intended for training logs
+    params['log_path'] = args.logfile
+    if params['log_path'] == None:
+        params.pop('log_path')
 
     run_probe_with_logging(params, args.weights_path_2)
