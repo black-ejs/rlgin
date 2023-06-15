@@ -41,7 +41,7 @@ def run(params:dict,weights:list):
     print(params)
 
     run_conv_heatmap(weights,params['heatmap_file'])
-    #run_linear_heatmap(weights,params['heatmap_file']+"_l_")
+    run_linear_heatmap(weights,params['heatmap_file']+"_l_")
 
     endTime = time.time()
     total_duration = endTime - startTime
@@ -63,7 +63,7 @@ def run_linear_heatmap(weights:list,output_file:str):
         player2.get_strategy()
 
         for layer_ndx in range(1,len(player2.ginDQN.layers)):
-            llayer = nn.Linear(player2.ginDQN.layers[layer_ndx])
+            llayer = player2.ginDQN.layers[layer_ndx]
             lin_weights = llayer.weight
             lin_bias = llayer.bias
             print(f"******************************")
@@ -260,7 +260,7 @@ if __name__ == '__main__':
 
     # Set options 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--logfile", nargs='?', type=str, default=None)
+    parser.add_argument("--logfile", nargs='?', type=str, default="logs/probe")
     ###parser.add_argument("--params_module", nargs='?', type=str, default="logs/pad_params") # default="logs/pad_params")
     #parser.add_argument("--weights_path_2", nargs='?', type=str, default="weights/pad_params_weights.h5.post_training")
     ###parser.add_argument("--params_module", nargs='?', type=str, default="params/ginDQNParameters_BLGw17_16") 
