@@ -34,7 +34,7 @@ do
 	for logfile in \${DD}; \
 	do \
 		echo \${logfile} @${HOST}; \
-		egrep -v ' turn | bench ' \${logfile} ; \
+		egrep -v ' turn | bench | future_rewards=| entire list' \${logfile} ; \
 	done"  \
 		${HOST} >> "${OUTPUT1}"
 
@@ -52,7 +52,7 @@ do
 		for logfile in \${DD}; \
 		do \
 			echo \${logfile} @${HOST}; \
-			egrep -v ' turn | bench ' \${logfile}; \
+			egrep -v ' turn | bench | future_rewards=| entire list ' \${logfile}; \
 		done"  \
 		${HOST} >> "${OUTPUT1}"
 	fi
