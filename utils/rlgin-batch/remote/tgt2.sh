@@ -4,7 +4,7 @@ CURRENT_SCRIPT_NAME="`basename ${0}`"
 CURRENT_SCRIPT_DIR="`dirname ${0}`"
 
 RLGIN_BATCH_REPO_URL='https://github.com/black-ejs/rlgin'
-MYTMP=${TMPDIR}tmp$$
+MYTMP=${TMPDIR}/tmp$$
 mkdir -p ${MYTMP}
 cd ${MYTMP}
 
@@ -39,7 +39,7 @@ do
 		${HOST} >> "${OUTPUT1}"
 
 	# this will find the already-done guys
-	if [[ "${ALREADY_DONE}"} == *" ${LEARNDIR} "* ]]
+	if [[ "X${ALREADY_DONE}X" == *" ${LEARNDIR} "* ]]
 	then
 		# already processed this guy
 		echo "skipping completed for ${LEARNDIR} @${HOST}"
