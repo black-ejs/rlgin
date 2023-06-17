@@ -37,11 +37,22 @@ def run(params:dict,weights:list):
     stats['params'] = params
 
     startTime = time.time()
-    print(f"--- PROBE START at {startTime} ---")
+    print(f"--- probeDQN: PROBE START at {startTime} ---")
     print(params)
 
+    print(f"   --- probeDQN: conv layer probe ---")
     run_conv_heatmap(weights,params['heatmap_file'])
+
+    print(f"   --- probeDQN: linear layers probe ---")
     run_linear_heatmap(weights,params['heatmap_file']+"_l_")
+
+    if len(weights) > 1:
+        print(f"   --- probeDQN: by-layer comparisons ---")
+        for w_ndx in range(len(weights)-1):
+            w1=weights[w_ndx]
+            for w2 in weights[w_ndx+1:]:
+                if not w1==w2:
+                    compare_weights(w1,w2) 
 
     endTime = time.time()
     total_duration = endTime - startTime
@@ -49,14 +60,49 @@ def run(params:dict,weights:list):
     stats['start_time']=startTime
     stats['end_time']=endTime
     stats['total_duration']=total_duration
-    print(f"--- PROBE END at {time.time()} ---")
+    print(f"--- probeDQN: PROBE END at {time.time()} ---")
 
     return stats
+
+## #############################################
+def compare_weights(weights1,weights2):
+    model_ids=[]
+    models = []
+    print(f"** ** ** ** ** ** ** ** ** ** ** ** ** ** **")
+    for weightsfile in (weights1,weights2):
+        player2 = learningPlayer.learningPlayer(params['player2'])
+        nn_params = params['player2']['nn']     
+        nn_params['weights_path'] = weightsfile
+        player2.get_strategy()
+        models.append(player2.ginDQN)
+        model_ids.append(extract_model_id(weightsfile))
+    
+    layer_weights = []
+    for model in models:
+        my_weights=[]
+        for layer_ndx in range(0,len(model.layers)):
+            my_weights.append(model.layers[layer_ndx].weight)
+        layer_weights.append(my_weights)
+
+    print(f"            ** ** ** ** ** ** **")
+    for layer_ndx in range(len(layer_weights[0])):
+        diffs = torch.eq(layer_weights[0][layer_ndx], layer_weights[1][layer_ndx])
+        print(f"{model_ids[0]} vs {model_ids[1]}: layer {layer_ndx}")
+        if torch.all(diffs):
+            print("this layer is identical in both models")
+        else:
+            print(f" --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---")
+            print("this layer is different in the two models")
+            print(diffs)
 
 ## #############################################
 def run_linear_heatmap(weights:list,output_file:str):
     heatmap_script = ""
     for weightsfile in weights:
+        model_id = extract_model_id(weightsfile)
+        print(f"******************************")
+        print(f"weightsfile={weightsfile}  model_id={model_id}")
+        
         player2 = learningPlayer.learningPlayer(params['player2'])
         nn_params = params['player2']['nn']     
         nn_params['weights_path'] = weightsfile
@@ -66,20 +112,32 @@ def run_linear_heatmap(weights:list,output_file:str):
             llayer = player2.ginDQN.layers[layer_ndx]
             lin_weights = llayer.weight
             lin_bias = llayer.bias
-            print(f"******************************")
-            print(f"{weightsfile}")
             print(f"---- Linear Layer {layer_ndx} weights")
             print(f"{lin_weights}")
             print(f"---- Linear Layer {layer_ndx} bias")
-            print(f"{lin_bias} - {lin_bias[0].item()} - {lin_bias[1].item()}")
+            print(f"{lin_bias}")
             #print(f"---- Linear Layer {layer_ndx} biased weights")
             #print(f"{conv_biased_weights}")
-            
+
+## #############################################
+def extract_model_id(weightsfile:str) ->str:
+    if '_' in weightsfile:
+        model_id = weightsfile[weightsfile.find("_")+1:weightsfile.find("-")-5]
+    else:
+        chunks = weightsfile.split("/")
+        generation = chunks[-1].split(".")[-1]
+        model_tag = chunks[-3]
+        model_id = model_tag + " g" + generation
+    return model_id
 
 ## #############################################
 def run_conv_heatmap(weights:list,output_file:str):
     heatmap_script = ""
     for weightsfile in weights:
+        model_id = extract_model_id(weightsfile)
+        print(f"******************************")
+        print(f"weightsfile={weightsfile}  model_id={model_id}")
+
         player2 = learningPlayer.learningPlayer(params['player2'])
         nn_params = params['player2']['nn']     
         nn_params['weights_path'] = weightsfile
@@ -98,8 +156,6 @@ def run_conv_heatmap(weights:list,output_file:str):
             else:
                 conv_biased_weights = torch.cat((conv_biased_weights,u0))
         conv_biased_weights = conv_biased_weights.reshape((num_kernels,1,4,4))
-        print(f"******************************")
-        print(f"{weightsfile}")
         print(f"---- Conv2D weights")
         print(f"{conv_weights}")
         print(f"---- Conv2D bias")
@@ -107,14 +163,6 @@ def run_conv_heatmap(weights:list,output_file:str):
         print(f"---- Conv2D biased weights")
         print(f"{conv_biased_weights}")
 
-        if '_' in weightsfile:
-            model_id = weightsfile[weightsfile.find("_")+1:weightsfile.find("-")-5]
-        else:
-            chunks = weightsfile.split("/")
-            generation = chunks[-1].split(".")[-1]
-            model_tag = chunks[-3]
-            model_id = model_tag + " g" + generation
-        print(f"weightsfile={weightsfile}  model_id={model_id}")
         heatmap_script += create_conv_heatmap_script(conv_weights,
                                              model_id,"G")
         
@@ -124,56 +172,28 @@ def run_conv_heatmap(weights:list,output_file:str):
     create_conv_heatmap(heatmap_script,output_file)
 
 ## #############################################
-def run_probe_with_logging(params:dict,weights_path_2:str):
-    old_stdout = None
-    old_stderr = None
-    log = None
-    try:
-            
-        if 'log_path' in params:
-            log_path = params['log_path']
-            log_path = os.path.expanduser(log_path)
-            if len(log_path)>0:
-                log = open(log_path, "w")
-                if log.writable:
-                    old_stdout = sys.stdout
-                    sys.stdout = log
-                    old_stderr = sys.stderr
-                    sys.stderr = log
-
-        output_file = params['heatmap_file']
-        if not output_file == None:
-            if os.path.isfile(output_file):
-                os.unlink(output_file)
-
-        run_probe(params, weights_path_2)
-
-    finally:
-        if not old_stdout == None:
-            sys.stdout = old_stdout
-        if not old_stderr == None:
-            sys.stderr = old_stderr
-        if not log == None:
-            log.close()
-
-## #############################################
-def run_probe(params:dict,weights_path_2:str):
+def expand_weights_path_2(weights_path_2:str):
     weights=[]
-    if os.path.isfile(weights_path_2):
-        weights.append(weights_path_2)
-    elif os.path.isdir(weights_path_2):
-        entries = os.scandir(weights_path_2)
+    expanded_weights_path_2 = os.path.expanduser(weights_path_2)
+    if os.path.isfile(expanded_weights_path_2):
+        weights.append(expanded_weights_path_2)
+    elif os.path.isdir(expanded_weights_path_2):
+        entries = os.scandir(expanded_weights_path_2)
         for e in entries:
             if e.is_file():
                 weights.append(e.path)
     else:
-        weights = weights_path_2.split()
-        # see refactor below
-        for w_p_2 in weights:
-            run_probe(params, w_p_2)
-        return  True
+        ww = weights_path_2.split()
+        for w in ww:
+            if not os.path.exists(w):
+                raise Exception(f"weights_path_2 specified does not exist: {w}")
+            weights.extend(expand_weights_path_2(w))
+    
+    return weights
 
-    # should refactor to always recurse the list here
+## #############################################
+def run_probe(params:dict,weights_path_2:str):
+    weights=expand_weights_path_2(weights_path_2)
     return run_probe_list(params,weights) 
 
 ## #############################################
@@ -240,6 +260,37 @@ def p2f(data,output_file:str=None):
         sys.stdout.write(data)
 
 ## #############################################
+def run_probe_with_logging(params:dict,weights_path_2:str):
+    old_stdout = None
+    old_stderr = None
+    log = None
+    try:
+            
+        if 'log_path' in params:
+            log_path = params['log_path']
+            log_path = os.path.expanduser(log_path)
+            if len(log_path)>0:
+                log = open(log_path, "w")
+                if log.writable:
+                    old_stdout = sys.stdout
+                    sys.stdout = log
+                    old_stderr = sys.stderr
+                    sys.stderr = log
+
+        output_file = params['heatmap_file']
+        if not output_file == None:
+            if os.path.isfile(output_file):
+                os.unlink(output_file)
+
+        run_probe(params, weights_path_2)
+
+    finally:
+        if not old_stdout == None:
+            sys.stdout = old_stdout
+        if not old_stderr == None:
+            sys.stderr = old_stderr
+        if not log == None:
+            log.close()
 ## #############################################
 ## #############################################
 import importlib
@@ -261,17 +312,25 @@ if __name__ == '__main__':
     # Set options 
     parser = argparse.ArgumentParser()
     parser.add_argument("--logfile", nargs='?', type=str, default="logs/probe")
+    parser.add_argument("--heatmap_file", nargs='?', type=str, default="~/gg.html")
+
     ###parser.add_argument("--params_module", nargs='?', type=str, default="logs/pad_params") # default="logs/pad_params")
     #parser.add_argument("--weights_path_2", nargs='?', type=str, default="weights/pad_params_weights.h5.post_training")
+
     ###parser.add_argument("--params_module", nargs='?', type=str, default="params/ginDQNParameters_BLGw17_16") 
     #parser.add_argument("--weights_path_2", nargs='?', type=str, default="../BLG/train/analysis/BLGw17.16/weights/weights.h5.3  ../BLG/train/analysis/BLGw17.16/weights/weights.h5.4") 
     #parser.add_argument("--weights_path_2", nargs='?', type=str, default="../BLG/train/analysis/BLGw17.16/weights/weights.h5.3") 
     #parser.add_argument("--weights_path_2", nargs='?', type=str, default="../BLG/train/analysis/BLGw17.16/weights") 
     #parser.add_argument("--weights_path_2", nargs='?', type=str, default="../BLG/train/analysis/BLGw17.16/weights ../BLG/train/analysis/BLGf7.3/weights") 
     #parser.add_argument("--weights_path_2", nargs='?', type=str, default="../BLG/train/analysis/BLGw17.16/weights/weights.h5.3 ../BLG/train/analysis/BLGf7.3/weights") 
-    parser.add_argument("--params_module", nargs='?', type=str, default="params/ginDQNParameters_TPN") 
-    parser.add_argument("--weights_path_2", nargs='?', type=str, default="../TPN/scratch/analysis/TPN1/weights/scratchGin_TPN1.1.22.2023-06-13_22-30-01.h5") 
-    parser.add_argument("--heatmap_file", nargs='?', type=str, default="~/gg.html")
+
+    ###parser.add_argument("--params_module", nargs='?', type=str, default="params/ginDQNParameters_TPN") 
+    #parser.add_argument("--weights_path_2", nargs='?', type=str, default="../TPN/scratch/analysis/TPN1/weights/scratchGin_TPN1.1.22.2023-06-13_22-30-01.h5") 
+    #parser.add_argument("--weights_path_2", nargs='?', type=str, default="../TPN/scratch/analysis/TPN1/weights/scratchGin_TPN1.1.22.2023-06-13_22-30-01.h5 ../TPN/scratch/analysis/TPN1/weights/scratchGin_TPN1.1.78.2023-06-15_04-23-36.h5") 
+
+    parser.add_argument("--params_module", nargs='?', type=str, default="params/ginDQNParameters_BLGw17_7") 
+    parser.add_argument("--weights_path_2", nargs='?', type=str, default="../BLG/train/analysis/BLGwi17.7/weights") 
+
     args = parser.parse_args()
     print("probeDQN.py: args ", args)
 
