@@ -492,8 +492,10 @@ class GinHand:
 	def __str__(self):
 		rez = ""
 		
-		if len(self.turns)>0:
-			m = self.turns[len(self.turns)-1]
+		turn_count = len(self.turns)
+		if turn_count>0:
+			rez += f"Turn {turn_count}" + '\n'
+			m = self.turns[turn_count-1]
 			rez += str(m)
 		else:
 			rez += "awaiting first play"

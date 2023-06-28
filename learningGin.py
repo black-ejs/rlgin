@@ -209,7 +209,12 @@ def run(params):
 
         # play the hand
         hand_startTime = time.time()
-        winner = ginhand.play(max_turns)
+        try:
+            winner = ginhand.play(max_turns)
+        except Exception as err:
+            print(f"*** ERROR *** : Exception raised while playing: {err}")
+            print(f"ginhand: {ginhand}")
+
         counter_hands += 1
         for p in nn_players:
             if p.ginDQN.params['train']:
@@ -367,10 +372,14 @@ def run_test(params,is_pretest:bool=False):
                 print_stats(stats)
 
 ## #############################################
-def run_train_test(params):
+def run_learningGin(params):
     start_time = time.time()
     print(f"****** learningGin execution at {datetime.datetime.now()} ")
+    print(f"environment: {os.environ}")
     print(f"params: {params}")
+
+    if params['scratch']:
+        run_scratch(params)
 
     run_pretest(params)
 
@@ -380,6 +389,7 @@ def run_train_test(params):
 
     print(f"****** learningGin execution took {int(time.time()) - start_time} seconds at {datetime.datetime.now()}")
 
+## #############################################
 def print_psinfo(prefix=""):
     process = psutil.Process(os.getpid())
     print(f"{prefix}max_rss={resource.getrusage(resource.RUSAGE_SELF).ru_maxrss} "
@@ -418,10 +428,7 @@ def run_with_logging(params:dict):
         if 'max_python_memory' in params:
             set_max_python_memory(params["max_python_memory"])
 
-        if params['scratch']:
-            run_scratch(params)
-
-        run_train_test(params)
+        run_learningGin(params)
 
     finally:
         if not old_stdout == None:
@@ -466,7 +473,7 @@ if __name__ == '__main__':
     parser.add_argument("--generation", nargs='?', type=int, default=-1)
     parser.add_argument("--max_python_memory", nargs='?', type=int, default=-1)
     parser.add_argument("--weights_path_1", nargs='?', type=str, default=None)
-    parser.add_argument("--weights_path_2", nargs='?', type=str, default=None)
+    parser.add_argument("--weights_path_2", nargs='?', type=str, default=None) # default="weights/weights.nn-cfhp.20230625152610.h5") 
     parser.add_argument("--learning_rate_1", nargs='?', type=float, default=None)
     parser.add_argument("--learning_rate_2", nargs='?', type=float, default=None)
     parser.add_argument("--gamma_1", nargs='?', type=float, default=None)
