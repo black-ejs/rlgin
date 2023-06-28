@@ -428,8 +428,11 @@ class GinHand:
 		while (self.winner == None 
 				and turns<maxTurns):
 
-			if self.deck.isEmpty() and self.extend_hands:
-				self.recycleDiscards()
+			if self.deck.isEmpty():
+				if self.extend_hands:
+					self.recycleDiscards()
+				else:
+					break
 
 			turns+=1			
 			

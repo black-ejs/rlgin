@@ -205,7 +205,7 @@ def run(params):
             else:
                 max_turns=params['max_steps_per_hand'] # back-compat
         else:
-            max_turns=(gin.NUM_RANKS*gin.NUM_SUITS) - (gin.HAND_SIZE*2)
+            max_turns=1000
 
         # play the hand
         hand_startTime = time.time()
