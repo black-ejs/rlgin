@@ -14,10 +14,10 @@ class Tgt_Processor:
         else:
             self.run_id, self.series_nick = ("","")
         self.tot_time = {}
+        self.tot_time['scratch'] = 0
+        self.tot_time['pre'] = 0
         self.tot_time['train'] = 0
         self.tot_time['test'] = 0
-        self.tot_time['pre'] = 0
-        self.tot_time['scratch'] = 0
         self.hand_count=0
         self.host =""
         self.phase=""
@@ -164,7 +164,7 @@ class Tgt_Processor:
         for phase in self.tot_time:
             if phase == "scratch":
                 continue
-            times += f"{phase}:{self.tot_time[phase]/self.hand_count:4.0f}/"
+            times += f"{phase}:{self.tot_time[phase]/self.hand_count:2.0f}/"
 
         summary = f"{self.run_id.ljust(14)} r={rewards[:-1]}, w={wins[:-1]}, score:{self.score_logfile():3.2f}  t={times[:-1]} tavg: {avg_time:3.2f}"
         return summary
