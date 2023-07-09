@@ -148,6 +148,7 @@ class Tgt_Processor:
     def logfile_summary(self):
         rewards=""
         wins=""
+        times=""
         avg_time=self.tot_time['train']/self.hand_count
 
         for phase in self.rewards:
@@ -160,7 +161,12 @@ class Tgt_Processor:
                 continue
             wins += f"{phase}:{mean(self.wins[phase]):3.1f}/"
 
-        summary = f"{self.run_id.ljust(14)} r={rewards[:-1]}, w={wins[:-1]}, score:{self.score_logfile():3.2f}  tavg: {avg_time:3.2f}"
+        for phase in self.tot_time:
+            if phase == "scratch":
+                continue
+            times += f"{phase}:{mean(self.tot_time[phase]):4.0f}/"
+
+        summary = f"{self.run_id.ljust(14)} r={rewards[:-1]}, w={wins[:-1]}, score:{self.score_logfile():3.2f}  t={times[:-1]} tavg: {avg_time:3.2f}"
         return summary
 
     def logfile_progress_summary(self):
