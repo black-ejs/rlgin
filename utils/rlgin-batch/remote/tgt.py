@@ -24,12 +24,13 @@ class Tgt_Processor:
         self.wins={}
         self.rewards={}
 
-    def process(self, input_file:str, output_file:str):
+    def process(self, input_file:str, output_file:str, data_only=False):
 
         self.output_file = output_file
         self.series_nick = ""
         self.series_total_score = 0
         self.series_score_count = 0
+        self.data_only = data_only
 
         if os.path.exists(self.output_file):
             os.remove(self.output_file)
@@ -134,7 +135,10 @@ class Tgt_Processor:
             return
         
         if 'train' in self.rewards:
-            outline = self.logfile_summary()
+            if self.data_only:
+                outline = self.logfile_summary_data()
+            else:
+                outline = self.logfile_summary()
         elif self.hand_count < self.episodes:
             outline = self.logfile_progress_summary()
 
@@ -169,6 +173,30 @@ class Tgt_Processor:
         summary = f"{self.run_id.ljust(14)} r={rewards[:-1]}, w={wins[:-1]}, score:{self.score_logfile():3.2f}  t={times[:-1]} tavg: {avg_time:3.2f}"
         return summary
 
+    def logfile_summary_data(self):
+        rewards=""
+        wins=""
+        times=""
+        avg_time=self.tot_time['train']/self.hand_count
+
+        for phase in self.rewards:
+            if phase == "scratch":
+                continue
+            rewards += f"{mean(self.rewards[phase]):.3f} "
+
+        for phase in self.wins:
+            if phase == "scratch":
+                continue
+            wins += f"{mean(self.wins[phase]):3.1f} "
+
+        for phase in self.tot_time:
+            if phase == "scratch":
+                continue
+            times += f"{self.tot_time[phase]/self.hand_count:2.0f} "
+
+        summary = f"{self.run_id} {rewards[:-1]} {wins[:-1]} {times[:-1]}"
+        return summary
+    
     def logfile_progress_summary(self):
         avg_time=self.tot_time[self.phase]/self.hand_count
         secs_to_go = int((self.episodes-self.hand_count) * (avg_time/1000))
@@ -200,9 +228,12 @@ if __name__ == "__main__":
         input_file = "/Users/edward/tgt2.sh.out.1"
         #input_file = "/Users/edward/Documents/dev/projects/BLG/scratch/analysis/BLG22/logs/scratchGin_BLG22.22.5.2023-06-10_05-23-27.log"
     output_file = f"{input_file}.x"
+    data_only=False
     if len(sys.argv)>2:
         output_file = sys.argv[2]
+        if output_file.endswith(".dat"):
+            data_only=True
 
-    Tgt_Processor().process(input_file,output_file)
+    Tgt_Processor().process(input_file,output_file,data_only=data_only)
 
 
