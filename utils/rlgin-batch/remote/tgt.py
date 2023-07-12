@@ -51,7 +51,8 @@ class Tgt_Processor:
         if len(self.phase)>0 and self.tot_time[self.phase]>0:
             self.output()
             if not input_file == self.logfile:
-                self.output_series_score(self.series_nick)
+                if not self.data_only:
+                    self.output_series_score(self.series_nick)
 
     def process_line(self,line:str):
         toks=line.split()
@@ -122,8 +123,8 @@ class Tgt_Processor:
         if self.series_score_count==0:
             self.series_score_count=1
         outline = f"{nick} overall_score={self.series_total_score:.3f}  avg_score={self.series_total_score/self.series_score_count:.3f}"
-        print(outline)
         
+        # print(outline)
         with open(self.output_file, 'a') as o: 
             print(outline,file=o)
 
@@ -142,7 +143,7 @@ class Tgt_Processor:
         elif self.hand_count < self.episodes:
             outline = self.logfile_progress_summary()
 
-        print(outline)
+        # print(outline)
         with open(self.output_file, 'a') as o: 
             print(outline,file=o)
 
