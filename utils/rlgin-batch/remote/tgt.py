@@ -58,7 +58,7 @@ class Tgt_Processor:
         toks=line.split()
         if line.find("episodes=")>-1:
             episodes=line[line.find("'episodes': ")+11:]
-            episodes=episodes[episodes.find(",")]
+            episodes=episodes[:episodes.find(",")]
             self.episodes=int(episodes)
 
         elif line.find("@rb-")>-1:
@@ -71,7 +71,8 @@ class Tgt_Processor:
             self.new_logfile(logfile)
             self.host = line[pos+1:-1]
             if len(prev_nick) > 0 and (not (prev_nick == self.series_nick)):
-                self.output_series_score(prev_nick)
+                if not self.data_only:
+                    self.output_series_score(prev_nick)
 
             # print(f"{self.series_nick}") 
             # print(f"{self.run_id}") 
@@ -141,7 +142,8 @@ class Tgt_Processor:
             else:
                 outline = self.logfile_summary()
         elif self.hand_count < self.episodes:
-            outline = self.logfile_progress_summary()
+            if not self.data_only:
+                outline = self.logfile_progress_summary()
 
         # print(outline)
         with open(self.output_file, 'a') as o: 
