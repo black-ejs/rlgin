@@ -7,12 +7,10 @@ import playGin
 
 import DQN
 import ginDQN
-from ginDQNConvoBitPlanes import ginDQNConvoBitPlanes
-from ginDQNConvoFloatPlane import ginDQNConvoFloatPlane
 from ginDQNLinear import ginDQNLinear
 from ginDQNLinearB import ginDQNLinearB
-import ginDQNConvFHandOut
-import ginDQNCFHPad
+from ginDQNConvFHandOut import ginDQNConvFHandOut
+from ginDQNHandOutStrategy import ginDQNHandOutStrategy, ginHandOutBenchmarkStrategy
 from playGin import BrainiacGinStrategy
 
 class learningPlayer:
@@ -36,9 +34,9 @@ class learningPlayer:
         dqn_params = self.params['nn']
         if self.ginDQN == None:
             self.ginDQN = self.initializeDQN(dqn_params)
-        if self.strategy == "nn-cfh" or self.strategy == "nn-cfhp":
-            nn_strategy = ginDQNConvFHandOut.ginDQNHandOutStrategy(dqn_params, self.ginDQN)
-            nn_strategy.benchmark_scorer = ginDQNConvFHandOut.ginHandOutBenchmarkStrategy ()
+        if isinstance(self.ginDQN, ginDQNConvFHandOut):
+            nn_strategy = ginDQNHandOutStrategy(dqn_params, self.ginDQN)
+            nn_strategy.benchmark_scorer = ginHandOutBenchmarkStrategy()
         else:
             nn_strategy = ginDQN.ginDQNStrategy(dqn_params, self.ginDQN)
             nn_strategy.benchmark_scorer = BrainiacGinStrategy()
@@ -51,14 +49,8 @@ class learningPlayer:
             ginDQN = ginDQNLinear(params)
         elif self.strategy == "nn-linearb":
             ginDQN = ginDQNLinearB(params)
-        elif self.strategy == "nn-convf":
-            ginDQN = ginDQNConvoFloatPlane(params)
-        elif self.strategy == "nn-convb":
-            ginDQN = ginDQNConvoBitPlanes(params)    
-        elif self.strategy == "nn-cfh":
-            ginDQN = ginDQNConvFHandOut.ginDQNConvFHandOut(params)
         elif self.strategy == "nn-cfhp":
-            ginDQN = ginDQNCFHPad.ginDQNCFHPad(params)
+            ginDQN = ginDQNConvFHandOut(params)
 
         print(f"sending DQN ({self.strategy}/{type(ginDQN).__name__}) to DEVICE ('{DQN.DEVICE}') for player {self.name}")
         ginDQN = ginDQN.to(DQN.DEVICE)

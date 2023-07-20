@@ -5,32 +5,13 @@ import playGin
 import DQN
 import ginDQN
 import ginDQNStrategy
-from FloatPlaneState import FloatPlaneState
-import ConvLinearDQN
-
-# ******************************
-class ginDQNConvFHandOut(ConvLinearDQN.ConvLinearDQN):
-    OUTPUT_SIZE = gin.HAND_SIZE + 1
-    INPUT_SIZE = FloatPlaneState.OUTPUT_SIZE
-    
-    def __init__(self, params):
-        params['output_size'] = self.OUTPUT_SIZE 
-        super().__init__(params)
-        self.output_size = params['output_size'] 
-        self.stateMaker = FloatPlaneState(params)
-
-    def get_state(self, ginhand:(gin.GinHand), 
-                         player:(gin.Player), 
-                         pile_substitute:(gin.Card) = None):
-        input_state = self.stateMaker.get_state(ginhand, player, pile_substitute)
-        return input_state
 
 ## ###############################################
 ## ###############################################
 ## ###############################################
 ## ###############################################
 class ginDQNHandOutStrategy(ginDQNStrategy.ginDQNStrategy):
-    def __init__(self,params,agent:(ginDQN.ginDQN)):
+    def __init__(self,params,agent:(ginDQN)):
         return super().__init__(params, agent)
 
     # if lowest-value card is the offered discard, choose from the DECK

@@ -5,7 +5,7 @@ def define_parameters():
     timestamp = str(datetime.datetime.now().strftime("%Y%m%d%H%M%S"))
     params = dict()
 
-    params['episodes'] = 50    # gin hands
+    params['episodes'] = 5    # gin hands
     params['test_runs'] = 5
 
     epsilon_decay_percent = 3   # 3% of hands
@@ -42,13 +42,13 @@ def define_parameters():
     params['player2']['nn']['test'] = True
     params['player2']['nn']['pretest'] = params['player2']['nn']['train']
     params['player2']['nn']["load_weights"] = True   
-    params['player2']['nn']['weights_path'] = f"weights/weights.{params['player2']['strategy']}.{timestamp}.h5"
-    #params['player2']['nn']['weights_path'] = "weights/weights.nn-cfhp.20230612134023.h5"
+    #params['player2']['nn']['weights_path'] = f"weights/weights.{params['player2']['strategy']}.{timestamp}.h5"
+    params['player2']['nn']['weights_path'] = "weights/weights.nn-cfhp.20230625152610.h5"
     params['player2']['nn']['use_cheat_rewards'] = False
 
     # game structure
     params['extend_hands'] = False          # recycle discards when deck is exhausted, up to max_turns_per_hand
-    params['max_turns_per_hand'] = 100     # max turns before no_winner, if 'extend_hands' == TRUE
+    params['max_turns_per_hand'] = 160      # max turns before no_winner, if 'extend_hands' == TRUE
     params['scratch'] = False
 
     # logging 

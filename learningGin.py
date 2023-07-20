@@ -11,7 +11,7 @@ import resource
 MAX_MEMORY= 1024*1024*1024
 
 import gin
-import ginDQN
+from ginDQNStrategy import ginDQNStrategy
 import ginDQNParameters
 NO_WIN_NAME = 'nobody'
 
@@ -200,10 +200,7 @@ def run(params):
         ##    dqnStrategy.pretrain_weights = pretrain_weights
 
         if params['extend_hands']:
-            if 'max_turns_per_hand' in params:
-                max_turns=params['max_turns_per_hand']
-            else:
-                max_turns=params['max_steps_per_hand'] # back-compat
+            max_turns=params['max_turns_per_hand']
         else:
             max_turns=1000
 
@@ -253,7 +250,7 @@ def run(params):
                 p.ginDQN.params['weights_path'] += ".post_training"
             posttrain_weights = p.save_weights()
             if not (p.pretrain_weights==None or posttrain_weights==None):
-                count_diffs = ginDQN.ginDQNStrategy.compare_weights(p.pretrain_weights, posttrain_weights)
+                count_diffs = ginDQNStrategy.compare_weights(p.pretrain_weights, posttrain_weights)
                 if count_diffs == 0:
                     print(f"** WARNING: {p.name}'s weights appear unchanged after training **")
         total_reward.append((p.name,p.total_reward))
